@@ -1,23 +1,21 @@
-from src.shared.helpers.external_interfaces.external_interface import IResponse, IRequest
-from .update_user_usecase import UpdateUserUsecase
-from .update_user_viewmodel import UpdateUserViewmodel
+from .get_user_usecase import GetUserUsecase
+from .get_user_viewmodel import GetUserViewmodel
 from src.shared.helpers.errors.controller_errors import MissingParameters, WrongTypeParameter
 from src.shared.helpers.errors.domain_errors import EntityError
 from src.shared.helpers.errors.usecase_errors import NoItemsFound
+from src.shared.helpers.external_interfaces.external_interface import IRequest, IResponse
 from src.shared.helpers.external_interfaces.http_codes import OK, NotFound, BadRequest, InternalServerError
 
 
-class UpdateUserController:
+class GetUserController:
 
-    def __init__(self, usecase: UpdateUserUsecase):
-        self.UpdateUserUsecase = usecase
+    def __init__(self, usecase: GetUserUsecase):
+        self.GetUserUsecase = usecase
 
     def __call__(self, request: IRequest) -> IResponse:
         try:
             if request.data.get('user_id') is None:
                 raise MissingParameters('user_id')
-            if request.data.get('new_name') is None:
-                raise MissingParameters('new_name')
 
             if type(request.data.get('user_id')) != str:
                 raise WrongTypeParameter(
@@ -26,9 +24,14 @@ class UpdateUserController:
                     fieldTypeReceived=request.data.get('user_id').__class__.__name__
                 )
 
-            user = self.UpdateUserUsecase(user_id=int(request.data.get('user_id')), new_name=request.data.get('new_name'))
+            if not request.data.get('user_id').isdecimal():
+                raise EntityError("user_id")
 
-            viewmodel = UpdateUserViewmodel(user=user)
+            user = self.GetUserUsecase(
+                user_id=int(request.data.get('user_id'))
+            )
+
+            viewmodel = GetUserViewmodel(user)
 
             return OK(viewmodel.to_dict())
 
