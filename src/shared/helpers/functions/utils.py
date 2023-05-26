@@ -1,7 +1,7 @@
 import math
 from typing import List
 
-from src.shared.domain.entities.Nota import Nota
+from src.shared.domain.entities.nota import Nota
 
 
 class Utils:

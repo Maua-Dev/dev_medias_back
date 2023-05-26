@@ -1,8 +1,9 @@
-from random import random, shuffle
+import abc
+from random import shuffle
 from typing import List, Tuple
 
 
-class Nota:
+class Nota(abc.ABC):
     peso: float # representa o peso da nota na matéria
     valor: float = None # representa o valor da nota
     dominio_da_nota: List[float] # representa o domínio de notas possíveis para uma nota em específico

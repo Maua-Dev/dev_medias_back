@@ -1,7 +1,7 @@
 from datetime import time
 from typing import List, Dict
 
-from src.shared.domain.entities.Nota import Nota
+from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.functions.utils import Utils
 
 
