@@ -2,6 +2,7 @@ import math
 from typing import List
 
 from src.shared.domain.entities.nota import Nota
+from src.shared.helpers.errors.function_errors import FunctionInputError
 
 
 class Utils:
@@ -18,12 +19,14 @@ class Utils:
 
     @staticmethod
     def media_aritimetica(l: List[Nota]) -> float:
+        if(len(l) == 0):
+            raise FunctionInputError("media_aritimetica", "Lista de notas não pode ser vazia")
         return sum([nota.valor for nota in l]) / len(l)
 
     @staticmethod
     def media(l: List[Nota]) -> float:
         if round(sum(map(lambda x: x.peso, l)), 2) != 1.00:
-            raise Exception("A soma dos pesos deve ser 1")
+            raise FunctionInputError("media", "A soma dos pesos deve ser 1")
         return sum(map(lambda x: x.valor * x.peso, l))
 
     @staticmethod
