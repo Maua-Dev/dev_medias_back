@@ -94,4 +94,4 @@ class Test_GradeOptmizerPresenter:
 
         response = lambda_handler(event=event, context=None)
         assert response["statusCode"] == 200
-        assert json.loads(response["body"])["message"] == "the algorithm retrieved a possible combination of grades successfully"
+        assert json.loads(response["body"])["message"] == "o algoritmo retonrou uma combinação válida de notas"

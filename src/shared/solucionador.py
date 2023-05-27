@@ -182,3 +182,4 @@ class Solucionador:
         print(f", e média {media_desejada} uma combinação de notas possíveis é:")
         Utils.print_lista_de_notas(notas_possiveis)
         print(f"\nO algorítmo demorou {t_exec:.5f} segundos para executar.")
+        print(f"As notas possuem média {Utils.media(notas_possiveis+notas_que_tenho)}")

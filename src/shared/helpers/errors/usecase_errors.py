@@ -8,7 +8,11 @@ class NoItemsFound(BaseError):
 class DuplicatedItem(BaseError):
     def __init__(self, message: str):
         super().__init__(f'The item alredy exists for this {message}')
-        
+
+class InvalidInput(BaseError):
+    def __init__(self, message: str):
+        super().__init__(f'Invalid input for {message}')        
+
 class ForbiddenAction(BaseError):
     def __init__(self, message: str):
         super().__init__(f'That action is forbidden for this {message}')

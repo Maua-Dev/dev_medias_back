@@ -6,7 +6,7 @@ from src.shared.domain.entities.nota import Nota
 
 class TestGradeOptimizerViewmodel:
 
-    def test_possible_grade_viewmodel(self):
+    def test_grade_optmizer_viewmodel(self):
         notas = [
             Nota(peso=0.12, valor=6.0),
             Nota(peso=0.08, valor=6.0),
@@ -30,5 +30,17 @@ class TestGradeOptimizerViewmodel:
                                     'peso':0.08
                                 }
                             ],
-                            'message':'the algorithm retrieved a possible combination of grades successfully'
+                            'message':'o algoritmo retonrou uma combinação válida de notas'
+                            }
+        
+    def test_grade_optmizer_viewmodel_grades_not_found(self):
+        notas = [
+        ]
+        
+        viewmodel = GradeOptmizerViewmodel(notas).to_dict()
+        
+        assert viewmodel == {
+                            'notas':[
+                            ],
+                            'message':'o algoritmo não encontrou uma combinação possível de notas'
                             }

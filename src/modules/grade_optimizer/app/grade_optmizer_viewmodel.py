@@ -27,5 +27,5 @@ class GradeOptmizerViewmodel:
     def to_dict(self):
         return {
             'notas': [NotaViewmodel(nota).to_dict() for nota in self.combinacao_de_notas],
-            'message': "the algorithm retrieved a possible combination of grades successfully"
+            'message': "o algoritmo retonrou uma combinação válida de notas" if len(self.combinacao_de_notas) > 0 else "o algoritmo não encontrou uma combinação possível de notas",
         }
