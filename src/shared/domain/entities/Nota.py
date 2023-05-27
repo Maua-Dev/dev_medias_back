@@ -2,6 +2,8 @@ import abc
 from random import shuffle
 from typing import List, Tuple
 
+from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
+
 
 class Nota(abc.ABC):
     peso: float # representa o peso da nota na matéria
@@ -12,12 +14,12 @@ class Nota(abc.ABC):
     def __init__(self, peso: float = None, valor: float = None):
         nota_valida, msg = self.valida_valor(valor)
         if (not nota_valida and valor != None):
-            raise Exception(msg)
+            raise EntityParameterError(msg)
         self.valor = valor
 
         peso_valido, msg = self.valida_peso(peso)
         if (not peso_valido):
-            raise Exception(msg)
+            raise EntityParameterError(msg)
         self.peso = peso
 
         self.dominio_da_nota = self.DOMINIO_DE_NOTAS.copy()
@@ -28,7 +30,7 @@ class Nota(abc.ABC):
     def limita_dominio(self, valor_minimo: float, valor_maximo: float) -> None:
         dominio_valido, msg = self.valida_limitacao_de_dominio(self.dominio_da_nota, valor_minimo, valor_maximo)
         if (not dominio_valido):
-            raise Exception(msg)
+            raise EntityParameterError(msg)
         self.dominio_da_nota = [nota for nota in self.dominio_da_nota if nota >= valor_minimo and nota <= valor_maximo]
 
     @staticmethod
