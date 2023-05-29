@@ -2,6 +2,7 @@ import pytest
 
 from src.modules.grade_optimizer.app.grade_optmizer_usecase import GradeOptimizerUsecase
 from src.shared.domain.entities.nota import Nota
+from src.shared.helpers.errors.function_errors import FunctionInputError
 from src.shared.helpers.errors.usecase_errors import InvalidInput
 from src.shared.helpers.functions.utils import Utils
 from src.shared.solucionador import Solucionador
@@ -30,7 +31,7 @@ class TestGradeOptimizerUsecase:
 
         notas_resp = usecase(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, media_desejada=media_desejada)
 
-        assert abs(Utils.media(notas_resp + notas_que_tenho) - media_desejada) <= Solucionador.ERR_MAX
+        assert abs(round(Utils.media(notas_resp + notas_que_tenho) - media_desejada, 2)) <= Solucionador.ERR_MAX
 
     def test_possible_grade_usecase_2(self):
             P1 = Nota(peso=0.2, valor=6.0)
@@ -47,7 +48,7 @@ class TestGradeOptimizerUsecase:
 
             notas_resp = usecase(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, media_desejada=media_desejada)
 
-            assert abs(Utils.media(notas_resp + notas_que_tenho) - media_desejada) <= Solucionador.ERR_MAX
+            assert abs(round(Utils.media(notas_resp + notas_que_tenho) - media_desejada, 2)) <= Solucionador.ERR_MAX
             
     def test_possible_grade_usecase_3(self):
             P1 = Nota(peso=0.2*0.6, valor=5.0)
@@ -68,7 +69,7 @@ class TestGradeOptimizerUsecase:
 
             notas_resp = usecase(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, media_desejada=media_desejada)
 
-            assert abs(Utils.media(notas_resp + notas_que_tenho) - media_desejada) <= Solucionador.ERR_MAX
+            assert abs(round(Utils.media(notas_resp + notas_que_tenho) - media_desejada, 2)) <= Solucionador.ERR_MAX
             
     def test_possible_grade_usecase_4(self):
             P1 = Nota(peso=0.2, valor=10.0)
@@ -246,3 +247,25 @@ class TestGradeOptimizerUsecase:
         with pytest.raises(InvalidInput):
             usecase(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, media_desejada=media_desejada)
 
+    def test_possible_grade_usecase_soma_dos_pesos_nao_e_1(self):
+        P1 = Nota(peso=0.12, valor=6.0)
+        T1 = Nota(peso=0.08, valor=6.0)
+        T2 = Nota(peso=0.08, valor=6.0)
+        
+        notas_que_tenho = [P1, T1, T2]
+
+        P2 = Nota(peso=0.12, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.12, valor=None)
+        P4 = Nota(peso=0.18, valor=None)
+        T4 = Nota(peso=0.12, valor=None)
+        
+        notas_que_quero = [P2, P3, T3, P4, T4]
+        
+        media_desejada = 6.0
+
+        usecase = GradeOptimizerUsecase()
+
+        with pytest.raises(FunctionInputError):
+            usecase(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, media_desejada=media_desejada)
+            

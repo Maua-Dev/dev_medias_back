@@ -18,11 +18,6 @@ class TestUtils:
         l = [Nota(0.2, 5), Nota(0.3, 4), Nota(0.1, 2), Nota(0.4, 10)]
         assert Utils.media(l) == 6.4
     
-    def test_media_soma_dos_pesos_diferente_de_1(self):
-        l = [Nota(0.2, 5), Nota(0.3, 4), Nota(0.1, 2), Nota(0.5, 10)]
-        with pytest.raises(FunctionInputError):
-            Utils.media(l)
-            
     def test_desvio_padrao(self):
         l = [Nota(0.2, 5), Nota(0.3, 4), Nota(0.1, 2), Nota(0.4, 10)]
         assert round(Utils.desvio_padrao(l), 2) == 3.40

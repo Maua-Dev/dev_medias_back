@@ -9,8 +9,8 @@ class DuplicatedItem(BaseError):
         super().__init__(f'The item alredy exists for this {message}')
 
 class InvalidInput(BaseError):
-    def __init__(self, message: str):
-        super().__init__(f'Parâmetro {message} está inválido')        
+    def __init__(self, parameter: str, message: str):
+        super().__init__(f'Parâmetro {parameter} está inválido: {message}')        
 
 class ForbiddenAction(BaseError):
     def __init__(self, message: str):

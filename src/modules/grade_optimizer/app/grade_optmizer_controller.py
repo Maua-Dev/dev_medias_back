@@ -50,7 +50,7 @@ class GradeOptmizerController:
                     raise EntityError("valor")
             notas_que_quero = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('notas_que_quero')]    
             
-            if type(request.data.get('media_desejada')) != float:
+            if type(request.data.get('media_desejada')) not in [int, float]:
                 raise WrongTypeParameter(
                     fieldName="media_desejada",
                     fieldTypeExpected="float",

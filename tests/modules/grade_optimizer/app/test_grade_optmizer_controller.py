@@ -48,7 +48,7 @@ class TestGradeOptimizerController:
                     'peso':0.12
                 }
             ],
-            'media_desejada':6.0
+            'media_desejada':6
         })
 
         usecase = GradeOptimizerUsecase()
@@ -617,5 +617,227 @@ class TestGradeOptimizerController:
         assert notas_resp.status_code == 400
         assert notas_resp.body == "Peso a deve ser um número"
         
-    
+    def test_possible_grade_controller_media_desejada_nao_e_float(self):
+        request = HttpRequest(body={
+            'notas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.12
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+            ],
+            'notas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                }
+            ],
+            'media_desejada':'6'
+        })
         
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro media_desejada não possui tipo correto.\n Recebido: str.\n Esperado: float"
+
+    def test_possible_grade_controller_invalid_input_notas_que_quero(self):
+        request = HttpRequest(body={
+            'notas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.12
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+            ],
+            'notas_que_quero':[
+                
+        
+            ],
+            'media_desejada':6
+        })
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro notas_que_quero está inválido: Não pode ser uma lista vazia"
+    
+    def test_possible_grade_controller_invalid_input_media_desejada(self):
+        request = HttpRequest(body={
+            'notas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.12
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+            ],
+            'notas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                }
+            ],
+            'media_desejada':10.1
+        })
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro media_desejada está inválido: Deve estar compreendida entre 0 e 10"
+    
+    def test_possible_grade_controller_function_input_error(self):
+        request = HttpRequest(body={
+            'notas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.12
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+            ],
+            'notas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.20
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                }
+            ],
+            'media_desejada':6
+        })
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Erro na função media: A soma dos pesos deve ser 1"
+        
+    def test_possible_grade_controller_entity_parameter_error(self):
+        request = HttpRequest(body={
+            'notas_que_tenho':[
+                {
+                    'valor':6.2,
+                    'peso':0.12
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.08
+                },
+            ],
+            'notas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                },
+                {
+                    'valor':None,
+                    'peso':0.18
+                },
+                {
+                    'valor':None,
+                    'peso':0.12
+                }
+            ],
+            'media_desejada':6
+        })
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Valor de nota 6.2 deve estar entre 0 e 10, variando de 0.5 em 0.5"
+        
+    
