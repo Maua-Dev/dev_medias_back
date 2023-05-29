@@ -14,4 +14,7 @@ class GradeOptimizerUsecase:
         if(len(notas_que_quero) == 0):
             raise InvalidInput("notas_que_quero")
         
+        if(media_desejada < Nota.DOMINIO_DE_NOTAS[0] or media_desejada > Nota.DOMINIO_DE_NOTAS[-1]):
+            raise InvalidInput("media_desejada")
+        
         return Solucionador.algoritmo(notas_que_tenho, notas_que_quero, media_desejada)

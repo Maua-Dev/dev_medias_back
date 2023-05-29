@@ -50,45 +50,41 @@ class Utils:
         print(l[-1].peso, end=' ]')
 
     @staticmethod
-    def minimo_valor_no_dominio(notas_que_tenho: List[Nota], notas_que_quero: List[Nota], peso_especifico: float,
-                                media_desejada: float, erro_max: float, distancia_max: float) -> float:
+    def minimo_valor_no_dominio(notas_que_tenho: List[Nota], notas_que_quero: List[Nota], peso_especifico: float, media_desejada: float, erro_max: float, distancia_max: float, aumento_do_range: float = 0) -> float:
         A = media_desejada - sum([nota.peso * nota.valor for nota in notas_que_tenho])
-
-        if (len(notas_que_quero) == 0):
+        
+        if(len(notas_que_quero) == 0):
             B = 0
         else:
-            B = ((len(notas_que_quero) + 1) * distancia_max) / (
-                len(notas_que_quero))  # len(notas_que_quero) tira a nota `n_x`
-
-        if (len(notas_que_quero) == 0):
+            B = ((len(notas_que_quero)+1) * (distancia_max+aumento_do_range))/(len(notas_que_quero)) # len(notas_que_quero) tira a nota `n_x`
+        
+        if(len(notas_que_quero) == 0):
             C = 0
         else:
             C = sum([nota.peso for nota in notas_que_quero])
-
-        valor = math.ceil(2 * ((A - erro_max - B * C) / (C + peso_especifico))) / 2
-        if valor < Nota.DOMINIO_DE_NOTAS[0]:  # 0
+        
+        valor = math.ceil(2*((A-erro_max-B*C)/(C+peso_especifico)))/2
+        if valor < Nota.DOMINIO_DE_NOTAS[0]: # 0
             return Nota.DOMINIO_DE_NOTAS[0]
-        elif valor > Nota.DOMINIO_DE_NOTAS[-1]:  # 10
+        elif valor > Nota.DOMINIO_DE_NOTAS[-1]: # 10
             return -1
         return valor
 
     @staticmethod
-    def maximo_valor_no_dominio(notas_que_tenho: List[Nota], notas_que_quero: List[Nota], peso_especifico: float,
-                                media_desejada: float, erro_max: float, distancia_max: float) -> float:
+    def maximo_valor_no_dominio(notas_que_tenho: List[Nota], notas_que_quero: List[Nota], peso_especifico: float, media_desejada: float, erro_max: float, distancia_max: float) -> float:
         A = media_desejada - sum([nota.peso * nota.valor for nota in notas_que_tenho])
-
-        if (len(notas_que_quero) == 0):
+        
+        if(len(notas_que_quero) == 0):
             B = 0
         else:
-            B = ((len(notas_que_quero) + 1) * distancia_max) / (
-                len(notas_que_quero))  # len(notas_que_quero) tira a nota `n_x`
-
-        if (len(notas_que_quero) == 0):
+            B = ((len(notas_que_quero)+1) * distancia_max)/(len(notas_que_quero)) # len(notas_que_quero) tira a nota `n_x`
+        
+        if(len(notas_que_quero) == 0):
             C = 0
         else:
             C = sum([nota.peso for nota in notas_que_quero])
-
-        valor = math.floor(2 * ((A + erro_max + B * C) / (C + peso_especifico))) / 2
-        if valor > Nota.DOMINIO_DE_NOTAS[-1]:  # 10
+        
+        valor = math.floor(2*((A+erro_max+B*C)/(C+peso_especifico)))/2
+        if valor > Nota.DOMINIO_DE_NOTAS[-1]: # 10
             return Nota.DOMINIO_DE_NOTAS[-1]
         return valor

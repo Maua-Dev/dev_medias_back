@@ -1,4 +1,3 @@
-from lib2to3.pytree import Base
 from src.shared.helpers.errors.base_error import BaseError
 
 class NoItemsFound(BaseError):
@@ -11,7 +10,7 @@ class DuplicatedItem(BaseError):
 
 class InvalidInput(BaseError):
     def __init__(self, message: str):
-        super().__init__(f'Invalid input for {message}')        
+        super().__init__(f'Parâmetro {message} está inválido')        
 
 class ForbiddenAction(BaseError):
     def __init__(self, message: str):

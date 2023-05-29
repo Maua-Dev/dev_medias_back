@@ -33,6 +33,9 @@ class Nota(abc.ABC):
             raise EntityParameterError(msg)
         self.dominio_da_nota = [nota for nota in self.dominio_da_nota if nota >= valor_minimo and nota <= valor_maximo]
 
+    def restaura_dominio(self) -> None:
+        self.dominio_da_nota = Nota.DOMINIO_DE_NOTAS.copy()
+
     @staticmethod
     def valida_limitacao_de_dominio(dominio_a_ser_limitado: List[float], valor_minimo: float, valor_maximo: float) -> \
     Tuple[bool, str]:

@@ -137,3 +137,13 @@ class Test_Nota:
             assert False
         except EntityParameterError as e:
             assert str(e) == "Domínio da nota já foi embaralhado"
+            
+    def test_nota_restaura_dominio(self):
+        nota = Nota(peso=0.2, valor=10.0)
+        nota.limita_dominio(0.0, 5.0)
+        nota.randomiza_dominio()
+        nota.restaura_dominio()
+        
+        assert nota.dominio_da_nota == Nota.DOMINIO_DE_NOTAS
+        
+    
