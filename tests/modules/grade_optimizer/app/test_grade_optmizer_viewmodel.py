@@ -30,7 +30,7 @@ class TestGradeOptimizerViewmodel:
                                     'peso':0.08
                                 }
                             ],
-                            'message':'o algoritmo retonrou uma combinação válida de notas'
+                            'message':'o algoritmo retornou uma combinação válida de notas'
                             }
         
     def test_grade_optmizer_viewmodel_grades_not_found(self):
