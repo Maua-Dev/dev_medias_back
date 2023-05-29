@@ -57,7 +57,7 @@ class TestGradeOptimizerController:
         notas_resp = controller(request=request)
 
         assert notas_resp.status_code == 200
-        assert notas_resp.body["message"] == "o algoritmo retonrou uma combinação válida de notas"
+        assert notas_resp.body["message"] == "O algoritmo retornou uma combinação válida de notas"
 
     def test_possible_grade_controller_notas_que_tenho_nao_existe(self):
         request = HttpRequest(body={

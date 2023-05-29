@@ -30,7 +30,7 @@ class TestGradeOptimizerViewmodel:
                                     'peso':0.08
                                 }
                             ],
-                            'message':'o algoritmo retornou uma combinação válida de notas'
+                            'message':'O algoritmo retornou uma combinação válida de notas'
                             }
         
     def test_grade_optmizer_viewmodel_grades_not_found(self):
@@ -42,5 +42,5 @@ class TestGradeOptimizerViewmodel:
         assert viewmodel == {
                             'notas':[
                             ],
-                            'message':'o algoritmo não encontrou uma combinação possível de notas'
+                            'message':'O algoritmo não encontrou uma combinação possível de notas'
                             }
