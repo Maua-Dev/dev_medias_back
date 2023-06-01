@@ -39,6 +39,7 @@ tags = {
     'stack': 'BACK'
 }
 
-IacStack(app, stack_name, env=cdk.Environment(account=aws_account_id, region=aws_region))
+print(stack_name)
+IacStack(app, stack_name, env=cdk.Environment(account=aws_account_id, region=aws_region), tags=tags)
 
 app.synth()
