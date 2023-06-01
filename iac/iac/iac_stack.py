@@ -49,5 +49,5 @@ class IacStack(Stack):
             "STAGE": stage,
         }
 
-        self.lambda_stack = LambdaStack(self, api_gateway_resource=api_gateway_resource,
-                                        environment_variables=ENVIRONMENT_VARIABLES)
+        # self.lambda_stack = LambdaStack(self, api_gateway_resource=api_gateway_resource,
+        #                                 environment_variables=ENVIRONMENT_VARIABLES)
