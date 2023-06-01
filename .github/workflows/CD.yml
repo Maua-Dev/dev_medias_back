@@ -3,7 +3,9 @@ name: CD
 on:
   push:
     branches:
-      - main
+      - dev
+      - homolog
+      - prod
 
   workflow_dispatch:
 
@@ -40,3 +42,6 @@ jobs:
             cdk deploy --require-approval never
           env:
             AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}
+            STACK_NAME: ${{ secrets.STACK_NAME }}
+            GITHUB_REF_NAME: ${{ github.ref }}
