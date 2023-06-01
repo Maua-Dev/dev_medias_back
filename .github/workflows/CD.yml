@@ -11,8 +11,9 @@ on:
 
 jobs:
   DeployToAWS:
+    environment:
+        name: ${{ github.ref_name }}
     runs-on: ubuntu-latest
-    environment: dev
     permissions:
       id-token: write
       contents: read
@@ -23,7 +24,7 @@ jobs:
         - name: Setup AWS Credentials
           uses: aws-actions/configure-aws-credentials@v1
           with:
-            aws-region: ${{ secrets.AWS_REGION }}
+            aws-region: ${{ vars.AWS_REGION }}
             role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
 
@@ -43,5 +44,5 @@ jobs:
           env:
             AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
             AWS_REGION: ${{ secrets.AWS_REGION }}
-            STACK_NAME: ${{ secrets.STACK_NAME }}
+            STACK_NAME: ${{ env.STACK_NAME }}
             GITHUB_REF_NAME: ${{ github.ref }}
