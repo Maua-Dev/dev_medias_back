@@ -28,6 +28,10 @@ jobs:
             role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
 
+        - name: Setting stage and stack name
+          run: |
+              echo "STAGE=${{ github.ref_name }}" 
+              echo "STACK_NAME=PortalInternoStackFront{{github.ref_name}}" >> $GITHUB_ENV
 
         - name: Installing Dependencies
           run: |
