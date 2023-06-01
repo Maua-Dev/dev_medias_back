@@ -1,7 +1,7 @@
 
 from aws_cdk import (
     aws_lambda as lambda_,
-    NestedStack, Duration
+    Duration
 )
 from constructs import Construct
 from aws_cdk.aws_apigateway import Resource, LambdaIntegration
@@ -38,11 +38,3 @@ class LambdaStack(Construct):
                                                 )
 
         self.grade_optimizer_function = self.create_lambda_api_gateway_integration("grade_optimizer", "POST", api_resource=api_gateway_resource, environment_variables=environment_variables)
-        
-        # functions_that_need_dynamo_permissions = [
-        #     self.get_all_products_group_by_restaurant_function,
-        #     self.delete_product,
-        #     self.create_product,
-        #     self.get_product,
-        #     self.update_product
-        # ]
