@@ -1,5 +1,5 @@
 import json
-from src.modules.grade_optimizer.app.grade_optmizer_presenter import lambda_handler
+from src.modules.grade_optmizer.app.grade_optmizer_presenter import lambda_handler
 
 
 class Test_GradeOptmizerPresenter:

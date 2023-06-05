@@ -1,7 +1,6 @@
 from typing import List
 
 from src.shared.domain.entities.nota import Nota
-from src.shared.helpers.errors.domain_errors import EntityError
 from src.shared.helpers.errors.function_errors import FunctionInputError
 from src.shared.helpers.errors.usecase_errors import InvalidInput
 from src.shared.solucionador import Solucionador

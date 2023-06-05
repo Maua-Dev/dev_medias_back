@@ -1,6 +1,6 @@
 import pytest
 
-from src.modules.grade_optimizer.app.grade_optmizer_viewmodel import GradeOptmizerViewmodel
+from src.modules.grade_optmizer.app.grade_optmizer_viewmodel import GradeOptmizerViewmodel
 from src.shared.domain.entities.nota import Nota
 
 
