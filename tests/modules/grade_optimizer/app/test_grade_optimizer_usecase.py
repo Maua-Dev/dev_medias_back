@@ -1,6 +1,6 @@
 import pytest
 
-from src.modules.grade_optimizer.app.grade_optmizer_usecase import GradeOptimizerUsecase
+from src.modules.grade_optmizer.app.grade_optmizer_usecase import GradeOptimizerUsecase
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.function_errors import FunctionInputError
 from src.shared.helpers.errors.usecase_errors import InvalidInput

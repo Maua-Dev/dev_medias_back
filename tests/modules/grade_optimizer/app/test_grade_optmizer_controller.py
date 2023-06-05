@@ -1,7 +1,7 @@
 import pytest
-from src.modules.grade_optimizer.app.grade_optmizer_controller import GradeOptmizerController
+from src.modules.grade_optmizer.app.grade_optmizer_controller import GradeOptmizerController
 
-from src.modules.grade_optimizer.app.grade_optmizer_usecase import GradeOptimizerUsecase
+from src.modules.grade_optmizer.app.grade_optmizer_usecase import GradeOptimizerUsecase
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.external_interfaces.http_models import HttpRequest
 from src.shared.helpers.functions.utils import Utils
