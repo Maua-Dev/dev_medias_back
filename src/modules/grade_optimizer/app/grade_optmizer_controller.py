@@ -1,5 +1,5 @@
-from src.modules.grade_optimizer.app import grade_optmizer_usecase
-from src.modules.grade_optimizer.app.grade_optmizer_viewmodel import GradeOptmizerViewmodel
+from .grade_optmizer_usecase import GradeOptimizerUsecase
+from .grade_optmizer_viewmodel import GradeOptmizerViewmodel
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.controller_errors import MissingParameters, WrongTypeParameter
 from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
@@ -11,7 +11,7 @@ from src.shared.helpers.external_interfaces.http_codes import OK, BadRequest, In
 
 class GradeOptmizerController:
 
-    def __init__(self, usecase: grade_optmizer_usecase):
+    def __init__(self, usecase: GradeOptimizerUsecase):
         self.usecase = usecase
 
     def __call__(self, request: IRequest) -> IResponse:
