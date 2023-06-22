@@ -160,10 +160,19 @@ Clone the repository using template
 
 ## Contributors 💰🤝💰
 
+### Infra 🧱
 - Bruno Vilardi - [Brvilardi](https://github.com/Brvilardi) 👷‍♂️
 - Hector Guerrini - [hectorguerrini](https://github.com/hectorguerrini) 🧙‍♂️
-- João Branco - [JoaoVitorBranco](https://github.com/JoaoVitorBranco) 😎
 - Vitor Soller - [VgsStudio](https://github.com/VgsStudio) 🐱‍💻
+- Luigi Trevisan - [LuigiTrevisan](https://github.com/LuigiTrevisan) 🍄
+
+### Backend 🚪
+- João Branco - [JoaoVitorBranco](https://github.com/JoaoVitorBranco) 😎
+
+### Algorithm ➕➖
+- João Branco - [JoaoVitorBranco](https://github.com/JoaoVitorBranco) 😎
+- Pedro Mesquita - []() 💫
+
 
 ## Especial Thanks 🙏
 
