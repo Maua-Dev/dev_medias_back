@@ -8,10 +8,24 @@ O algoritmo funciona por brute force. Porém, existem algumas validações que a
 
 ### 1. Nota
 
+A classe `Nota` possui 3 atributos: `peso`, `valor` e `dominio_de_nota`. O `peso` representa o peso total daquela nota em relação à média final disciplina. O `valor` representa o quanto o aluno tirou naquela prova/trabalho. E o `dominio_de_nota` representa quais são os possíveis valores para aquela nota ([0, 0.5, 1, 1.5, ..., 9.5, 10] ou alguma sublista deste domínio maior). Esta variável é inicializada como sendo o valor da lista mencionada (armazenada em `DOMINIO_DE_NOTAS` da mesma classe). Ela serve para definir os possíveis valores de notas que aquela prova pode possuir para atingir a média desejada. Esta definição pode diminuir as possibilidades que esta nota pode ter, reduzindo o esforço computacional.
+
+Ela possui validação para os seguintes atributos:
+
+1. `valida_valor`: verifica se o este atributo recebido é `float` ou `int`; e se o valor pertence ao `DOMINIO_DE_NOTAS`;
+
+2. `valida_peso`: verifica se o peso é None (necessariamente a nota precisa ter um peso); se o peso é `float`, e se o peso está entre o seguinte intervalo: [0, 1]
+
+Além disso, ela possui alguns métodos:
+
+1. `randomiza_dominio`: pega a lista `dominio_da_nota` e a randomiza;
+
+2. `limita_dominio`: pega um valor mínimo e máximo escolhido no input, e faz uma secção da lista `dominio_da_nota`. Vale ressalta que esta lista deve ser a geral (ou seja, uma cópia de `DOMINIO_DE_NOTAS`), além de não estar randomizada. Esta validação é feita pelo método `valida_limitacao_de_dominio`;
+
+3. `restaura_dominio`: volta o domínio da nota para o original (cópia de `DOMINIO_DE_NOTAS`);
+
+4. `valida_limitacao_de_dominio`: valida se o `dominio_da_nota` está no formato original (ou seja, se ele não foi seccionado ainda); se o input `valor_máximo` realmente é maior que o input `valor_minimo`; e se o domíno já não foi randomizado.
+
 ### 2. Utils
 
 ## Lógica do algorítmo
-
-## Equacionamento
-
-$$(1)\ $$
