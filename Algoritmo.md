@@ -28,4 +28,20 @@ Além disso, ela possui alguns métodos:
 
 ### 2. Utils
 
+Esta classe tem a funcionalidade de apresentar funções que o algorítmo utiliza, como cálculo de médias, desvio padrão, e funções utilizadas no debug do código (como a exibição de uma lista de notas). Os métodos de debug não serão comentados nesta descrição, mas podem ser vistos na classe. 
+
+Os métodos que esta classe possui são:
+
+1. `media_aritimetica`: faz o cálculo da média aritimética das notas (sem considerar os pesos entre elas);
+
+2. `media`: calcula a média ponderada entre as notas, validando se as notas possuem a soma dos seus pesos igual a 1.
+
+3. `desvio_padrao`: calcula o desvio padrão entre as notas, utilizando-se do método anterior `media`;
+
+4. `distancia_entre_notas`: verifica se todas as notas distam de um valor `distancia_min` da média aritimética entre as notas (para verificar a dispersão entre as notas);
+
+5. `minimo_valor_no_dominio`: verifica qual o menor valor que a nota pode ter para ser possível com que a média desejada seja atingida. O cálculo da equação utilizada por esta função estará descrito no tópico "Lógica do algorítmo". Se o valor fornecido for menor que o menor valor mínimo de uma nota (0.0), a função retorna "0.0". Caso o valor fornecido seja maior que o maior valor que uma nota pode ter (10.0), esta função retorna "-1", indicando que é impossível encontrar uma possibilidade que a média desejada seja atingida;
+
+6. `maximo_valor_no_dominio`: verifica qual o maior valor que a nota pode ter para ser possível com que a média desejada seja atingida. O cálculo da equação utilizada por esta função estará descrito no tópico "Lógica do algorítmo". Se o valor fornecido for maior que o maior valor máximo de uma nota (10.0), a função retorna "10.0". Não há uma validação para se existe uma possibilidade do valor máximo ser menor que "0.0", uma vez que o próprio algoritmo verifica a melhor possibilidade, e encontrará que esta nota deve ser "0.0"; 
+
 ## Lógica do algorítmo
