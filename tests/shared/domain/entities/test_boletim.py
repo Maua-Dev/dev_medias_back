@@ -117,4 +117,80 @@ class Test_Boletim:
         boletim.trabalhos.quero[0].valor = 7.5
         boletim.trabalhos.quero[1].valor = 8
 
-        assert boletim.media_final() == 6.0      
+        assert boletim.media_final() == 6.0
+        
+    def test_boletim_tenho(self):
+        P1 = Nota(peso=0.12, valor=6.0)
+        T1 = Nota(peso=0.08, valor=6.0)
+        T2 = Nota(peso=0.08, valor=6.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = [T1, T2]
+
+        P2 = Nota(peso=0.12, valor=None)
+        P3 = Nota(peso=0.18, valor=None)
+        T3 = Nota(peso=0.12, valor=None)
+        P4 = Nota(peso=0.18, valor=None)
+        T4 = Nota(peso=0.12, valor=None)
+        
+        provas_que_quero = [P2, P3, P4]
+        trabalhos_que_quero = [T3, T4]
+        
+        notas_que_tenho = provas_que_tenho + trabalhos_que_tenho
+        
+        provas = ConjuntoDeNotas(quero=provas_que_quero, tenho=provas_que_tenho)
+        trabalhos = ConjuntoDeNotas(quero=trabalhos_que_quero, tenho=trabalhos_que_tenho)
+        boletim = Boletim(provas=provas, trabalhos=trabalhos)
+        
+        assert len(notas_que_tenho) == len(boletim.tenho())
+        assert all([boletim.tenho()[i] == notas_que_tenho[i] for i in range(len(notas_que_tenho))])
+        
+    def test_boletim_quero(self):
+        P1 = Nota(peso=0.12, valor=6.0)
+        T1 = Nota(peso=0.08, valor=6.0)
+        T2 = Nota(peso=0.08, valor=6.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = [T1, T2]
+
+        P2 = Nota(peso=0.12, valor=None)
+        P3 = Nota(peso=0.18, valor=None)
+        T3 = Nota(peso=0.12, valor=None)
+        P4 = Nota(peso=0.18, valor=None)
+        T4 = Nota(peso=0.12, valor=None)
+        
+        provas_que_quero = [P2, P3, P4]
+        trabalhos_que_quero = [T3, T4]
+        
+        notas_que_quero = provas_que_quero + trabalhos_que_quero
+        
+        provas = ConjuntoDeNotas(quero=provas_que_quero, tenho=provas_que_tenho)
+        trabalhos = ConjuntoDeNotas(quero=trabalhos_que_quero, tenho=trabalhos_que_tenho)
+        boletim = Boletim(provas=provas, trabalhos=trabalhos)
+        
+        assert len(notas_que_quero) == len(boletim.quero())
+        assert all([boletim.quero()[i] == notas_que_quero[i] for i in range(len(notas_que_quero))])
+        
+    def test_boletim_altera_quero(self):
+        P1 = Nota(peso=0.24, valor=1.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = []
+
+        P2 = Nota(peso=0.36, valor=None)
+        T1 = Nota(peso=0.12, valor=None)
+        T2 = Nota(peso=0.28, valor=None)
+        
+        provas_que_quero = [P2]
+        trabalhos_que_quero = [T1, T2]
+        
+        
+        provas = ConjuntoDeNotas(quero=provas_que_quero, tenho=provas_que_tenho)
+        trabalhos = ConjuntoDeNotas(quero=trabalhos_que_quero, tenho=trabalhos_que_tenho)
+        boletim = Boletim(provas=provas, trabalhos=trabalhos)
+
+        boletim.altera_quero(idx=0, valor=7.5)
+        boletim.altera_quero(idx=1, valor=7.5)
+        boletim.altera_quero(idx=2, valor=8)
+        
+        assert boletim.media_final() == 6.0

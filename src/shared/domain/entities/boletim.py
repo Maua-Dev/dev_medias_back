@@ -26,8 +26,23 @@ class Boletim(abc.ABC):
         self.trabalhos = trabalhos
         
 
-    def media_final(self):
+    def media_final(self) -> float:
         return self.provas.media() + self.trabalhos.media()
+
+    def tenho(self) -> List[Nota]:
+        return self.provas.tenho + self.trabalhos.tenho
+    
+    def quero(self) -> List[Nota]:
+        return self.provas.quero + self.trabalhos.quero
+    
+    def altera_quero(self, idx: int, valor: float) -> None:
+        if idx < 0 or idx >= len(self.quero()):
+            raise FunctionInputError("O idx deve ser um inteiro entre 0 e " + str(len(self.quero())-1))
+        if 0 <= idx and idx <= len(self.provas.quero)-1:
+            self.provas.quero[idx].valor = valor
+        else:
+            self.trabalhos.quero[idx-len(self.provas.quero)].valor = valor
+
 
     @staticmethod
     def valida_notas(notas: List[Nota]) -> bool:
