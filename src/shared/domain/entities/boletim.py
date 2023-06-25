@@ -1,67 +1,103 @@
 import abc
-from typing import List, Tuple
-from src.shared.domain.entities.conjunto_de_notas import ConjuntoDeNotas
+from typing import List
 from src.shared.domain.entities.nota import Nota
 
-from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
+from src.shared.helpers.errors.domain_errors import EntityParameterError
 from src.shared.helpers.errors.function_errors import FunctionInputError
-from src.shared.helpers.functions.utils import Utils
 
 
 class Boletim(abc.ABC):
-    provas: ConjuntoDeNotas
-    trabalhos: ConjuntoDeNotas
+    tenho: List[Nota]	
+    quero: List[Nota]
+    idx_tenho: int # idx que representa onde se iniciam os trabalhos que tenho no atributo `tenho` 
+    idx_quero: int # idx que representa onde se iniciam os trabalhos que quero no atributo `quero`
 
-    def __init__(self, provas: ConjuntoDeNotas, trabalhos: ConjuntoDeNotas):
-        if(not self.valida_notas(provas)):
-            raise EntityParameterError("Lista de provas deve ser do tipo ConjuntoDeNotas")
+    def __init__(self, provas_que_tenho: List[Nota] = [], provas_que_quero: List[Nota] = [], trabalhos_que_tenho: List[Nota] = [], trabalhos_que_quero: List[Nota] = []):
+        if not self.valida_tenho(provas_que_tenho):
+            raise EntityParameterError("Lista de provas_que_tenho deve ser do tipo List[Nota] e todas as notas devem ter valor")
+        if not self.valida_quero(provas_que_quero):
+            raise EntityParameterError("Lista de provas_que_quero deve ser do tipo List[Nota] e todas as notas devem ter valor None")
+        if not self.valida_tenho(trabalhos_que_tenho):
+            raise EntityParameterError("Lista de trabalhos_que_tenho deve ser do tipo List[Nota] e todas as notas devem ter valor")
+        if not self.valida_quero(trabalhos_que_quero):
+            raise EntityParameterError("Lista de trabalhos_que_quero deve ser do tipo List[Nota] e todas as notas devem ter valor None")
         
-        if(not self.valida_notas(trabalhos)):
-            raise EntityParameterError("Lista de trabalhos deve ser do tipo ConjuntoDeNotas")
+        self.tenho = provas_que_tenho + trabalhos_que_tenho
+        self.quero = provas_que_quero + trabalhos_que_quero
         
-        if(not self.valida_pesos(provas=provas, trabalhos=trabalhos)):
+        self.idx_tenho = len(provas_que_tenho)
+        self.idx_quero = len(provas_que_quero)       
+        
+        if(not self.valida_pesos(provas=self.provas(), trabalhos=self.trabalhos())):
             raise FunctionInputError("media", "A soma dos pesos deve ser 1")
         
-        self.provas = provas
-        self.trabalhos = trabalhos
         
 
     def media_final(self) -> float:
         return self.provas.media() + self.trabalhos.media()
 
-    def tenho(self) -> List[Nota]:
-        return self.provas.tenho + self.trabalhos.tenho
+    def provas(self) -> List[Nota]:
+        result = self.tenho[:self.idx_tenho] + self.quero[:self.idx_quero]
+        return result
     
-    def quero(self) -> List[Nota]:
-        return self.provas.quero + self.trabalhos.quero
+    def trabalhos(self) -> List[Nota]:
+        result = self.tenho[self.idx_tenho:] + self.quero[self.idx_quero:]
+        return result
     
-    def altera_quero(self, idx: int, valor: float) -> None:
-        if idx < 0 or idx >= len(self.quero()):
-            raise FunctionInputError("O idx deve ser um inteiro entre 0 e " + str(len(self.quero())-1))
-        if 0 <= idx and idx <= len(self.provas.quero)-1:
-            self.provas.quero[idx].valor = valor
-        else:
-            self.trabalhos.quero[idx-len(self.provas.quero)].valor = valor
-
+    def media_provas(self) -> float:
+        return round(sum(map(lambda x: x.valor * x.peso, self.provas())), ndigits=1)
+    
+    def media_trabalhos(self) -> float:
+        return round(sum(map(lambda x: x.valor * x.peso, self.trabalhos())), ndigits=1)
+    
+    def media_final(self) -> float:
+        return round(self.media_provas() + self.media_trabalhos(), ndigits=1)
 
     @staticmethod
-    def valida_notas(notas: List[Nota]) -> bool:
-        if type(notas) != ConjuntoDeNotas:
+    def valida_tenho(notas: List[Nota]) -> bool:
+        if type(notas) != list:
             return False
+        for nota in notas:
+            if type(nota) != Nota:
+                return False
+            if nota.valor == None:
+                return False
         return True
     
     @staticmethod
-    def valida_pesos(provas: ConjuntoDeNotas, trabalhos: ConjuntoDeNotas) -> bool:
-        pesos = round(number=sum([prova.peso for prova in provas.tenho+provas.quero]) + sum([trabalho.peso for trabalho in trabalhos.tenho+trabalhos.quero]), ndigits=2)
+    def valida_quero(notas: List[Nota]) -> bool:
+        if type(notas) != list:
+            return False
+        for nota in notas:
+            if type(nota) != Nota:
+                return False
+            if nota.valor != None:
+                return False
+        return True
+                
+    @staticmethod
+    def valida_pesos(provas: List[Nota], trabalhos: List[Nota]) -> bool:
+        pesos = round(number=sum([prova.peso for prova in provas]) + sum([trabalho.peso for trabalho in trabalhos]), ndigits=2)
         if pesos != 1.00:
             return False
         return True
     
     def __str__(self):
-        string = "Provas: [ "
-        string += self.provas.__str__() + " ]\n"
+        string = "Provas: [\nTenho: [ "
+        
+        for idx in range(self.idx_tenho - 1):
+            string += str(self.tenho[idx]) + ", "
+        string += str(self.tenho[self.idx_tenho - 1]) + " ]\nQuero: [ "
+        for idx in range(self.idx_quero - 1):
+            string += str(self.quero[idx]) + ", "
+        string += str(self.quero[self.idx_quero - 1]) + " ]\n]\n"
         
         string += "Trabalhos: [ "
-        string += self.trabalhos.__str__() + " ]\n"
+        for idx in range(self.idx_tenho, len(self.tenho) - 1):
+            string += str(self.tenho[idx]) + ", "
+        string += str(self.tenho[len(self.tenho) - 1]) + " ]\nQuero: [ "
+        for idx in range(self.idx_quero, len(self.quero) - 1):
+            string += str(self.quero[idx]) + ", "
+        string += str(self.quero[len(self.quero) - 1]) + " ]\n]\n"
         
         return string

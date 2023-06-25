@@ -1,5 +1,6 @@
 from datetime import time
 from typing import List, Dict
+from src.shared.domain.entities.boletim import Boletim
 
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.functions.utils import Utils
@@ -14,19 +15,22 @@ class Solucionador:
 
     @staticmethod
     def algoritmo(provas_que_tenho: List[float], provas_que_quero: List[float], trabalhos_que_tenho: List[float], trabalhos_que_quero: List[float],  media_desejada: float) -> List[Nota]:
-        
+        # armazenando as notas nas entidades ConjuntoDeNotas e Boletim
+        provas = ConjuntoDeNotas(quero=provas_que_quero, tenho=provas_que_tenho)
+        trabalhos = ConjuntoDeNotas(quero=trabalhos_que_quero, tenho=trabalhos_que_tenho)
+        boletim = Boletim(provas=provas, trabalhos=trabalhos)
         
         # variável que representa a quantidade de notas que quero calcular 
-        tamanho_notas_que_quero = len(provas_que_quero) + len(trabalhos_que_quero)
+        tamanho_notas_que_quero = len(boletim.quero())
 
         # lista que conterá as notas possíveis de serem retornadas
         notas_possiveis = list()
 
         # lista que contém as notas que tenho
-        notas_que_tenho = provas_que_tenho + trabalhos_que_tenho
+        notas_que_tenho = boletim.tenho()
         
         # lista que contém as notas que quero
-        notas_que_quero = provas_que_quero + trabalhos_que_quero
+        notas_que_quero = boletim.quero()
 
         # Se não for possível atingir tal nota, retornará uma lista vazia
         # ex: se o aluno escolher média 10, e tirou 0 em alguma nota, esse "if" captará
@@ -39,6 +43,7 @@ class Solucionador:
         # Verifica se existe combinações para médias maiores que a pedida,
         # mas não existem combinações para o intervalo da média desejada
         while(media_desejada + Solucionador.aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
+            
             # garantia de que os domínios estão no valor original
             for nota in notas_que_quero:
                 nota.restaura_dominio()
