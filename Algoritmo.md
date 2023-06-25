@@ -44,4 +44,5 @@ Os métodos que esta classe possui são:
 
 6. `maximo_valor_no_dominio`: verifica qual o maior valor que a nota pode ter para ser possível com que a média desejada seja atingida. O cálculo da equação utilizada por esta função estará descrito no tópico "Lógica do algorítmo". Se o valor fornecido for maior que o maior valor máximo de uma nota (10.0), a função retorna "10.0". Não há uma validação para se existe uma possibilidade do valor máximo ser menor que "0.0", uma vez que o próprio algoritmo verifica a melhor possibilidade, e encontrará que esta nota deve ser "0.0"; 
 
-## Lógica do algorítmo
+## Lógica do algoritmo
+

@@ -13,14 +13,20 @@ class Solucionador:
     aumento_range = 0  # aumento da média desejada para que o algorítmo encontre mais notas
 
     @staticmethod
-    def algoritmo(notas_que_tenho: List[Nota], notas_que_quero: List[Nota], media_desejada: float) -> List[Nota]:
+    def algoritmo(provas_que_tenho: List[float], provas_que_quero: List[float], trabalhos_que_tenho: List[float], trabalhos_que_quero: List[float],  media_desejada: float) -> List[Nota]:
         
         
-        # variável que representa o tamanho da lista `notas_que_quero`
-        tamanho_notas_que_quero = len(notas_que_quero)
+        # variável que representa a quantidade de notas que quero calcular 
+        tamanho_notas_que_quero = len(provas_que_quero) + len(trabalhos_que_quero)
 
         # lista que conterá as notas possíveis de serem retornadas
         notas_possiveis = list()
+
+        # lista que contém as notas que tenho
+        notas_que_tenho = provas_que_tenho + trabalhos_que_tenho
+        
+        # lista que contém as notas que quero
+        notas_que_quero = provas_que_quero + trabalhos_que_quero
 
         # Se não for possível atingir tal nota, retornará uma lista vazia
         # ex: se o aluno escolher média 10, e tirou 0 em alguma nota, esse "if" captará
@@ -31,14 +37,16 @@ class Solucionador:
 
 
         # Verifica se existe combinações para médias maiores que a pedida,
-        #  mas não existem combinações para o intervalo da média desejada
+        # mas não existem combinações para o intervalo da média desejada
         while(media_desejada + Solucionador.aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
             # garantia de que os domínios estão no valor original
             for nota in notas_que_quero:
                 nota.restaura_dominio()
             
             # limitando o domínio de cada nota
-            for idx, nota in enumerate(notas_que_quero):
+            for idx, nota in enumerate(
+                                       
+                                       ):
 
                 # seleciona o mínimo valor de cada nota para que seja possível calcular uma média válida
                 valor_minimo = Utils.minimo_valor_no_dominio(notas_que_tenho=notas_que_tenho,
