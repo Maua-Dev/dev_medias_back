@@ -57,7 +57,6 @@ class GradeOptmizerController:
                     fieldTypeReceived=request.data.get('media_desejada').__class__.__name__
                 )
                 
-
             combinacao_de_notas = self.usecase(
                 notas_que_tenho=notas_que_tenho,
                 notas_que_quero=notas_que_quero,

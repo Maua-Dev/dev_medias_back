@@ -13,14 +13,14 @@ class Boletim(abc.ABC):
     idx_quero: int # idx que representa onde se iniciam os trabalhos que quero no atributo `quero`
 
     def __init__(self, provas_que_tenho: List[Nota] = [], provas_que_quero: List[Nota] = [], trabalhos_que_tenho: List[Nota] = [], trabalhos_que_quero: List[Nota] = []):
-        if not self.valida_tenho(provas_que_tenho):
-            raise EntityParameterError("Lista de provas_que_tenho deve ser do tipo List[Nota] e todas as notas devem ter valor")
-        if not self.valida_quero(provas_que_quero):
-            raise EntityParameterError("Lista de provas_que_quero deve ser do tipo List[Nota] e todas as notas devem ter valor None")
-        if not self.valida_tenho(trabalhos_que_tenho):
-            raise EntityParameterError("Lista de trabalhos_que_tenho deve ser do tipo List[Nota] e todas as notas devem ter valor")
-        if not self.valida_quero(trabalhos_que_quero):
-            raise EntityParameterError("Lista de trabalhos_que_quero deve ser do tipo List[Nota] e todas as notas devem ter valor None")
+        if not self.valida_lista_de_notas(provas_que_tenho):
+            raise EntityParameterError("Lista de provas_que_tenho deve ser do tipo List[Nota]")
+        if not self.valida_lista_de_notas(provas_que_quero):
+            raise EntityParameterError("Lista de provas_que_quero deve ser do tipo List[Nota]")
+        if not self.valida_lista_de_notas(trabalhos_que_tenho):
+            raise EntityParameterError("Lista de trabalhos_que_tenho deve ser do tipo List[Nota]")
+        if not self.valida_lista_de_notas(trabalhos_que_quero):
+            raise EntityParameterError("Lista de trabalhos_que_quero deve ser do tipo List[Nota]")
         
         self.tenho = provas_que_tenho + trabalhos_que_tenho
         self.quero = provas_que_quero + trabalhos_que_quero
@@ -29,10 +29,8 @@ class Boletim(abc.ABC):
         self.idx_quero = len(provas_que_quero)       
         
         if(not self.valida_pesos(provas=self.provas(), trabalhos=self.trabalhos())):
-            raise FunctionInputError("media", "A soma dos pesos deve ser 1")
+            raise EntityParameterError("A soma dos pesos das notas passadas deve ser 1")
         
-        
-
     def media_final(self) -> float:
         return self.provas.media() + self.trabalhos.media()
 
@@ -45,16 +43,39 @@ class Boletim(abc.ABC):
         return result
     
     def media_provas(self) -> float:
+        if(self.valida_preenchimento(self.provas()) == False):
+            raise FunctionInputError("media_provas", "O valor das provas devem estar preenchidos")
         return round(sum(map(lambda x: x.valor * x.peso, self.provas())), ndigits=1)
     
     def media_trabalhos(self) -> float:
+        if(self.valida_preenchimento(self.trabalhos()) == False):
+            raise FunctionInputError("media_trabalhos", "O valor dos trabalhos devem estar preenchidos")
         return round(sum(map(lambda x: x.valor * x.peso, self.trabalhos())), ndigits=1)
     
     def media_final(self) -> float:
         return round(self.media_provas() + self.media_trabalhos(), ndigits=1)
+    
+    @staticmethod
+    def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota]) -> float:
+        boletim = Boletim(
+            provas_que_quero=quero[:idx_quero],
+            provas_que_tenho=tenho[:idx_tenho],
+            trabalhos_que_quero=quero[idx_quero:],
+            trabalhos_que_tenho=tenho[idx_tenho:]
+        )              
+        return boletim.media_final()
 
     @staticmethod
-    def valida_tenho(notas: List[Nota]) -> bool:
+    def valida_lista_de_notas(notas: List[Nota]) -> bool:
+        if type(notas) != list:
+            return False
+        for nota in notas:
+            if type(nota) != Nota:
+                return False
+        return True
+    
+    @staticmethod
+    def valida_preenchimento(notas: List[Nota]) -> bool:
         if type(notas) != list:
             return False
         for nota in notas:
@@ -64,17 +85,6 @@ class Boletim(abc.ABC):
                 return False
         return True
     
-    @staticmethod
-    def valida_quero(notas: List[Nota]) -> bool:
-        if type(notas) != list:
-            return False
-        for nota in notas:
-            if type(nota) != Nota:
-                return False
-            if nota.valor != None:
-                return False
-        return True
-                
     @staticmethod
     def valida_pesos(provas: List[Nota], trabalhos: List[Nota]) -> bool:
         pesos = round(number=sum([prova.peso for prova in provas]) + sum([trabalho.peso for trabalho in trabalhos]), ndigits=2)

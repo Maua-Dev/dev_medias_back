@@ -99,26 +99,6 @@ class Test_Boletim:
         with pytest.raises(EntityParameterError):
             Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
-    def test_boletim_provas_que_tenho_notas_com_none(self):
-        P1 = Nota(peso=0.12, valor=None)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
-        
-        provas_que_tenho = [P1]
-        trabalhos_que_tenho = [T1, T2]
-
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
-        
-        provas_que_quero = [P2, P3, P4]
-        trabalhos_que_quero = [T3, T4]
-        
-        with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
-            
     def test_boletim_provas_que_quero_nao_lista_de_notas(self):
         P1 = Nota(peso=0.12, valor=6.0)
         T1 = Nota(peso=0.08, valor=6.0)
@@ -139,26 +119,6 @@ class Test_Boletim:
         with pytest.raises(EntityParameterError):
             Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
-    def test_boletim_provas_que_quero_notas_sem_none(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
-        
-        provas_que_tenho = [P1]
-        trabalhos_que_tenho = [T1, T2]
-
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=6.0)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
-        
-        provas_que_quero = [P2, P3, P4]
-        trabalhos_que_quero = [T3, T4]
-        
-        with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
-            
     def test_boletim_trabalhos_que_tenho_nao_lista_de_notas(self):
         P1 = Nota(peso=0.12, valor=6.0)
         T1 = Nota(peso=0.08, valor=6.0)
@@ -166,25 +126,6 @@ class Test_Boletim:
         
         provas_que_tenho = [P1]
         trabalhos_que_tenho = T1
-
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
-        
-        provas_que_quero = [P2, P3, P4]
-        trabalhos_que_quero = [T3, T4]
-        
-        with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
-    def test_boletim_trabalhos_que_tenho_notas_com_none(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=None)
-        T2 = Nota(peso=0.08, valor=6.0)
-        
-        provas_que_tenho = [P1]
-        trabalhos_que_tenho = [T1, T2]
 
         P2 = Nota(peso=0.12, valor=None)
         P3 = Nota(peso=0.18, valor=None)
@@ -218,26 +159,6 @@ class Test_Boletim:
         with pytest.raises(EntityParameterError):
             Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
-    def test_boletim_trabalhos_que_quero_notas_sem_none(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
-        
-        provas_que_tenho = [P1]
-        trabalhos_que_tenho = [T1, T2]
-
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=6.0)
-        
-        provas_que_quero = [P2, P3, P4]
-        trabalhos_que_quero = [T3, T4]
-        
-        with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
-            
     def test_boletim_pesos_invalidos(self):
         P1 = Nota(peso=0.12, valor=6.0)
         T1 = Nota(peso=0.08, valor=6.0)
@@ -255,7 +176,7 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
-        with pytest.raises(FunctionInputError):
+        with pytest.raises(EntityParameterError):
             Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
     
     def test_media_final_floor(self):
@@ -469,3 +390,67 @@ class Test_Boletim:
         boletim.quero[2].valor = 8
         
         assert boletim.media_trabalhos() == 3.1
+        
+    def test_media_provas_devem_estar_preenchidas(self):
+        P1 = Nota(peso=0.12, valor=6.0)
+        T1 = Nota(peso=0.08, valor=6.0)
+        T2 = Nota(peso=0.08, valor=6.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = [T1, T2]
+
+        P2 = Nota(peso=0.12, valor=None)
+        P3 = Nota(peso=0.18, valor=None)
+        T3 = Nota(peso=0.12, valor=None)
+        P4 = Nota(peso=0.18, valor=None)
+        T4 = Nota(peso=0.12, valor=None)
+        
+        provas_que_quero = [P2, P3, P4]
+        trabalhos_que_quero = [T3, T4]
+        
+        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        
+        with pytest.raises(FunctionInputError):
+            boletim.media_provas()
+            
+    def test_media_trabalhos_devem_estar_preenchidos(self):
+        P1 = Nota(peso=0.12, valor=6.0)
+        T1 = Nota(peso=0.08, valor=6.0)
+        T2 = Nota(peso=0.08, valor=6.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = [T1, T2]
+
+        P2 = Nota(peso=0.12, valor=None)
+        P3 = Nota(peso=0.18, valor=None)
+        T3 = Nota(peso=0.12, valor=None)
+        P4 = Nota(peso=0.18, valor=None)
+        T4 = Nota(peso=0.12, valor=None)
+        
+        provas_que_quero = [P2, P3, P4]
+        trabalhos_que_quero = [T3, T4]
+        
+        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        
+        with pytest.raises(FunctionInputError):
+            boletim.media_trabalhos()
+    
+    def test_media_final_externo(self):
+        P1 = Nota(peso=0.24, valor=1.0)
+        provas_que_tenho = [P1]
+        
+        trabalhos_que_tenho = []
+        
+        P2 = Nota(peso=0.36, valor=7.5)
+        provas_que_quero = [P2]
+        
+        T1 = Nota(peso=0.12, valor=7.5)
+        T2 = Nota(peso=0.28, valor=8)
+        trabalhos_que_quero = [T1, T2]
+        
+        tenho = provas_que_tenho + trabalhos_que_tenho
+        quero = provas_que_quero + trabalhos_que_quero
+        idx_tenho = len(provas_que_tenho)
+        idx_quero = len(provas_que_quero)
+        
+        assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero) == 6.0
