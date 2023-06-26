@@ -454,3 +454,41 @@ class Test_Boletim:
         idx_quero = len(provas_que_quero)
         
         assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero) == 6.0
+        
+    def test_provas_que_quero(self):
+        P1 = Nota(peso=0.24, valor=1.0)
+        provas_que_tenho = [P1]
+        
+        trabalhos_que_tenho = []
+        
+        P2 = Nota(peso=0.36, valor=None)
+        provas_que_quero = [P2]
+        
+        T1 = Nota(peso=0.12, valor=None)
+        T2 = Nota(peso=0.28, valor=None)
+        trabalhos_que_quero = [T1, T2]
+        
+        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        
+        
+        assert len(boletim.provas_que_quero()) == len(provas_que_quero)
+        assert [boletim.provas_que_quero()[i] == provas_que_quero[i] for i in range(len(provas_que_quero))]
+        
+    def test_trabalhos_que_quero(self):
+        P1 = Nota(peso=0.24, valor=1.0)
+        provas_que_tenho = [P1]
+        
+        trabalhos_que_tenho = []
+        
+        P2 = Nota(peso=0.36, valor=None)
+        provas_que_quero = [P2]
+        
+        T1 = Nota(peso=0.12, valor=None)
+        T2 = Nota(peso=0.28, valor=None)
+        trabalhos_que_quero = [T1, T2]
+        
+        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        
+        
+        assert len(boletim.trabalhos_que_quero()) == len(trabalhos_que_quero)
+        assert [boletim.trabalhos_que_quero()[i] == trabalhos_que_quero[i] for i in range(len(trabalhos_que_quero))]

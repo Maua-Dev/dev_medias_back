@@ -42,6 +42,12 @@ class Boletim(abc.ABC):
         result = self.tenho[self.idx_tenho:] + self.quero[self.idx_quero:]
         return result
     
+    def provas_que_quero(self) -> List[Nota]:
+        return self.quero[:self.idx_quero]
+
+    def trabalhos_que_quero(self) -> List[Nota]:
+        return self.quero[self.idx_quero:]
+    
     def media_provas(self) -> float:
         if(self.valida_preenchimento(self.provas()) == False):
             raise FunctionInputError("media_provas", "O valor das provas devem estar preenchidos")
