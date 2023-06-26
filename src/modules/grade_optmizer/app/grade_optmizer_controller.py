@@ -16,39 +16,73 @@ class GradeOptmizerController:
 
     def __call__(self, request: IRequest) -> IResponse:
         try:
-            if request.data.get('notas_que_tenho') is None:
-                raise MissingParameters('notas_que_tenho')
-            if type(request.data.get('notas_que_tenho')) != list:
+            if request.data.get('provas_que_tenho') is None:
+                raise MissingParameters('provas_que_tenho')
+            if type(request.data.get('provas_que_tenho')) != list:
                 raise WrongTypeParameter(
-                    fieldName="notas_que_tenho",
+                    fieldName="provas_que_tenho",
                     fieldTypeExpected="list",
-                    fieldTypeReceived=request.data.get('user_id').__class__.__name__
+                    fieldTypeReceived=request.data.get('provas_que_tenho').__class__.__name__
                 )
-            for nota in request.data.get('notas_que_tenho'):
+            for nota in request.data.get('provas_que_tenho'):
                 if(type(nota) != dict):
-                    raise EntityError("notas_que_tenho")
+                    raise EntityError("provas_que_tenho")
                 if(nota.get('valor') == None):
                     raise EntityError("valor")
                 if(nota.get('peso') == None):
                     raise EntityError("peso")
-            notas_que_tenho = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('notas_que_tenho')]
+            provas_que_tenho = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('provas_que_tenho')]
                 
-            if request.data.get('notas_que_quero') is None:
-                raise MissingParameters('notas_que_quero')
-            if type(request.data.get('notas_que_quero')) != list:
+            if request.data.get('trabalhos_que_tenho') is None:
+                raise MissingParameters('trabalhos_que_tenho')
+            if type(request.data.get('trabalhos_que_tenho')) != list:
                 raise WrongTypeParameter(
-                    fieldName="notas_que_quero",
+                    fieldName="trabalhos_que_tenho",
                     fieldTypeExpected="list",
-                    fieldTypeReceived=request.data.get('user_id').__class__.__name__
+                    fieldTypeReceived=request.data.get('trabalhos_que_tenho').__class__.__name__
                 )
-            for nota in request.data.get('notas_que_quero'):
+            for nota in request.data.get('trabalhos_que_tenho'):
                 if(type(nota) != dict):
-                    raise EntityError("notas_que_quero")
+                    raise EntityError("trabalhos_que_tenho")
+                if(nota.get('valor') == None):
+                    raise EntityError("valor")
+                if(nota.get('peso') == None):
+                    raise EntityError("peso")
+            trabalhos_que_tenho = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('trabalhos_que_tenho')]
+                
+            if request.data.get('provas_que_quero') is None:
+                raise MissingParameters('provas_que_quero')
+            if type(request.data.get('provas_que_quero')) != list:
+                raise WrongTypeParameter(
+                    fieldName="provas_que_quero",
+                    fieldTypeExpected="list",
+                    fieldTypeReceived=request.data.get('provas_que_quero').__class__.__name__
+                )
+            for nota in request.data.get('provas_que_quero'):
+                if(type(nota) != dict):
+                    raise EntityError("provas_que_quero")
                 if(nota.get('peso') == None):
                     raise EntityError("peso")
                 if(nota.get('valor') != None):
                     raise EntityError("valor")
-            notas_que_quero = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('notas_que_quero')]    
+            provas_que_quero = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('provas_que_quero')]    
+            
+            if request.data.get('trabalhos_que_quero') is None:
+                raise MissingParameters('trabalhos_que_quero')
+            if type(request.data.get('trabalhos_que_quero')) != list:
+                raise WrongTypeParameter(
+                    fieldName="trabalhos_que_quero",
+                    fieldTypeExpected="list",
+                    fieldTypeReceived=request.data.get('trabalhos_que_quero').__class__.__name__
+                )
+            for nota in request.data.get('trabalhos_que_quero'):
+                if(type(nota) != dict):
+                    raise EntityError("trabalhos_que_quero")
+                if(nota.get('peso') == None):
+                    raise EntityError("peso")
+                if(nota.get('valor') != None):
+                    raise EntityError("valor")
+            trabalhos_que_quero = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('trabalhos_que_quero')]    
             
             if type(request.data.get('media_desejada')) not in [int, float]:
                 raise WrongTypeParameter(
@@ -58,8 +92,10 @@ class GradeOptmizerController:
                 )
                 
             combinacao_de_notas = self.usecase(
-                notas_que_tenho=notas_que_tenho,
-                notas_que_quero=notas_que_quero,
+                provas_que_tenho=provas_que_tenho,
+                trabalhos_que_tenho=trabalhos_que_tenho,
+                provas_que_quero=provas_que_quero,
+                trabalhos_que_quero=trabalhos_que_quero,
                 media_desejada=request.data.get('media_desejada')
             )
 
