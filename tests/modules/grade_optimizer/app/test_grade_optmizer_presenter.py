@@ -49,11 +49,13 @@ class Test_GradeOptmizerPresenter:
                 "timeEpoch": 1583348638390
             },
             "body": {
-                'notas_que_tenho':[
+                'provas_que_tenho':[
                     {
                         'valor':6.0,
                         'peso':0.12
-                    },
+                    }
+                ],
+                'trabalhos_que_tenho':[
                     {
                         'valor':6.0,
                         'peso':0.08
@@ -63,7 +65,7 @@ class Test_GradeOptmizerPresenter:
                         'peso':0.08
                     },
                 ],
-                'notas_que_quero':[
+                'provas_que_quero':[
                     {
                         'valor':None,
                         'peso':0.12
@@ -74,18 +76,20 @@ class Test_GradeOptmizerPresenter:
                     },
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.18
                     },
+                ],
+                'trabalhos_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.18
+                        'peso':0.12
                     },
                     {
                         'valor':None,
                         'peso':0.12
                     }
                 ],
-                'media_desejada':6.0
+                'media_desejada':6
             },
             "pathParameters": None,
             "isBase64Encoded": None,
@@ -142,11 +146,13 @@ class Test_GradeOptmizerPresenter:
                 "timeEpoch": 1583348638390
             },
             "body": {
-                'notas_que_tenho':[
+                'provas_que_tenho':[
                     {
                         'valor':6.0,
                         'peso':0.12
-                    },
+                    }
+                ],
+                'trabalhos_que_tenho':[
                     {
                         'valor':6.0,
                         'peso':0.08
@@ -156,29 +162,31 @@ class Test_GradeOptmizerPresenter:
                         'peso':0.08
                     },
                 ],
-                'notas_que_quero':[
+                'provas_que_quero':[
                     {
                         'valor':None,
                         'peso':0.12
                     },
                     {
                         'valor':None,
-                        'peso':0.18
-                    },
-                    {
-                        'valor':None,
-                        'peso':0.2
+                        'peso':0.19
                     },
                     {
                         'valor':None,
                         'peso':0.18
+                    },
+                ],
+                'trabalhos_que_quero':[
+                    {
+                        'valor':None,
+                        'peso':0.12
                     },
                     {
                         'valor':None,
                         'peso':0.12
                     }
                 ],
-                'media_desejada':6.0
+                'media_desejada':6
             },
             "pathParameters": None,
             "isBase64Encoded": None,
@@ -187,5 +195,5 @@ class Test_GradeOptmizerPresenter:
 
         response = lambda_handler(event=event, context=None)
         assert response["statusCode"] == 400
-        assert json.loads(response["body"]) == "Erro na função media: A soma dos pesos deve ser 1"
+        assert json.loads(response["body"]) == "A soma dos pesos das notas passadas deve ser 1"
   
