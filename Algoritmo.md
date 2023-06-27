@@ -44,5 +44,14 @@ Os métodos que esta classe possui são:
 
 6. `maximo_valor_no_dominio`: verifica qual o maior valor que a nota pode ter para ser possível com que a média desejada seja atingida. O cálculo da equação utilizada por esta função estará descrito no tópico "Lógica do algorítmo". Se o valor fornecido for maior que o maior valor máximo de uma nota (10.0), a função retorna "10.0". Não há uma validação para se existe uma possibilidade do valor máximo ser menor que "0.0", uma vez que o próprio algoritmo verifica a melhor possibilidade, e encontrará que esta nota deve ser "0.0"; 
 
+### Boletim
+
+O boletim possui 4 atributos: `tenho`, que representa uma lista de notas que tenho; `quero`, que representa uma lista de notas que quero; `idx_tenho` que representa o index na lista `tenho` do primeiro trabalho na lista (se for igual ao tamanho da lista representa que não tem trabalho); e `idx_quero` que tem a mesma ideia de `idx_tenho` só que para a lista `quero`. Esta classe foi criada a fim de se separar a lista de provas com a lista de trabalhos, possuindo algumas características que esta divisão necessita, como a média das provas, média dos trabalhos, entre outros. Ela foi criada justamente por uma descoberta de que o sistema que calcula a média final faz a média de provas e a média de trabalhos separadas, arrendondando elas, e após isso faz a média final.
+
+Os métodos implementados nesta classe são:
+
+1. `media_final`
+
+
 ## Lógica do algoritmo
 

@@ -31,9 +31,6 @@ class Boletim(abc.ABC):
         if(not self.valida_pesos(provas=self.provas(), trabalhos=self.trabalhos())):
             raise EntityParameterError("A soma dos pesos das notas passadas deve ser 1")
         
-    def media_final(self) -> float:
-        return self.provas.media() + self.trabalhos.media()
-
     def provas(self) -> List[Nota]:
         result = self.tenho[:self.idx_tenho] + self.quero[:self.idx_quero]
         return result
