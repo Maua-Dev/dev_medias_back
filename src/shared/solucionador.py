@@ -110,10 +110,22 @@ class Solucionador:
 
                     # lógica para verificar quais das combinações escolhidas
                     # de notas possui o menor desvio padrão
-                    for nota in range(1, len(notas_possiveis)):
-                        if (Utils.desvio_padrao(notas_possiveis[nota]) - media_desejada < Utils.desvio_padrao(melhor_combinacao) - media_desejada):
-                            
-                            melhor_combinacao = notas_possiveis[nota]
+                    for idx_nota in range(1, len(notas_possiveis)):
+                        if(round(Utils.desvio_padrao(notas_possiveis[idx_nota]), 4) == round(Utils.desvio_padrao(melhor_combinacao), 4)):
+                            if(
+                                Boletim.media_final_externo(
+                                    idx_tenho=boletim.idx_tenho,
+                                    idx_quero=boletim.idx_quero,
+                                    tenho=boletim.tenho,
+                                    quero=list(notas_possiveis[idx_nota])
+                                ) < Boletim.media_final_externo(
+                                    idx_tenho=boletim.idx_tenho,
+                                    idx_quero=boletim.idx_quero,
+                                    tenho=boletim.tenho,
+                                    quero=list(melhor_combinacao)    
+                                )
+                            ):
+                                melhor_combinacao = notas_possiveis[nota]
                             
                     # adiciona a melhor combinação no boletim e retorna-o na saída do algoritmo
                     boletim.quero = list(melhor_combinacao)
@@ -170,8 +182,8 @@ class Solucionador:
                 return boletim
 
             # primeira soma do `aumento_range`, para tornar a média desejada inteira
-            elif((media_desejada + Solucionador.ERR_MAX) % 1 != 0):
-                Solucionador.aumento_range += round(1 - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
+            elif((media_desejada + Solucionador.ERR_MAX + Solucionador.aumento_range)*2 % 1 != 0):
+                Solucionador.aumento_range += round(0.5 - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
                 
             # a primeira soma `aumento_range` já foi feita
             else:

@@ -55,7 +55,7 @@ class Utils:
         
         if(len(notas_que_quero) == 0):
             B = 0
-        else:
+        else: 
             B = ((len(notas_que_quero)+1) * (distancia_max+aumento_do_range))/(len(notas_que_quero)) # len(notas_que_quero) tira a nota `n_x`
         
         if(len(notas_que_quero) == 0):
