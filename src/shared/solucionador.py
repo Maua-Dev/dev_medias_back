@@ -64,7 +64,7 @@ class Solucionador:
                                                                 notas_que_quero=boletim.quero[:idx] + boletim.quero[
                                                                                                         idx + 1:],
                                                                 peso_especifico=nota.peso, media_desejada=media_desejada,
-                                                                erro_max=Solucionador.ERR_MAX, distancia_max=Solucionador.MENOR_DIST)
+                                                                erro_max=Solucionador.ERR_MAX+Solucionador.aumento_range, distancia_max=Solucionador.MENOR_DIST)
 
                 # limitando o domínio da nota
                 nota.limita_dominio(valor_minimo, valor_maximo)
