@@ -10,7 +10,7 @@ class DuplicatedItem(BaseError):
 
 class InvalidInput(BaseError):
     def __init__(self, parameter: str, message: str):
-        super().__init__(f'Parâmetro {parameter} está inválido: {message}')        
+        super().__init__(f'Parâmetro {parameter} está(ão) inválido(s): {message}')        
 
 class ForbiddenAction(BaseError):
     def __init__(self, message: str):

@@ -79,3 +79,6 @@ class Nota(abc.ABC):
 
     def __str__(self):
         return f"(Valor: {self.valor}, Peso: {self.peso})"
+    
+    def __eq__(self, other):
+        return self.peso == other.peso and self.valor == other.valor and self.dominio_da_nota == other.dominio_da_nota

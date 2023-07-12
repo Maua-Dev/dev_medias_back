@@ -55,7 +55,7 @@ class Utils:
         
         if(len(notas_que_quero) == 0):
             B = 0
-        else:
+        else: 
             B = ((len(notas_que_quero)+1) * (distancia_max+aumento_do_range))/(len(notas_que_quero)) # len(notas_que_quero) tira a nota `n_x`
         
         if(len(notas_que_quero) == 0):
@@ -87,4 +87,6 @@ class Utils:
         valor = math.floor(2*((A+erro_max+B*C)/(C+peso_especifico)))/2
         if valor > Nota.DOMINIO_DE_NOTAS[-1]: # 10
             return Nota.DOMINIO_DE_NOTAS[-1]
+        elif valor < Nota.DOMINIO_DE_NOTAS[0]: #0
+            return Nota.DOMINIO_DE_NOTAS[0]
         return valor

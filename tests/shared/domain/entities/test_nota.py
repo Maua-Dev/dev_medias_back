@@ -146,4 +146,10 @@ class Test_Nota:
         
         assert nota.dominio_da_nota == Nota.DOMINIO_DE_NOTAS
         
-    
+    def test_nota_eq(self):
+        nota_1 = Nota(peso=0.2, valor=10.0)
+        nota_1.limita_dominio(0.0, 5.0)
+        nota_2 = Nota(peso=0.2, valor=10.0)
+        nota_2.limita_dominio(0.0, 5.0)
+        assert nota_1 == nota_2
+        

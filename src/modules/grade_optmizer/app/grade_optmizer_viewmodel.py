@@ -1,4 +1,4 @@
-from typing import List
+from src.shared.domain.entities.boletim import Boletim
 from src.shared.domain.entities.nota import Nota
 
 
@@ -17,15 +17,27 @@ class NotaViewmodel:
         }
 
 class GradeOptmizerViewmodel:
-    user_id: int
-    name: str
-    email: str
+    boletim: Boletim
 
-    def __init__(self, combinacao_de_notas: List[Nota]):
-        self.combinacao_de_notas = combinacao_de_notas
+    def __init__(self, boletim: Boletim):
+        self.boletim = boletim
 
     def to_dict(self):
-        return {
-            'notas': [NotaViewmodel(nota).to_dict() for nota in self.combinacao_de_notas],
-            'message': "O algoritmo retornou uma combinação válida de notas" if len(self.combinacao_de_notas) > 0 else "O algoritmo não encontrou uma combinação possível de notas",
-        }
+            
+        if all([nota.valor != None for nota in self.boletim.quero]):
+            return {
+                'notas': {
+                    'provas': [NotaViewmodel(nota).to_dict() for nota in self.boletim.provas_que_quero()],
+                    'trabalhos': [NotaViewmodel(nota).to_dict() for nota in self.boletim.trabalhos_que_quero()],
+                },
+                'message': "O algoritmo retornou uma combinação válida de notas"
+            }
+        else:
+            return {
+                'notas': {
+                    'provas': [],
+                    'trabalhos': [],
+                },
+                'message': "O algoritmo não encontrou uma combinação possível de notas"
+            }
+
