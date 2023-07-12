@@ -87,4 +87,6 @@ class Utils:
         valor = math.floor(2*((A+erro_max+B*C)/(C+peso_especifico)))/2
         if valor > Nota.DOMINIO_DE_NOTAS[-1]: # 10
             return Nota.DOMINIO_DE_NOTAS[-1]
+        elif valor < Nota.DOMINIO_DE_NOTAS[0]: #0
+            return Nota.DOMINIO_DE_NOTAS[0]
         return valor
