@@ -4,9 +4,9 @@ from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.controller_errors import MissingParameters, WrongTypeParameter
 from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
 from src.shared.helpers.errors.function_errors import FunctionInputError
-from src.shared.helpers.errors.usecase_errors import InvalidInput
+from src.shared.helpers.errors.usecase_errors import CombinationNotFound, InvalidInput
 from src.shared.helpers.external_interfaces.external_interface import IRequest, IResponse
-from src.shared.helpers.external_interfaces.http_codes import OK, BadRequest, InternalServerError
+from src.shared.helpers.external_interfaces.http_codes import OK, BadRequest, InternalServerError, NotFound
 
 
 class GradeOptmizerController:
@@ -104,6 +104,9 @@ class GradeOptmizerController:
             return OK(viewmodel.to_dict())
 
         except InvalidInput as err:
+            return BadRequest(body=err.message)
+        
+        except CombinationNotFound as err:
             return BadRequest(body=err.message)
         
         except EntityParameterError as err:

@@ -4,7 +4,7 @@ from src.modules.grade_optmizer.app.grade_optmizer_usecase import GradeOptimizer
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.domain_errors import EntityParameterError
 from src.shared.helpers.errors.function_errors import FunctionInputError
-from src.shared.helpers.errors.usecase_errors import InvalidInput
+from src.shared.helpers.errors.usecase_errors import CombinationNotFound, InvalidInput
 from src.shared.helpers.functions.utils import Utils
 from src.shared.solucionador import Solucionador
 
@@ -178,10 +178,9 @@ class TestGradeOptimizerUsecase:
         usecase = GradeOptimizerUsecase()
         
         for _ in range(10):
-            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            with pytest.raises(CombinationNotFound):
+                usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
-            assert boletim_resp.quero[0].valor == None
-            assert boletim_resp.quero[1].valor == None
         
     def test_possible_grade_usecase_impossivel_de_tirar_nota_2(self):
         P1 = Nota(peso=0.2*0.6, valor=6.0)
@@ -203,10 +202,10 @@ class TestGradeOptimizerUsecase:
         usecase = GradeOptimizerUsecase()
         
         for _ in range(10):
-            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            with pytest.raises(CombinationNotFound):
+                usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
-            assert all([nota.valor == None for nota in boletim_resp.quero])
-        
+
     def test_possible_grade_usecase_uma_nota_apenas(self):
         P1 = Nota(peso=0.2, valor=6)
         P2 = Nota(peso=0.2, valor=8.0)

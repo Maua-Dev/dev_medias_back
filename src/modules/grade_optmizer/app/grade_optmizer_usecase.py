@@ -3,7 +3,7 @@ from src.shared.domain.entities.boletim import Boletim
 
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.function_errors import FunctionInputError
-from src.shared.helpers.errors.usecase_errors import InvalidInput
+from src.shared.helpers.errors.usecase_errors import CombinationNotFound, InvalidInput
 from src.shared.solucionador import Solucionador
 
 
@@ -24,5 +24,6 @@ class GradeOptimizerUsecase:
         response = Solucionador.algoritmo(boletim=boletim, media_desejada=media_desejada)
         
         if(response == None):
-            return boletim
+            raise CombinationNotFound()
+        
         return response
