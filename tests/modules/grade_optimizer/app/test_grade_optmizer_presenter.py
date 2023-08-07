@@ -170,7 +170,7 @@ class Test_GradeOptmizerPresenter:
                     {
                         'valor':None,
                         'peso':0.18
-                    },
+                    }, 
                     {
                         'valor':None,
                         'peso':0.18
