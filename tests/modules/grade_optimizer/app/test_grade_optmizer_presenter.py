@@ -194,7 +194,7 @@ class Test_GradeOptmizerPresenter:
         }
 
         response = lambda_handler(event=event, context=None)
-        assert response["statusCode"] == 400
+        assert response["statusCode"] == 404
         assert json.loads(response["body"]) == "O algoritmo não encontrou uma combinação possível de notas"
         
     def test_grade_optmizer_presenter_bad_request(self):

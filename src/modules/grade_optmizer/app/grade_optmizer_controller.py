@@ -107,7 +107,7 @@ class GradeOptmizerController:
             return BadRequest(body=err.message)
         
         except CombinationNotFound as err:
-            return BadRequest(body=err.message)
+            return NotFound(body=err.message)
         
         except EntityParameterError as err:
             return BadRequest(body=err.message)
