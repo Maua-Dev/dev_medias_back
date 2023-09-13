@@ -170,7 +170,7 @@ class Test_GradeOptmizerPresenter:
                     {
                         'valor':None,
                         'peso':0.18
-                    },
+                    }, 
                     {
                         'valor':None,
                         'peso':0.18
@@ -194,8 +194,8 @@ class Test_GradeOptmizerPresenter:
         }
 
         response = lambda_handler(event=event, context=None)
-        assert response["statusCode"] == 200
-        assert json.loads(response["body"])["message"] == "O algoritmo não encontrou uma combinação possível de notas"
+        assert response["statusCode"] == 404
+        assert json.loads(response["body"]) == "O algoritmo não encontrou uma combinação possível de notas"
         
     def test_grade_optmizer_presenter_bad_request(self):
         event = {

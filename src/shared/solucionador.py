@@ -7,9 +7,9 @@ from src.shared.helpers.functions.utils import Utils
 
 
 class Solucionador:
-    NOTAS_TOTAIS = 200  # quantidade de notas que o programa escolherá e parará ao encontrá-los
-    MENOR_DIST = 3  # menor distância entre notas escolhidas e a média aritimética entre elas
-    # para que sejam escolhidas pelo algorítmo
+    NOTAS_TOTAIS = 100  # quantidade de notas que o programa escolherá e parará ao encontrá-los
+    MENOR_DIST = 1.5  # menor distância entre notas escolhidas e a média aritimética entre elas
+                    # para que sejam escolhidas pelo algorítmo
     ERR_MAX = 0.04  # erro máximo permitido entre a média das notas escolhidas e a média desejada
     aumento_range = 0  # aumento da média desejada para que o algorítmo encontre mais notas
 

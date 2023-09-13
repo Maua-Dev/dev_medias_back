@@ -15,4 +15,8 @@ class InvalidInput(BaseError):
 class ForbiddenAction(BaseError):
     def __init__(self, message: str):
         super().__init__(f'That action is forbidden for this {message}')
+        
+class CombinationNotFound(BaseError):
+    def __init__(self):
+        super().__init__(f'O algoritmo não encontrou uma combinação possível de notas')
 

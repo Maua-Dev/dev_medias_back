@@ -10,7 +10,7 @@ from src.shared.solucionador import Solucionador
 
 class TestGradeOptimizerController:
 
-    def test_possible_grade_controller(self):
+    def test_possible_grade_controller_1(self):
         request = HttpRequest(body={
             'provas_que_tenho':[
                 {
@@ -53,6 +53,38 @@ class TestGradeOptimizerController:
                 }
             ],
             'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        response = controller(request=request)
+
+        assert response.status_code == 200
+        assert response.body["message"] == "O algoritmo retornou uma combinação válida de notas"
+
+    def test_possible_grade_controller_2(self):
+        request = HttpRequest(body={
+            "provas_que_tenho":[
+                {"valor":6,"peso":0.175},
+                {"valor":4,"peso":0.175}
+            ],
+            "provas_que_quero":[
+                {"peso":0.175},{"peso":0.175}
+            ],
+            "trabalhos_que_tenho":[
+                {"valor":6,"peso":0.0375},
+                {"valor":8.5,"peso":0.0375}
+            ],
+            "trabalhos_que_quero":[
+                {"peso":0.0375},
+                {"peso":0.0375},
+                {"peso":0.0375},
+                {"peso":0.0375},
+                {"peso":0.0375},
+                {"peso":0.0375}
+            ],
+            "media_desejada":6
         })
 
         usecase = GradeOptimizerUsecase()

@@ -4,7 +4,7 @@ from src.modules.grade_optmizer.app.grade_optmizer_usecase import GradeOptimizer
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.domain_errors import EntityParameterError
 from src.shared.helpers.errors.function_errors import FunctionInputError
-from src.shared.helpers.errors.usecase_errors import InvalidInput
+from src.shared.helpers.errors.usecase_errors import CombinationNotFound, InvalidInput
 from src.shared.helpers.functions.utils import Utils
 from src.shared.solucionador import Solucionador
 
@@ -34,7 +34,6 @@ class TestGradeOptimizerUsecase:
 
         for _ in range(10):
             boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
-
             assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
 
     def test_possible_grade_usecase_2(self):
@@ -101,8 +100,7 @@ class TestGradeOptimizerUsecase:
 
             assert boletim_resp.quero[0].valor == 10.0
             assert boletim_resp.quero[1].valor == 10.0
-            
-            
+                  
     def test_possible_grade_usecase_5(self):
         P1 = Nota(peso=0.2, valor=6.0)
         P2 = Nota(peso=0.2, valor=8.0)
@@ -144,6 +142,30 @@ class TestGradeOptimizerUsecase:
             boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
             assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
+    
+    def test_possible_grade_usecase_7(self):
+        P1 = Nota(peso=0.15, valor=6.0)
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = []
+
+        P2 = Nota(peso=0.15, valor=5.0)
+        P3 = Nota(peso=0.15, valor=None)
+        P4 = Nota(peso=0.15, valor=None)
+        provas_que_quero = [P2, P3, P4]
+        
+        T1 = Nota(peso=0.1, valor=None)
+        T2 = Nota(peso=0.1, valor=None)
+        T3 = Nota(peso=0.1, valor=None)
+        T4 = Nota(peso=0.1, valor=None)
+        trabalhos_que_quero = [T1, T2, T3, T4]
+        
+        media_desejada = 6
+
+        usecase = GradeOptimizerUsecase()
+
+        for _ in range(10):
+            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
 
     def test_possible_grade_usecase_nenhuma_nota_pedida(self):
         P1 = Nota(peso=0.12, valor=6.0)
@@ -178,11 +200,9 @@ class TestGradeOptimizerUsecase:
         usecase = GradeOptimizerUsecase()
         
         for _ in range(10):
-            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
-
-            assert boletim_resp.quero[0].valor == None
-            assert boletim_resp.quero[1].valor == None
-        
+            with pytest.raises(CombinationNotFound):
+                usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+ 
     def test_possible_grade_usecase_impossivel_de_tirar_nota_2(self):
         P1 = Nota(peso=0.2*0.6, valor=6.0)
         T1 = Nota(peso=0.08, valor=6.0)
@@ -203,10 +223,9 @@ class TestGradeOptimizerUsecase:
         usecase = GradeOptimizerUsecase()
         
         for _ in range(10):
-            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            with pytest.raises(CombinationNotFound):
+                usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
-            assert all([nota.valor == None for nota in boletim_resp.quero])
-        
     def test_possible_grade_usecase_uma_nota_apenas(self):
         P1 = Nota(peso=0.2, valor=6)
         P2 = Nota(peso=0.2, valor=8.0)
