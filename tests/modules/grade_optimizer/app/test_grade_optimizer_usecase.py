@@ -169,7 +169,7 @@ class TestGradeOptimizerUsecase:
     
     def test_possible_grade_usecase_8(self):
         provas_que_tenho = []
-        
+    
         T1 = Nota(peso=0.234375, valor=7.5)
         T2 = Nota(peso=0.234375, valor=8.5)
         trabalhos_que_tenho = [T1, T2]
