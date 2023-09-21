@@ -1,3 +1,4 @@
+import traceback
 from .grade_optmizer_usecase import GradeOptimizerUsecase
 from .grade_optmizer_viewmodel import GradeOptmizerViewmodel
 from src.shared.domain.entities.nota import Nota
@@ -125,4 +126,5 @@ class GradeOptmizerController:
             return BadRequest(body=err.message)
 
         except Exception as err:
+            traceback.print_exc()
             return InternalServerError(body=err.args[0])

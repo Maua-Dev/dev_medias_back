@@ -20,6 +20,7 @@ class Solucionador:
 
         # lista que conterá as notas possíveis de serem retornadas
         notas_possiveis = list()
+        print(f"Tamanho de notas_possiveis variable: {len(notas_possiveis)}")
 
         # Se não for possível atingir tal nota, retornará uma lista vazia
         # ex: se o aluno escolher média 10, e tirou 0 em alguma nota, esse "if" captará
@@ -125,7 +126,7 @@ class Solucionador:
                                     quero=list(melhor_combinacao)    
                                 )
                             ):
-                                melhor_combinacao = notas_possiveis[nota]
+                                melhor_combinacao = notas_possiveis[idx_nota]
                             
                     # adiciona a melhor combinação no boletim e retorna-o na saída do algoritmo
                     boletim.quero = list(melhor_combinacao)
