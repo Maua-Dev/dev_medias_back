@@ -200,6 +200,26 @@ class Test_Boletim:
         
         assert boletim.media_final() == 6.0
         
+    def test_media_final_floor(self):
+        
+        
+        P1 = Nota(peso=0.2*0.5, valor=8)
+        P2 = Nota(peso=0.2*0.5, valor=8)
+        P3 = Nota(peso=0.3*0.5, valor=10)
+        P4 = Nota(peso=0.3*0.5, valor=10)
+        provas_que_tenho = [P1, P2, P3, P4]
+        provas_que_quero = []
+        
+        T1 = Nota(peso=0.5*0.5, valor=10)
+        T2 = Nota(peso=0.5*0.5, valor=10)
+        trabalhos_que_tenho = [T1, T2]
+        trabalhos_que_quero = []
+        
+        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        
+        
+        assert boletim.media_final() == 9.6
+        
     def test_media_final_ceil(self):
         P1 = Nota(peso=0.24, valor=4)
         provas_que_tenho = [P1]
