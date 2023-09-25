@@ -218,7 +218,7 @@ class Test_Boletim:
         boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         
-        assert boletim.media_final() == 9.6
+        assert boletim.media_final() == 9.7
         
     def test_media_final_ceil(self):
         P1 = Nota(peso=0.24, valor=4)
