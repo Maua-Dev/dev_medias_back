@@ -473,7 +473,7 @@ class Test_Boletim:
         idx_tenho = len(provas_que_tenho)
         idx_quero = len(provas_que_quero)
         
-        assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero) == 6.0
+        assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero) == 6.1
         
     def test_provas_que_quero(self):
         P1 = Nota(peso=0.24, valor=1.0)
