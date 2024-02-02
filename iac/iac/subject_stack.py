@@ -52,4 +52,4 @@ class SubjectStack(Construct):
                                                                              )
 
         cfn_distribution = cloudFrontWebDistribution.node.default_child
-        cfn_distribution.add_property_override('DistributionConfig.Origins.0.OriginAccessIdentity', oac.get_att('Id'))
+        cfn_distribution.add_property_override('DistributionConfig.Origins.0.OriginAccessControlId', oac.get_att('Id'))
