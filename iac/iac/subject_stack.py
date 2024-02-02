@@ -6,6 +6,7 @@ from aws_cdk import (
     aws_s3,
     RemovalPolicy,
     aws_iam as iam, aws_cloudfront,
+    aws_cloudfront_origins
 )
 
 
@@ -28,23 +29,34 @@ class SubjectStack(Construct):
             principals=[iam.AnyPrincipal()]
         ))
 
-        self.cloudfront = aws_cloudfront.CloudFrontWebDistribution(self, "SubjectCloudFront",
-                                                                   origin_configs=[
-                                                                       aws_cloudfront.SourceConfiguration(
-                                                                           s3_origin_source=aws_cloudfront.S3OriginConfig(
-                                                                               s3_bucket_source=self.bucket
-                                                                           ),
-                                                                           behaviors=[
-                                                                               aws_cloudfront.Behavior(
-                                                                                   is_default_behavior=True
-                                                                               )
-                                                                           ]
-                                                                       )
-                                                                   ]
-                                                                   )
+        oac = aws_cloudfront.CfnOriginAccessControl(self, "OAC", origin_access_control_config={
+            "name": f"DevMedias Subject Bucket OAC {self.github_ref}",
+            "originAccessControlOriginType": "s3",
+            "signingBehavior": "always",
+            "signingProtocol": "sigv4"
+        })
 
-        self.cloudfront.add_to_resource_policy(iam.PolicyStatement(
-            actions=["s3:GetObject"],
-            resources=[f"{self.bucket.bucket_arn}/*"],
-            principals=[iam.AnyPrincipal()]
-        ))
+        aws_cloudfront.CfnDistribution(self, "CDN", distribution_config={
+            "comment": f"DevMedias Subject Bucket CDN {self.github_ref}",
+            "origins": [
+                {
+                    "domainName": self.bucket.bucket_domain_name,
+                    "id": "s3-origin",
+                    "originPath": "",
+                    "s3OriginConfig": {
+                        "originAccessIdentity": f"origin-access-identity/cloudfront/{oac.ref}"
+                    }
+                }
+            ],
+            "defaultCacheBehavior": {
+                "targetOriginId": "s3-origin",
+                "viewerProtocolPolicy": "redirect-to-https",
+                "allowedMethods": ["GET", "HEAD"],
+                "cachedMethods": ["GET", "HEAD"],
+                "compress": True,
+                "minTtl": 0,
+                "maxTtl": 86400,
+                "defaultTtl": 3600
+            },
+            "enabled": True
+        })
