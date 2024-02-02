@@ -23,12 +23,6 @@ class SubjectStack(Construct):
         self.bucket = aws_s3.Bucket(self, "SubjectBucket", block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
                                     removal_policy=REMOVAL_POLICY)
 
-        self.bucket.add_to_resource_policy(iam.PolicyStatement(
-            actions=["s3:GetObject"],
-            resources=[f"{self.bucket.bucket_arn}/*"],
-            principals=[iam.AnyPrincipal()]
-        ))
-
         oac = aws_cloudfront.CfnOriginAccessControl(self, "OAC", origin_access_control_config={
             "name": f"DevMedias Subject Bucket OAC {self.github_ref}",
             "originAccessControlOriginType": "s3",
@@ -53,3 +47,11 @@ class SubjectStack(Construct):
 
         cfn_distribution = cloudFrontWebDistribution.node.default_child
         cfn_distribution.add_property_override('DistributionConfig.Origins.0.OriginAccessControlId', oac.get_att('Id'))
+
+        self.bucket.add_to_resource_policy(iam.PolicyStatement(
+            actions=["s3:GetObject"],
+            resources=[f"arn:aws:s3:::{self.bucket.bucket_name}/*"],
+            principals=[iam.ServicePrincipal(
+                f"cloudfront.amazonaws.com"
+            )],
+        ))
