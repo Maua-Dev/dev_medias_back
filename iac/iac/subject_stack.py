@@ -14,23 +14,24 @@ class SubjectStack(Construct):
 
     def __init__(self, scope: Construct, **kwargs) -> None:
         super().__init__(scope, "SubjectStack")
-        self.github_ref = os.environ.get("GITHUB_REF")
+        self.github_ref_name = os.environ.get("GITHUB_REF_NAME")
         self.aws_region = os.environ.get("AWS_REGION")
         self.aws_account_id = os.environ.get("AWS_ACCOUNT_ID")
 
-        REMOVAL_POLICY = RemovalPolicy.RETAIN if 'prod' in self.github_ref else RemovalPolicy.DESTROY
+        REMOVAL_POLICY = RemovalPolicy.RETAIN if 'prod' in self.github_ref_name else RemovalPolicy.DESTROY
 
         self.bucket = aws_s3.Bucket(self, "SubjectBucket", block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
                                     removal_policy=REMOVAL_POLICY)
 
         oac = aws_cloudfront.CfnOriginAccessControl(self, "OAC", origin_access_control_config={
-            "name": f"DevMedias Subject Bucket OAC {self.github_ref}",
+            "name": f"DevMedias Subject Bucket OAC {self.github_ref_name}",
             "originAccessControlOriginType": "s3",
             "signingBehavior": "always",
             "signingProtocol": "sigv4"
         })
 
         cloudFrontWebDistribution = aws_cloudfront.CloudFrontWebDistribution(self, "CloudFrontWebDistribution",
+                                                                             comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
                                                                              origin_configs=[
                                                                                  aws_cloudfront.SourceConfiguration(
                                                                                      s3_origin_source=aws_cloudfront.S3OriginConfig(
