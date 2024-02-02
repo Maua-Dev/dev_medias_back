@@ -31,6 +31,7 @@ class SubjectStack(Construct):
         })
 
         cloudFrontWebDistribution = aws_cloudfront.CloudFrontWebDistribution(self, "CloudFrontWebDistribution",
+                                                                             comment=f"DevMedias Subject S3 CDN {self.github_ref}",
                                                                              origin_configs=[
                                                                                  aws_cloudfront.SourceConfiguration(
                                                                                      s3_origin_source=aws_cloudfront.S3OriginConfig(
