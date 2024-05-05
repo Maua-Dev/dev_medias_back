@@ -11,6 +11,8 @@ class Solucionador:
     MENOR_DIST = 1.5  # menor distância entre notas escolhidas e a média aritimética entre elas
                     # para que sejam escolhidas pelo algorítmo
     ERR_MAX = 0.04  # erro máximo permitido entre a média das notas escolhidas e a média desejada
+    PRIMEIRO_PASSO = 0.5  # primeiro passo para aumentar o range de média desejada
+    PASSO = 0.5 # passo para aumentar o range de média desejada
     aumento_range = 0  # aumento da média desejada para que o algorítmo encontre mais notas
 
     @staticmethod
@@ -184,11 +186,11 @@ class Solucionador:
 
             # primeira soma do `aumento_range`, para tornar a média desejada inteira
             elif((media_desejada + Solucionador.ERR_MAX + Solucionador.aumento_range)*2 % 1 != 0):
-                Solucionador.aumento_range += round(0.5 - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
+                Solucionador.aumento_range += round(Solucionador.PRIMEIRO_PASSO - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
                 
             # a primeira soma `aumento_range` já foi feita
             else:
-                Solucionador.aumento_range += 0.5
+                Solucionador.aumento_range += Solucionador.PASSO
                 
         # se não encontrou nenhuma nota, retorna uma lista vazia
         return None
