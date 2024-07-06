@@ -1,6 +1,6 @@
 import os
 from aws_cdk import (
-    Stack,
+    Stack
 )
 from constructs import Construct
 
@@ -35,17 +35,17 @@ class IacStack(Stack):
         {
             "allow_origins": Cors.ALL_ORIGINS,
             "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": Cors.DEFAULT_HEADERS
+            "allow_headers": ["*"]
         }
                                                                )
-        if 'prod' in self.github_ref_name:
-            stage = 'PROD'
+        if "prod" in self.github_ref_name:
+            stage = "PROD"
 
-        elif 'homolog' in self.github_ref_name:
-            stage = 'HOMOLOG'
+        elif "homolog" in self.github_ref_name:
+            stage = "HOMOLOG"
 
         else:
-            stage = 'DEV'
+            stage = "DEV"
 
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
