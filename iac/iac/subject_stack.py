@@ -38,9 +38,46 @@ class SubjectStack(Construct):
                                                                                          s3_bucket_source=self.bucket,
                                                                                      ),
                                                                                      behaviors=[aws_cloudfront.Behavior(
-                                                                                         is_default_behavior=True)]
+                                                                                         is_default_behavior=True,
+                                                                                         compress=True,
+                                                                                         allowed_methods=aws_cloudfront.CloudFrontAllowedMethods.ALL,
+                                                                                         viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                                                                                         response_headers_policy=aws_cloudfront.ResponseHeadersPolicy(
+                                                                                             "ResponseHeadersPolicy",
+                                                                                             cors_behavior=aws_cloudfront.ResponseHeadersCorsBehavior(
+                                                                                                 access_control_allow_origins=[
+                                                                                                     "*"
+                                                                                                 ],
+                                                                                                 access_control_allow_methods=[
+                                                                                                     "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"
+                                                                                                 ],
+                                                                                                 access_control_allow_headers=[
+                                                                                                     "*"
+                                                                                                 ],
+                                                                                                 origin_override=True
+                                                                                             ),
+                                                                                             custom_headers_behavior=aws_cloudfront.ResponseCustomHeadersBehavior(
+                                                                                                 custom_headers=[
+                                                                                                     aws_cloudfront.ResponseCustomHeader(
+                                                                                                         header="Access-Control-Allow-Origin",
+                                                                                                         value="*",
+                                                                                                         override=True
+                                                                                                     ),
+                                                                                                     aws_cloudfront.ResponseCustomHeader(
+                                                                                                         header="Access-Control-Allow-Methods",
+                                                                                                         value="GET, POST, PUT, DELETE, OPTIONS",
+                                                                                                         override=True
+                                                                                                     ),
+                                                                                                     aws_cloudfront.ResponseCustomHeader(
+                                                                                                         header="Access-Control-Allow-Headers",
+                                                                                                         value="*",
+                                                                                                         override=True
+                                                                                                     ),
+                                                                                                 ]
+                                                                                             )
+                                                                                         )
+                                                                                    )]
                                                                                  )
-
                                                                              ],
                                                                              price_class=aws_cloudfront.PriceClass.PRICE_CLASS_ALL,
                                                                              viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
