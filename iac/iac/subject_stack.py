@@ -54,6 +54,7 @@ class SubjectStack(Construct):
                                                                                                  access_control_allow_headers=[
                                                                                                      "*"
                                                                                                  ],
+                                                                                                 access_control_allow_credentials=False,
                                                                                                  origin_override=True
                                                                                              ),
                                                                                              custom_headers_behavior=aws_cloudfront.ResponseCustomHeadersBehavior(
