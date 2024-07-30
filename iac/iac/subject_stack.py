@@ -35,7 +35,6 @@ class SubjectStack(Construct):
                 access_control_allow_origins=["*"],
                 access_control_allow_methods=["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
                 access_control_allow_headers=["*"],
-                access_control_max_age=aws_cloudfront.Duration.seconds(600),
                 access_control_allow_credentials=False,
                 origin_override=True
             ),
