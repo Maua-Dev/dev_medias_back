@@ -1,19 +1,21 @@
 import os
 
 from constructs import Construct
-
 from aws_cdk import (
     aws_s3,
     RemovalPolicy,
-    aws_iam as iam, aws_cloudfront,
-    aws_cloudfront_origins
+    aws_iam as iam,
+    aws_cloudfront,
+    aws_cloudfront_origins,
+    Stack
 )
+from aws_cdk import App
 
 
-class SubjectStack(Construct):
+class SubjectStack(Stack):
 
-    def __init__(self, scope: Construct, **kwargs) -> None:
-        super().__init__(scope, "SubjectStack")
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
         self.github_ref_name = os.environ.get("GITHUB_REF_NAME")
         self.aws_region = os.environ.get("AWS_REGION")
         self.aws_account_id = os.environ.get("AWS_ACCOUNT_ID")
@@ -30,55 +32,17 @@ class SubjectStack(Construct):
             "signingProtocol": "sigv4"
         })
 
-        response_headers_policy = aws_cloudfront.ResponseHeadersPolicy(self, "ResponseHeadersPolicy",
-            cors_behavior=aws_cloudfront.ResponseHeadersCorsBehavior(
-                access_control_allow_origins=["*"],
-                access_control_allow_methods=["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
-                access_control_allow_headers=["*"],
-                access_control_allow_credentials=False,
-                origin_override=True
-            ),
-            custom_headers_behavior=aws_cloudfront.ResponseCustomHeadersBehavior(
-                custom_headers=[
-                    aws_cloudfront.ResponseCustomHeader(
-                        header="Access-Control-Allow-Origin",
-                        value="*",
-                        override=True
-                    ),
-                    aws_cloudfront.ResponseCustomHeader(
-                        header="Access-Control-Allow-Methods",
-                        value="GET, POST, PUT, DELETE, OPTIONS",
-                        override=True
-                    ),
-                    aws_cloudfront.ResponseCustomHeader(
-                        header="Access-Control-Allow-Headers",
-                        value="*",
-                        override=True
-                    ),
-                ]
-            )
-        )
-
-        cloudFrontWebDistribution = aws_cloudfront.CloudFrontWebDistribution(self, "CloudFrontWebDistribution",
-                                                                             comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
-                                                                             origin_configs=[
-                                                                                 aws_cloudfront.SourceConfiguration(
-                                                                                     s3_origin_source=aws_cloudfront.S3OriginConfig(
-                                                                                         s3_bucket_source=self.bucket,
-                                                                                     ),
-                                                                                     behaviors=[aws_cloudfront.Behavior(
-                                                                                         is_default_behavior=True,
-                                                                                         compress=True,
-                                                                                         allowed_methods=aws_cloudfront.CloudFrontAllowedMethods.ALL,
-                                                                                         cached_methods=aws_cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD_OPTIONS,
-                                                                                         viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                                                                                         response_headers_policy=response_headers_policy
-                                                                                     )]
-                                                                                 )
-                                                                             ],
-                                                                             price_class=aws_cloudfront.PriceClass.PRICE_CLASS_ALL,
-                                                                             viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                                                                             )
+        cloudFrontWebDistribution = aws_cloudfront.Distribution(self, "CloudFrontWebDistribution",
+                                                                default_behavior=aws_cloudfront.BehaviorOptions(
+                                                                    origin=aws_cloudfront_origins.S3Origin(self.bucket),
+                                                                    allowed_methods=aws_cloudfront.AllowedMethods.ALLOW_ALL,
+                                                                    viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                                                                    response_headers_policy=aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS
+                                                                ),
+                                                                comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
+                                                                price_class=aws_cloudfront.PriceClass.PRICE_CLASS_ALL,
+                                                                default_root_object="index.html"
+                                                                )
 
         cfn_distribution = cloudFrontWebDistribution.node.default_child
         cfn_distribution.add_property_override('DistributionConfig.Origins.0.OriginAccessControlId', oac.get_att('Id'))
@@ -90,3 +54,8 @@ class SubjectStack(Construct):
                 f"cloudfront.amazonaws.com"
             )],
         ))
+
+
+app = App()
+SubjectStack(app, "SubjectStack")
+app.synth()
