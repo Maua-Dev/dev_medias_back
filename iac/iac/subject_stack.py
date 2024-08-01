@@ -30,35 +30,6 @@ class SubjectStack(Construct):
             "signingProtocol": "sigv4"
         })
 
-        response_headers_policy = aws_cloudfront.ResponseHeadersPolicy(self, "ResponseHeadersPolicy",
-            cors_behavior=aws_cloudfront.ResponseHeadersCorsBehavior(
-                access_control_allow_origins=["*"],
-                access_control_allow_methods=["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
-                access_control_allow_headers=["*"],
-                access_control_allow_credentials=False,
-                origin_override=True
-            ),
-            custom_headers_behavior=aws_cloudfront.ResponseCustomHeadersBehavior(
-                custom_headers=[
-                    aws_cloudfront.ResponseCustomHeader(
-                        header="Access-Control-Allow-Origin",
-                        value="*",
-                        override=True
-                    ),
-                    aws_cloudfront.ResponseCustomHeader(
-                        header="Access-Control-Allow-Methods",
-                        value="GET, POST, PUT, DELETE, OPTIONS",
-                        override=True
-                    ),
-                    aws_cloudfront.ResponseCustomHeader(
-                        header="Access-Control-Allow-Headers",
-                        value="*",
-                        override=True
-                    ),
-                ]
-            )
-        )
-
         cloudFrontWebDistribution = aws_cloudfront.CloudFrontWebDistribution(self, "CloudFrontWebDistribution",
                                                                              comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
                                                                              origin_configs=[
@@ -72,7 +43,6 @@ class SubjectStack(Construct):
                                                                                          allowed_methods=aws_cloudfront.CloudFrontAllowedMethods.ALL,
                                                                                          cached_methods=aws_cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD_OPTIONS,
                                                                                          viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                                                                                         response_headers_policy=response_headers_policy
                                                                                      )]
                                                                                  )
                                                                              ],
