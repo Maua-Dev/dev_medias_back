@@ -94,9 +94,9 @@ class SubjectStack(Construct):
             comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
             origin_request_policy_name="CORS-S3Origin",
             header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
-                "Origin",
-                "Access-Control-Request-Headers",
-                "Access-Control-Request-Method"
+                "origin",
+                "access-control-request-headers",
+                "access-control-request-method"
             )
         )
 
