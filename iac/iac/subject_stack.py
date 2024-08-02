@@ -61,7 +61,7 @@ class SubjectStack(Construct):
                                                  enable_accept_encoding_brotli=True,
                                                  enable_accept_encoding_gzip=True)
         
-        cloudFrontWebDistribution.add_property_override("DistributionConfig.DefaultCacheBehavior.CachePolicyId", cachePolicy.cache_policy_id)        
+        cfn_distribution.add_property_override("DistributionConfig.DefaultCacheBehavior.CachePolicyId", cachePolicy.cache_policy_id)        
 
         self.bucket.add_to_resource_policy(iam.PolicyStatement(
             actions=["s3:GetObject"],
