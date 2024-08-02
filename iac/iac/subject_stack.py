@@ -71,8 +71,10 @@ class SubjectStack(Construct):
             oac.get_att('Id')
         )
 
+        cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+
         cachePolicy = aws_cloudfront.CachePolicy(
-            self, "CachePolicy",
+            self, cache_policy_id,
             cache_policy_name="Managed-CachingOptimized",
             comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
@@ -87,11 +89,11 @@ class SubjectStack(Construct):
             cachePolicy.cache_policy_id
         )
 
-        policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+        origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
 
         originRequestPolicy = aws_cloudfront.OriginRequestPolicy(
             self,
-            policy_id,
+            origin_request_policy_id,
             comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
             origin_request_policy_name="CORS-S3Origin",
             header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
