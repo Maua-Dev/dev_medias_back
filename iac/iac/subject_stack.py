@@ -6,8 +6,7 @@ from aws_cdk import (
     Duration,
     aws_s3,
     RemovalPolicy,
-    aws_iam as iam, aws_cloudfront,
-    aws_cloudfront_origins
+    aws_iam as iam, aws_cloudfront
 )
 
 
@@ -74,11 +73,13 @@ class SubjectStack(Construct):
 
         cachePolicy = aws_cloudfront.CachePolicy(
             self, "CachePolicy",
-            default_ttl=Duration.seconds(86400),
-            max_ttl=Duration.days(365),
+            cache_policy_name="Managed-CachingOptimized",
+            comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
-            enable_accept_encoding_brotli=True,
-            enable_accept_encoding_gzip=True
+            max_ttl=Duration.days(365),
+            default_ttl=Duration.seconds(86400),
+            enable_accept_encoding_gzip=True,
+            enable_accept_encoding_brotli=True
         )
 
         cfn_distribution.add_property_override(
@@ -86,17 +87,14 @@ class SubjectStack(Construct):
             cachePolicy.cache_policy_id
         )
 
-        policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
-
         originRequestPolicy = aws_cloudfront.OriginRequestPolicy(
             self,
-            policy_id,
-            comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
             origin_request_policy_name="CORS-S3Origin",
+            comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
             header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
-                "origin",
-                "access-control-request-headers",
-                "access-control-request-method"
+                "Origin",
+                "Access-Control-Request-Headers",
+                "Access-Control-Request-Method"
             )
         )
 
