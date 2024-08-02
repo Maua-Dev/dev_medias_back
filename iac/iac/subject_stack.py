@@ -55,12 +55,6 @@ class SubjectStack(Construct):
         cfn_distribution.add_property_override('DistributionConfig.Origins.0.OriginAccessControlId', oac.get_att('Id'))
 
         cachePolicy = aws_cloudfront.CachePolicy(self, "CachePolicy",
-                                                 header_behavior=aws_cloudfront.CacheHeaderBehavior(
-                                                     allow_list=["Accept-Encoding"]),
-                                                 query_string_behavior=aws_cloudfront.CacheQueryStringBehavior(
-                                                     query_string_behavior="none"),
-                                                 cookie_behavior=aws_cloudfront.CacheCookieBehavior(
-                                                     cookie_behavior="none"),
                                                  default_ttl=Duration.seconds(86400),
                                                  max_ttl=Duration.days(365),
                                                  min_ttl=Duration.seconds(1),
