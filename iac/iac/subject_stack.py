@@ -3,6 +3,7 @@ import os
 from constructs import Construct
 
 from aws_cdk import (
+    Duration,
     aws_s3,
     RemovalPolicy,
     aws_iam as iam, aws_cloudfront,
@@ -52,6 +53,21 @@ class SubjectStack(Construct):
 
         cfn_distribution = cloudFrontWebDistribution.node.default_child
         cfn_distribution.add_property_override('DistributionConfig.Origins.0.OriginAccessControlId', oac.get_att('Id'))
+
+        cachePolicy = aws_cloudfront.CachePolicy(self, "CachePolicy",
+                                                 header_behavior=aws_cloudfront.CacheHeaderBehavior(
+                                                     allow_list=["Accept-Encoding"]),
+                                                 query_string_behavior=aws_cloudfront.CacheQueryStringBehavior(
+                                                     query_string_behavior="none"),
+                                                 cookie_behavior=aws_cloudfront.CacheCookieBehavior(
+                                                     cookie_behavior="none"),
+                                                 default_ttl=Duration.seconds(86400),
+                                                 max_ttl=Duration.days(365),
+                                                 min_ttl=Duration.seconds(1),
+                                                 enable_accept_encoding_brotli=True,
+                                                 enable_accept_encoding_gzip=True)
+        
+        cloudFrontWebDistribution.add_property_override("DistributionConfig.DefaultCacheBehavior.CachePolicyId", cachePolicy.cache_policy_id)        
 
         self.bucket.add_to_resource_policy(iam.PolicyStatement(
             actions=["s3:GetObject"],
