@@ -75,7 +75,7 @@ class SubjectStack(Construct):
 
         cachePolicy = aws_cloudfront.CachePolicy(
             self, cache_policy_id,
-            cache_policy_name="Managed-CachingOptimized",
+            cache_policy_name="CachingOptimized",
             comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
             max_ttl=Duration.days(365),
