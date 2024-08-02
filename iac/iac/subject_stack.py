@@ -91,7 +91,8 @@ class SubjectStack(Construct):
         originRequestPolicy = aws_cloudfront.OriginRequestPolicy(
             self,
             policy_id,
-            comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
+            comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
+            origin_request_policy_name="CORS-S3Origin",
             header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
                 "Origin",
                 "Access-Control-Request-Headers",
