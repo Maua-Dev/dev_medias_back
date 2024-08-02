@@ -67,8 +67,8 @@ class SubjectStack(Construct):
                                                                 comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
                                                                 origin_request_policy_name=f"DevMedias Subject S3 CDN {self.github_ref_name}",
                                                                 header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]))
-       
-        cfn_distribution.add_property_override("DistributionConfig.DefaultCacheBehavior.OriginRequestPolicyId", originRequestPolicy.origin_request_policy_id)
+
+        cfn_distribution.add_property_override("DistributionConfig.Origins.0.OriginRequestPolicyId", originRequestPolicy.origin_request_policy_id)
 
         self.bucket.add_to_resource_policy(iam.PolicyStatement(
             actions=["s3:GetObject"],
