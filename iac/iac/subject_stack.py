@@ -44,6 +44,14 @@ class SubjectStack(Construct):
                                                                                          allowed_methods=aws_cloudfront.CloudFrontAllowedMethods.ALL,
                                                                                          cached_methods=aws_cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD_OPTIONS,
                                                                                          viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                                                                                         forwarded_values=aws_cloudfront.CfnDistribution.ForwardedValuesProperty(
+                                                                                             query_string=True,
+                                                                                             headers=[
+                                                                                                 "Origin",
+                                                                                                  "Access-Control-Request-Headers",
+                                                                                                  "Access-Control-Request-Method"
+                                                                                             ]
+                                                                                         ),
                                                                                      )]
                                                                                  )
                                                                              ],
@@ -62,13 +70,6 @@ class SubjectStack(Construct):
                                                  enable_accept_encoding_gzip=True)
         
         cfn_distribution.add_property_override("DistributionConfig.DefaultCacheBehavior.CachePolicyId", cachePolicy.cache_policy_id)
-
-        originRequestPolicy = aws_cloudfront.OriginRequestPolicy(self, "OriginRequestPolicy",
-                                                                comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
-                                                                origin_request_policy_name=f"DevMedias Subject S3 CDN {self.github_ref_name}",
-                                                                header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]))
-
-        cfn_distribution.add_property_override("DistributionConfig.Origins.0.OriginRequestPolicyId", originRequestPolicy.origin_request_policy_id)
 
         self.bucket.add_to_resource_policy(iam.PolicyStatement(
             actions=["s3:GetObject"],
