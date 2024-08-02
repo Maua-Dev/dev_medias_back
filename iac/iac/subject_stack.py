@@ -87,10 +87,13 @@ class SubjectStack(Construct):
             cachePolicy.cache_policy_id
         )
 
+        policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+
         originRequestPolicy = aws_cloudfront.OriginRequestPolicy(
             self,
-            origin_request_policy_name="CORS-S3Origin",
+            policy_id,
             comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
+            origin_request_policy_name="CORS-S3Origin",
             header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
                 "Origin",
                 "Access-Control-Request-Headers",
