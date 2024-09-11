@@ -108,7 +108,7 @@ class SubjectStack(Construct):
             originRequestPolicy.origin_request_policy_id
         )
 
-        response_headers_policy = aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT()
+        response_headers_policy = aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT
 
         cfn_distribution.add_property_override(
             "DistributionConfig.DefaultCacheBehavior.ResponseHeadersPolicyId",
