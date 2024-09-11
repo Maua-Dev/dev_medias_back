@@ -47,7 +47,7 @@ class SubjectStack(Construct):
                     behaviors=[aws_cloudfront.Behavior(
                         is_default_behavior=True,
                         compress=True,
-                        allowed_methods=aws_cloudfront.CloudFrontAllowedMethods.ALL,
+                        allowed_methods=aws_cloudfront.CloudFrontAllowedMethods.GET_HEAD_OPTIONS,
                         cached_methods=aws_cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD_OPTIONS,
                         viewer_protocol_policy=aws_cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                         forwarded_values=aws_cloudfront.CfnDistribution.ForwardedValuesProperty(
@@ -106,6 +106,13 @@ class SubjectStack(Construct):
         cfn_distribution.add_property_override(
             "DistributionConfig.DefaultCacheBehavior.OriginRequestPolicyId",
             originRequestPolicy.origin_request_policy_id
+        )
+
+        response_headers_policy = aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT()
+
+        cfn_distribution.add_property_override(
+            "DistributionConfig.DefaultCacheBehavior.ResponseHeadersPolicyId",
+            response_headers_policy.response_headers_policy_id
         )
 
         self.bucket.add_to_resource_policy(iam.PolicyStatement(
