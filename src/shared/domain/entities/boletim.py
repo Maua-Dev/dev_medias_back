@@ -103,17 +103,31 @@ class Boletim(abc.ABC):
         
         for idx in range(self.idx_tenho - 1):
             string += str(self.tenho[idx]) + ", "
-        string += str(self.tenho[self.idx_tenho - 1]) + " ]\nQuero: [ "
+        last_prova_tenho = self.idx_tenho - 1
+        if last_prova_tenho >= 0:
+            string += str(self.tenho[last_prova_tenho])
+        string += " ]\nQuero: [ "
+        
         for idx in range(self.idx_quero - 1):
             string += str(self.quero[idx]) + ", "
-        string += str(self.quero[self.idx_quero - 1]) + " ]\n]\n"
+        last_prova_quero = self.idx_quero - 1
+        if last_prova_quero >= 0:
+            string += str(self.quero[last_prova_quero])
+        string += " ]\n]\n"
         
         string += "Trabalhos: [ "
         for idx in range(self.idx_tenho, len(self.tenho) - 1):
             string += str(self.tenho[idx]) + ", "
-        string += str(self.tenho[len(self.tenho) - 1]) + " ]\nQuero: [ "
+        last_trabalho_tenho = len(self.tenho) - 1
+        if self.idx_tenho <= last_trabalho_tenho:
+            string += str(self.tenho[last_trabalho_tenho])
+        string += " ]\nQuero: [ "
+        
         for idx in range(self.idx_quero, len(self.quero) - 1):
             string += str(self.quero[idx]) + ", "
-        string += str(self.quero[len(self.quero) - 1]) + " ]\n]\n"
+        last_trabalho_quero = len(self.quero) - 1
+        if self.idx_quero <= last_trabalho_quero:
+            string += str(self.quero[last_trabalho_quero])
+        string += " ]\n]\n"
         
         return string

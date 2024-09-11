@@ -512,3 +512,19 @@ class Test_Boletim:
         
         assert len(boletim.trabalhos_que_quero()) == len(trabalhos_que_quero)
         assert [boletim.trabalhos_que_quero()[i] == trabalhos_que_quero[i] for i in range(len(trabalhos_que_quero))]
+        
+    def test_str_sem_provas_que_quero(self):
+        P1 = Nota(peso=0.2, valor=6.0)
+        P2 = Nota(peso=0.2, valor=3.0)
+        P3 = Nota(peso=0.2, valor=10.0)
+        T1 = Nota(peso=0.2, valor=4.0)
+        T2 = Nota(peso=0.2, valor=6.0)
+
+        boletim = Boletim(provas_que_quero=[], provas_que_tenho=[P1,P2,P3], trabalhos_que_quero=[T2], trabalhos_que_tenho=[T1])
+        assert str(boletim) == 'Provas: [\nTenho: [ (Valor: 6.0, Peso: 0.2), (Valor: 3.0, Peso: 0.2), (Valor: 10.0, Peso: 0.2) ]\nQuero: [  ]\n]\nTrabalhos: [ (Valor: 4.0, Peso: 0.2) ]\nQuero: [ (Valor: 6.0, Peso: 0.2) ]\n]\n'
+        
+    def test_str_sem_trabalho(self):
+        P1 = Nota(peso=0.2, valor=6.0)
+        P2 = Nota(peso=0.8, valor=6.0)
+        boletim = Boletim(provas_que_quero=[P2], provas_que_tenho=[P1], trabalhos_que_quero=[], trabalhos_que_tenho=[])
+        assert str(boletim) == 'Provas: [\nTenho: [ (Valor: 6.0, Peso: 0.2) ]\nQuero: [ (Valor: 6.0, Peso: 0.8) ]\n]\nTrabalhos: [  ]\nQuero: [  ]\n]\n'
