@@ -73,10 +73,12 @@ class SubjectStack(Construct):
         )
 
         cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+        cache_policy_name = f"DevMediasS3CachingOptimized-{self.github_ref_name}"
 
         cachePolicy = aws_cloudfront.CachePolicy(
-            self, cache_policy_id,
-            cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
+            self,
+            cache_policy_id,
+            cache_policy_name=cache_policy_name,
             comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
             max_ttl=Duration.days(365),
