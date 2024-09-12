@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from constructs import Construct
 
@@ -68,28 +69,33 @@ class SubjectStack(Construct):
 
         cfn_distribution = cloudFrontWebDistribution.node.default_child
         cfn_distribution.add_property_override(
-            'DistributionConfig.Origins.0.OriginAccessControlId',
-            oac.get_att('Id')
+            "DistributionConfig.Origins.0.OriginAccessControlId",
+            oac.get_att("Id")
         )
 
-        cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-        cache_policy_name = f"DevMediasS3CachingOptimized-{self.github_ref_name}"
+        cache_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, self.github_ref_name))
 
-        cachePolicy = aws_cloudfront.CachePolicy(
-            self,
-            cache_policy_id,
-            cache_policy_name=cache_policy_name,
-            comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
-            min_ttl=Duration.seconds(1),
-            max_ttl=Duration.days(365),
-            default_ttl=Duration.seconds(86400),
-            enable_accept_encoding_gzip=True,
-            enable_accept_encoding_brotli=True
-        )
+        def get_policy_id():
+            try:
+                cache_policy = aws_cloudfront.CachePolicy.from_cache_policy_id(cache_policy_id)
+                return cache_policy.cache_policy_id
+            except:
+                cache_policy = aws_cloudfront.CachePolicy(
+                    self,
+                    cache_policy_id,
+                    cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
+                    comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
+                    min_ttl=Duration.seconds(1),
+                    max_ttl=Duration.days(365),
+                    default_ttl=Duration.seconds(86400),
+                    enable_accept_encoding_gzip=True,
+                    enable_accept_encoding_brotli=True
+                )
+                return cache_policy.cache_policy_id
 
         cfn_distribution.add_property_override(
             "DistributionConfig.DefaultCacheBehavior.CachePolicyId",
-            cachePolicy.cache_policy_id
+            get_policy_id()
         )
 
         origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
