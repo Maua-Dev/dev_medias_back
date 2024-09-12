@@ -12,6 +12,7 @@ from aws_cdk import (
 
 class SubjectStack(Construct):
 
+
     def __init__(self, scope: Construct, **kwargs) -> None:
         super().__init__(scope, "SubjectStack")
         self.github_ref_name = os.environ.get("GITHUB_REF_NAME")
@@ -75,7 +76,7 @@ class SubjectStack(Construct):
 
         cachePolicy = aws_cloudfront.CachePolicy(
             self, cache_policy_id,
-            cache_policy_name="CachingOptimized",
+            cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
             comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
             max_ttl=Duration.days(365),
