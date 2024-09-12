@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from constructs import Construct
 
@@ -72,8 +73,11 @@ class SubjectStack(Construct):
             oac.get_att('Id')
         )
 
+        cache_policy_id = str(uuid.uuid4())
+
         cachePolicy = aws_cloudfront.CachePolicy(
             self,
+            cache_policy_id,
             cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
             comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
@@ -88,7 +92,7 @@ class SubjectStack(Construct):
             cachePolicy.cache_policy_id
         )
 
-        origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+        origin_request_policy_id = str(uuid.uuid4())
 
         originRequestPolicy = aws_cloudfront.OriginRequestPolicy(
             self,
