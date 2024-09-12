@@ -71,22 +71,9 @@ class SubjectStack(Construct):
             oac.get_att('Id')
         )
 
-        cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-
-        cachePolicy = aws_cloudfront.CachePolicy(
-            self, cache_policy_id,
-            cache_policy_name="CachingOptimized",
-            comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
-            min_ttl=Duration.seconds(1),
-            max_ttl=Duration.days(365),
-            default_ttl=Duration.seconds(86400),
-            enable_accept_encoding_gzip=True,
-            enable_accept_encoding_brotli=True
-        )
-
         cfn_distribution.add_property_override(
             "DistributionConfig.DefaultCacheBehavior.CachePolicyId",
-            cachePolicy.cache_policy_id
+            "658327ea-f89d-4fab-a63d-7e88639e58f6"
         )
 
         origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
