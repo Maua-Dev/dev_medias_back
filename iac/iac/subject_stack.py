@@ -73,7 +73,7 @@ class SubjectStack(Construct):
             oac.get_att("Id")
         )
 
-        cache_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, self.github_ref_name))
+        cache_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"CP-{self.github_ref_name}"))
 
         def get_policy_id():
             try:
@@ -98,23 +98,29 @@ class SubjectStack(Construct):
             get_policy_id()
         )
 
-        origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
+        origin_request_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"ORP-{self.github_ref_name}"))
 
-        originRequestPolicy = aws_cloudfront.OriginRequestPolicy(
-            self,
-            origin_request_policy_id,
-            comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
-            origin_request_policy_name="CORS-S3Origin",
-            header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
-                "Origin",
-                "Access-Control-Request-Headers",
-                "Access-Control-Request-Method"
-            )
-        )
+        def get_origin_request_policy_id():
+            try:
+                origin_request_policy = aws_cloudfront.OriginRequestPolicy.from_origin_request_policy_id(origin_request_policy_id)
+                return origin_request_policy.origin_request_policy_id
+            except:
+                origin_request_policy = aws_cloudfront.OriginRequestPolicy(
+                    self,
+                    origin_request_policy_id,
+                    comment=f"DevMedias Policy for S3 origin with CORS {self.github_ref_name}",
+                    origin_request_policy_name=f"CORS-S3Origin-{self.github_ref_name}",
+                    header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
+                        "Origin",
+                        "Access-Control-Request-Headers",
+                        "Access-Control-Request-Method"
+                    )
+                )
+                return origin_request_policy.origin_request_policy_id
 
         cfn_distribution.add_property_override(
             "DistributionConfig.DefaultCacheBehavior.OriginRequestPolicyId",
-            originRequestPolicy.origin_request_policy_id
+            get_origin_request_policy_id()
         )
 
         response_headers_policy = aws_cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS_WITH_PREFLIGHT
@@ -129,5 +135,5 @@ class SubjectStack(Construct):
             resources=[f"arn:aws:s3:::{self.bucket.bucket_name}/*"],
             principals=[iam.ServicePrincipal(
                 f"cloudfront.amazonaws.com"
-            )],
+            )]
         ))
