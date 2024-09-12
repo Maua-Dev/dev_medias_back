@@ -69,8 +69,8 @@ class SubjectStack(Construct):
 
         cfn_distribution = cloudFrontWebDistribution.node.default_child
         cfn_distribution.add_property_override(
-            'DistributionConfig.Origins.0.OriginAccessControlId',
-            oac.get_att('Id')
+            "DistributionConfig.Origins.0.OriginAccessControlId",
+            oac.get_att("Id")
         )
 
         cache_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, self.github_ref_name))
