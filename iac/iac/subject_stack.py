@@ -71,13 +71,12 @@ class SubjectStack(Construct):
             'DistributionConfig.Origins.0.OriginAccessControlId',
             oac.get_att('Id')
         )
-        stage = self.get_stage_from_ref()
 
         cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
 
         cachePolicy = aws_cloudfront.CachePolicy(
             self, cache_policy_id,
-            cache_policy_name=f"DevMediasS3CachingOptimized-{stage}",
+            cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
             comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
             min_ttl=Duration.seconds(1),
             max_ttl=Duration.days(365),
