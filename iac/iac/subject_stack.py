@@ -12,6 +12,7 @@ from aws_cdk import (
 
 class SubjectStack(Construct):
 
+
     def __init__(self, scope: Construct, **kwargs) -> None:
         super().__init__(scope, "SubjectStack")
         self.github_ref_name = os.environ.get("GITHUB_REF_NAME")
@@ -70,10 +71,24 @@ class SubjectStack(Construct):
             'DistributionConfig.Origins.0.OriginAccessControlId',
             oac.get_att('Id')
         )
+        stage = self.get_stage_from_ref()
+
+        cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+
+        cachePolicy = aws_cloudfront.CachePolicy(
+            self, cache_policy_id,
+            cache_policy_name=f"DevMediasS3CachingOptimized-{stage}",
+            comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
+            min_ttl=Duration.seconds(1),
+            max_ttl=Duration.days(365),
+            default_ttl=Duration.seconds(86400),
+            enable_accept_encoding_gzip=True,
+            enable_accept_encoding_brotli=True
+        )
 
         cfn_distribution.add_property_override(
             "DistributionConfig.DefaultCacheBehavior.CachePolicyId",
-            "658327ea-f89d-4fab-a63d-7e88639e58f6"
+            cachePolicy.cache_policy_id
         )
 
         origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
