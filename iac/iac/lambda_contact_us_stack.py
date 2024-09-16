@@ -35,9 +35,6 @@ class LambdaContactUsStack(Construct):
             timeout=Duration.seconds(15),
         )
         
-        api_gateway_with_module = api_gateway_resource.add_resource(module_name.replace("_", "-"))
-
-        api_gateway_with_module.add_method("POST", integration=LambdaIntegration(function))
 
         api_gateway_resource.add_resource("public").add_resource(module_name.replace("_", "-")).add_method("POST",
                                                                                                            integration=LambdaIntegration(

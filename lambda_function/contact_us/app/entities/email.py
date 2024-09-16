@@ -19,7 +19,7 @@ class Email:
         self.message = message
         self.date_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         self.body = f"""
-        <!DOCTYPE html>
+       <!DOCTYPE html>
         <html lang="pt-br" charset="UTF-8">
         <head>
         </head>
@@ -27,11 +27,12 @@ class Email:
         <table class="main" style="width: 50vw; max-width: 600px; background-color: white; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25); overflow: hidden;">
             <tr>
             <td>
-                <table class="TittleBox" style="width: 100%; background-color: #726057; border-radius: 10px 10px 0 0;">
+                <table class="TittleBox" style="width: 100%; background-color: black; border-radius: 10px 10px 0 0;">
                 <tr>
                     <td style="text-align: center; padding: 20px;">
-                    <img alt="DevMedias Logo" src="https://d22wxe17x1tv7t.cloudfront.net/devmedias.png" />
-                    <h1 style="color: #F3B986; margin-top: 10px;"><strong>Feedback Enviado!</strong></h1>
+                        <img alt="DevMedias Logo" src="https://d22wxe17x1tv7t.cloudfront.net/devmedias.png" 
+                             style="max-width: 100%; height: auto; width: 200px;" />
+                        <h1 style="color:white; margin-top: 10px;"><strong>Feedback Enviado!</strong></h1>
                     </td>
                 </tr>
                 </table>
@@ -39,19 +40,19 @@ class Email:
                 <tr>
                     <td style="text-align: center; padding: 20px;">
                     <div class="TextsBox" style="word-wrap: break-word;">
-                        <h2 style="color: #72310E;">Olá!<p>Recebemos sua solicitação:</p></h2>
-                        <h4 style="color: #726057;">{self.message}</h4>
-                        <h4 style="color: #726057;">{self.date_time}</h4>
+                        <h2 style="color: #272423;">Olá!<p>Recebemos sua solicitação:</p></h2>
+                        <h4 style="color: black">{self.message}</h4>
+                        <h4 style="color: black;">{self.date_time}</h4>
                     </div>
                     </td>
                 </tr>
                 </table>
-                <table class="BottomBox" style="width: 100%; background-color: #f5e7db; border-top: 1px solid #726057; border-radius: 0 0 10px 10px;">
+                <table class="BottomBox" style="width: 100%; background-color: rgb(3, 5, 78); border-top: 1px solid #726057; border-radius: 0 0 10px 10px;">
                 <tr>
                     <td style="text-align: center; padding: 20px;">
-                    <div class="TextsBox" style="color: #72310E; word-wrap: break-word;">
+                    <div class="TextsBox" style="color: white; word-wrap: break-word;">
                         <h2>Atenciosamente,</h2>
-                        <h2><strong>Dev. Community Mauá</strong>&#127839;</h2>
+                        <h2><strong>Dev. Community Mauá</strong></h2>
                     </div>
                     </td>
                 </tr>

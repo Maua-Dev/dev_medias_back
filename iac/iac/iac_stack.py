@@ -62,8 +62,3 @@ class IacStack(Stack):
         
         self.subject_stack = SubjectStack(self)
 
-
-# lambda layer
-# imports 
-# ses admin policy
-# authorizer
