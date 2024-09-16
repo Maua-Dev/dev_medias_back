@@ -36,7 +36,7 @@ class Email:
                     </td>
                 </tr>
                 </table>
-                <table class="ContentBox" style="width: 100%; background-color: #f5e7db;">
+                <table class="ContentBox" style="width: 100%; background-color: white">
                 <tr>
                     <td style="text-align: center; padding: 20px;">
                     <div class="TextsBox" style="word-wrap: break-word;">
@@ -47,7 +47,7 @@ class Email:
                     </td>
                 </tr>
                 </table>
-                <table class="BottomBox" style="width: 100%; background-color: rgb(3, 5, 78); border-top: 1px solid #726057; border-radius: 0 0 10px 10px;">
+                <table class="BottomBox" style="width: 100%; background-color: rgb(3, 5, 78); border-top: 1px solid white; border-radius: 0 0 10px 10px;">
                 <tr>
                     <td style="text-align: center; padding: 20px;">
                     <div class="TextsBox" style="color: white; word-wrap: break-word;">
