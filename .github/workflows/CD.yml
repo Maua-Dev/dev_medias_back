@@ -49,3 +49,6 @@ jobs:
             AWS_REGION: ${{ vars.AWS_REGION }}
             STACK_NAME: ${{ env.STACK_NAME }}
             GITHUB_REF_NAME: ${{ github.ref_name }}
+            FROM_EMAIL: ${{ vars.FROM_EMAIL }}  
+            HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
+            REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}  
