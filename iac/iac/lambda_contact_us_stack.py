@@ -26,7 +26,7 @@ class LambdaContactUsStack(Construct):
 
         function = lambda_.Function(
             self, module_name,
-            code=lambda_.Code.from_asset(f"../lambda_functions/contact_us"),
+            code=lambda_.Code.from_asset(f"../lambda_function/contact_us"),
             handler=f"app.send_email_feedback_presenter.lambda_handler",
             runtime=lambda_.Runtime.PYTHON_3_9,
             layers=[lambda_layer],
