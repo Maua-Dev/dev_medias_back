@@ -372,3 +372,22 @@ class TestGradeOptimizerUsecase:
         with pytest.raises(EntityParameterError):
             usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
             
+    def test_possible_grade_usecase_fix_limite_de_dominio_menor_dist_05(self):
+        P1 =  Nota(peso=0.1, valor=6.0)
+        P2 = Nota(peso=0.1, valor=8.0)
+        P3 = Nota(peso=0.7, valor=None)
+        T1 = Nota(peso=0.1, valor=None)
+        provas_que_quero=[P3]
+        provas_que_tenho=[P1, P2]
+        trabalhos_que_quero=[T1]
+        trabalhos_que_tenho=[]
+        
+        media_desejada = 6.0
+
+        Solucionador.MENOR_DIST = 0.5
+        usecase = GradeOptimizerUsecase()
+
+        for i in range(3):
+            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
+            
