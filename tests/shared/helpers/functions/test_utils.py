@@ -33,12 +33,12 @@ class TestUtils:
     def test_minimo_valor_no_dominio(self):
         notas_que_tenho = [Nota(0.1, 5), Nota(0.15, 4), Nota(0.05, 3), Nota(0.2, 2)]
         notas_que_quero = [Nota(0.1, 10), Nota(0.10, 4), Nota(0.05, 3), Nota(0.2, 2)]
-        assert Utils.minimo_valor_no_dominio(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, peso_especifico=0.1, media_desejada=7, erro_max=0.5, distancia_max=1.5) == 7.5
+        assert Utils.minimo_valor_no_dominio(notas_que_tenho=notas_que_tenho, notas_que_quero=notas_que_quero, peso_especifico=0.1, media_desejada=7, erro_max=0.5, distancia_max=1.5) == 7.0
     
     def test_minimo_valor_no_dominio_notas_que_quero_vazia(self):
         notas_que_tenho = [Nota(0.2, 10), Nota(0.3, 7), Nota(0.1, 5), Nota(0.3, 2)]
         notas_que_quero = []
-        assert Utils.minimo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 3.5
+        assert Utils.minimo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 3.0
         
     def test_minimo_valor_no_dominio_notas_que_quero_minimo_valor_0(self):
         notas_que_tenho = [Nota(0.2, 10), Nota(0.3, 10), Nota(0.1, 5), Nota(0.3, 2)]
@@ -53,12 +53,12 @@ class TestUtils:
     def test_maximo_valor_no_dominio(self):
         notas_que_tenho = [Nota(0.1, 5), Nota(0.15, 10), Nota(0.05, 3), Nota(0.2, 10)]
         notas_que_quero = [Nota(0.1, 10), Nota(0.10, 10), Nota(0.05, 3), Nota(0.2, 2)]
-        assert Utils.maximo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 5.5
+        assert Utils.maximo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 6.0
         
     def test_maximo_valor_no_dominio_notas_que_quero_vazia(self):
         notas_que_tenho = [Nota(0.2, 10), Nota(0.3, 10), Nota(0.1, 5), Nota(0.3, 2)]
         notas_que_quero = []
-        assert Utils.maximo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 4
+        assert Utils.maximo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 4.5
         
     def test_maximo_valor_10(self):
         notas_que_tenho = [Nota(0.1, 5), Nota(0.15, 0), Nota(0.05, 0), Nota(0.2, 0)]

@@ -77,8 +77,7 @@ class TestGradeOptimizerController:
                 {"valor":8.5,"peso":0.0375}
             ],
             "trabalhos_que_quero":[
-                {"peso":0.0375},
-                {"peso":0.0375},
+                {"peso":0.075},
                 {"peso":0.0375},
                 {"peso":0.0375},
                 {"peso":0.0375},
