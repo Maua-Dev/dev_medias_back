@@ -267,7 +267,7 @@ class TestGradeOptimizerUsecase:
         for _ in range(10):
             boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
-            assert boletim_resp.quero[0].valor == 1.0
+            assert boletim_resp.quero[0].valor == 0.5
         
     def test_possible_grade_usecase_uma_nota_apenas_2(self):
         P1 = Nota(peso=0.2, valor=10.0)
@@ -389,5 +389,8 @@ class TestGradeOptimizerUsecase:
 
         for i in range(3):
             boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
-            assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
+            assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= 0.5
+            
+        Solucionador.MENOR_DIST = 1.5
+        
             

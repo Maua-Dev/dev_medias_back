@@ -176,7 +176,7 @@ $$
 Como o resultado buscado é um valor no domínio de notas, que é discreto:
 
 $$
-n_{min} = \dfrac{ceil\left(2\cdot \left[\dfrac{A-E_{rr}-B\cdot C}{C+p_x}\right]\right)}{2} \:(X)
+n_{min} = \dfrac{floor\left(2\cdot \left[\dfrac{A-E_{rr}-B\cdot C}{C+p_x}\right]\right)}{2} \:(X)
 $$
 
 Agora, deve-se analisar o valor máximo, que compreende uma distância fixa para a média aritimética entre as notas que o aluno quer buscar. Analisando a equação $(II)$, verifica-se a seguinte expressão que determina um valor máximo para $n_x$:
@@ -239,17 +239,17 @@ $$
 Como deve-se descobrir o valor máximo de $n_x$ no domínio de notas, que é discreto:
 
 $$
-n_{max} = \dfrac{floor\left(2\cdot \left[\dfrac{A+E_{rr}+B\cdot C}{C + p_x}\right]\right)}{2} \:(XIV)
+n_{max} = \dfrac{ceil\left(2\cdot \left[\dfrac{A+E_{rr}+B\cdot C}{C + p_x}\right]\right)}{2} \:(XIV)
 $$
 
 Portanto, as duas equações que serão montadas na classe Utils serão $(X)$ e $(XIV)$:
 
 $$
-n_{min} = \dfrac{ceil\left(2\cdot \left[\dfrac{A-E_{rr}-B\cdot C}{C+p_x}\right]\right)}{2}
+n_{min} = \dfrac{floor\left(2\cdot \left[\dfrac{A-E_{rr}-B\cdot C}{C+p_x}\right]\right)}{2}
 $$
 
 $$
-n_{max} = \dfrac{floor\left(2\cdot \left[\dfrac{A+E_{rr}+B\cdot C}{C + p_x}\right]\right)}{2}
+n_{max} = \dfrac{ceil\left(2\cdot \left[\dfrac{A+E_{rr}+B\cdot C}{C + p_x}\right]\right)}{2}
 $$
 
 Com as constantes, a partir das equações $(VII)$, $(VIII)$ e $(IX)$, sendo representadas pelos seguintes valores:
@@ -285,7 +285,7 @@ $$
 Assumindo domínio discreto:
 
 $$
-n_{min} = \dfrac{ceil\left(2\cdot \left[\dfrac{A-E_{rr}}{p_x}\right]\right)}{2}
+n_{min} = \dfrac{floor\left(2\cdot \left[\dfrac{A-E_{rr}}{p_x}\right]\right)}{2}
 $$
 
 Demonstrado todas as fórmulas necessárias para o cálculo dos limites dos domínios que uma certa nota pode possuir, é possível prosseguir com a explicação do algoritmo. O laço de repetição verifica o mínimo e máximo valor que cada nota pode possuir a fim de se obter uma combinação válida de notas. Chamando a função `minimo_valor_no_dominio` e `maximo_valor_no_dominio`, se calculam tais valores para cada nota. Caso o cálculo do valor mínimo retorne `-1`, indica-se que o valor mínimo para a nota procurada naquela iteração foi maior que o valor máximo do domínio de notas (10.0), ou seja, é impossível se obter aquela nota a fim de se obter a média desejada (pois ela nunca alcançará o valor mínimo). Este laço de repetição também possui a análise para uma nota apenas. Neste caso, ao verificar que se quer apenas uma nota, o algoritmo pega o valor mínimo e o retorna como resposta dentro do objeto `Boletim` inicializado anteriormente. Caso mais de uma nota seja buscada, o algoritmo se utiliza da função `limita_dominio` para restringir o domínio de cada nota procurada.
