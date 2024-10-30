@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import boto3
+import pytz
 
 from .entities.email import Email
 from src.shared.helpers.external_interfaces.http_lambda_requests import LambdaHttpRequest, LambdaHttpResponse
@@ -48,12 +49,14 @@ def send_email(event, context):
             ],
             Source=os.environ.get("FROM_EMAIL"),
         )
-        date_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        br_timezone = pytz.timezone("America/Sao_Paulo")
+        date_time = datetime.now(br_timezone).strftime("%d/%m/%Y %H:%M:%S")
+
         status_code = 200
         response = f"Email enviado com sucesso para {user_email} em {date_time}"
     except Exception as e:
         status_code = 500
-        date_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        date_time = datetime.now(br_timezone).strftime("%d/%m/%Y %H:%M:%S")
         response = f"Erro ao enviar email para {user_email} em {date_time} - {e}"
 
     http_response = LambdaHttpResponse(status_code=status_code, body=response)
