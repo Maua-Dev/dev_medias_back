@@ -49,6 +49,8 @@ class Boletim(abc.ABC):
         if(self.valida_preenchimento(self.provas()) == False):
             raise FunctionInputError("media_provas", "O valor das provas devem estar preenchidos")
         decimal_value = sum(map(lambda x: x.valor * x.peso, self.provas()))
+        if decimal_value * 100 % 1 > 0.9999999999:
+            decimal_value = round(decimal_value, ndigits=2)
         return decimal_value
 
     
@@ -56,6 +58,8 @@ class Boletim(abc.ABC):
         if(self.valida_preenchimento(self.trabalhos()) == False):
             raise FunctionInputError("media_trabalhos", "O valor dos trabalhos devem estar preenchidos")
         decimal_value = sum(map(lambda x: x.valor * x.peso, self.trabalhos()))
+        if decimal_value * 100 % 1 > 0.9999999999:
+            decimal_value = round(decimal_value, ndigits=2)
         return decimal_value
 
     def media_final(self) -> float:
