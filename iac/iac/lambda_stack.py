@@ -1,4 +1,3 @@
-
 from aws_cdk import (
     aws_lambda as lambda_,
     Duration
@@ -21,7 +20,6 @@ class LambdaStack(Construct):
             environment=environment_variables,
             timeout=Duration.seconds(15)
         )
-        
 
         api_resource.add_resource(module_name.replace("_", "-")).add_method(method,
                                                                             integration=LambdaIntegration(
@@ -38,6 +36,11 @@ class LambdaStack(Construct):
                                                 )
 
         self.grade_optimizer_function = self.create_lambda_api_gateway_integration("grade_optmizer",
+                                                                                   "POST",
+                                                                                   api_resource=api_gateway_resource,
+                                                                                   environment_variables=environment_variables)
+        
+        self.calculate_mean_function = self.create_lambda_api_gateway_integration("calculate_mean",
                                                                                    "POST",
                                                                                    api_resource=api_gateway_resource,
                                                                                    environment_variables=environment_variables)

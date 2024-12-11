@@ -49,6 +49,8 @@ class Boletim(abc.ABC):
         if(self.valida_preenchimento(self.provas()) == False):
             raise FunctionInputError("media_provas", "O valor das provas devem estar preenchidos")
         decimal_value = sum(map(lambda x: x.valor * x.peso, self.provas()))
+        if decimal_value * 100 % 1 > 0.9999999999:
+            decimal_value = round(decimal_value, ndigits=2)
         return decimal_value
 
     
@@ -56,10 +58,28 @@ class Boletim(abc.ABC):
         if(self.valida_preenchimento(self.trabalhos()) == False):
             raise FunctionInputError("media_trabalhos", "O valor dos trabalhos devem estar preenchidos")
         decimal_value = sum(map(lambda x: x.valor * x.peso, self.trabalhos()))
+        if decimal_value * 100 % 1 > 0.9999999999:
+            decimal_value = round(decimal_value, ndigits=2)
         return decimal_value
 
     def media_final(self) -> float:
-        return round(self.media_provas() + self.media_trabalhos(), ndigits=1)
+        
+        def arredondar_media(media):
+            # Multiplica a média por 10 para trabalhar com o centésimo
+            media_x10 = media * 10
+            # Separa o valor inteiro e a parte decimal da multiplicação
+            inteiro = int(media_x10)
+            decimal = media_x10 - inteiro
+
+            # Verifica se o centésimo é maior ou igual a 0.5
+            if decimal >= 0.5:
+                return round(media_x10) / 10
+            else:
+                return inteiro / 10
+        
+        return arredondar_media(self.media_provas() + self.media_trabalhos())
+        
+        
     
     @staticmethod
     def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota]) -> float:
