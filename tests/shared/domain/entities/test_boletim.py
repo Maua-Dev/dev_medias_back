@@ -159,6 +159,30 @@ class Test_Boletim:
         with pytest.raises(EntityParameterError):
             Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
+    def test_boletim_pesos_validos(self):
+        P1 = Nota(peso=0.3, valor=6.0)
+        P2 = Nota(peso=0.7, valor=8.0)
+
+        notas = [P1, P2]
+
+        assert Boletim.valida_pesos(notas) == True
+
+    def test_boletim_pesos_invalidos_under(self):
+        P1 = Nota(peso=0.3, valor=6.0)
+        P2 = Nota(peso=0.5, valor=8.0)
+
+        notas = [P1, P2]
+
+        assert Boletim.valida_pesos(notas) == False
+    
+    def test_boletim_pesos_invalidos_over(self):
+        P1 = Nota(peso=0.3, valor=6.0)
+        P2 = Nota(peso=0.9, valor=8.0)
+
+        notas = [P1, P2]
+
+        assert Boletim.valida_pesos(notas) == False
+    
     def test_boletim_pesos_invalidos(self):
         P1 = Nota(peso=0.12, valor=6.0)
         T1 = Nota(peso=0.08, valor=6.0)
