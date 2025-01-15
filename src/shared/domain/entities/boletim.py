@@ -28,8 +28,11 @@ class Boletim(abc.ABC):
         self.idx_tenho = len(provas_que_tenho)
         self.idx_quero = len(provas_que_quero)       
         
-        if(not self.valida_pesos(provas=self.provas(), trabalhos=self.trabalhos())):
-            raise EntityParameterError("A soma dos pesos das notas passadas deve ser 1")
+        if(not self.valida_pesos(provas=self.provas())):
+            raise EntityParameterError("A soma dos pesos das provas passadas deve ser 1")
+        
+        if(not self.valida_pesos(trabalhos=self.trabalhos())):
+            raise EntityParameterError("A soma dos pesos dos trabalhos passados deve ser 1")
         
     def provas(self) -> List[Nota]:
         result = self.tenho[:self.idx_tenho] + self.quero[:self.idx_quero]
@@ -112,8 +115,8 @@ class Boletim(abc.ABC):
         return True
     
     @staticmethod
-    def valida_pesos(provas: List[Nota], trabalhos: List[Nota]) -> bool:
-        pesos = round(number=sum([prova.peso for prova in provas]) + sum([trabalho.peso for trabalho in trabalhos]), ndigits=2)
+    def valida_pesos(notas: List[Nota]) -> bool:
+        pesos = round(sum([nota.peso for nota in notas]), 2)
         if pesos != 1.00:
             return False
         return True
