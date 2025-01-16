@@ -10,9 +10,11 @@ class Boletim(abc.ABC):
     tenho: List[Nota]	
     quero: List[Nota]
     idx_tenho: int # idx que representa onde se iniciam os trabalhos que tenho no atributo `tenho` 
-    idx_quero: int # idx que representa onde se iniciam os trabalhos que quero no atributo `quero`
+    idx_quero: int # idx que representa onde se iniciam os trabalhos que quero no atributo `quero`peso_prova
+    peso_prova = float
+    peso_trabalho = float
 
-    def __init__(self, provas_que_tenho: List[Nota] = [], provas_que_quero: List[Nota] = [], trabalhos_que_tenho: List[Nota] = [], trabalhos_que_quero: List[Nota] = []):
+    def __init__(self, peso_prova: float, peso_trabalho: float,provas_que_tenho: List[Nota] = [], provas_que_quero: List[Nota] = [], trabalhos_que_tenho: List[Nota] = [], trabalhos_que_quero: List[Nota] = []):
         if not self.valida_lista_de_notas(provas_que_tenho):
             raise EntityParameterError("Lista de provas_que_tenho deve ser do tipo List[Nota]")
         if not self.valida_lista_de_notas(provas_que_quero):
@@ -27,11 +29,14 @@ class Boletim(abc.ABC):
         
         self.idx_tenho = len(provas_que_tenho)
         self.idx_quero = len(provas_que_quero)       
+
+        self.peso_prova = peso_prova
+        self.peso_trabalho = peso_trabalho
         
-        if(not self.valida_pesos(provas=self.provas())):
+        if(not self.valida_pesos(notas=self.provas())):
             raise EntityParameterError("A soma dos pesos das provas passadas deve ser 1")
         
-        if(not self.valida_pesos(trabalhos=self.trabalhos())):
+        if(not self.valida_pesos(notas=self.trabalhos())):
             raise EntityParameterError("A soma dos pesos dos trabalhos passados deve ser 1")
         
     def provas(self) -> List[Nota]:
@@ -75,12 +80,15 @@ class Boletim(abc.ABC):
             decimal = media_x10 - inteiro
 
             # Verifica se o centésimo é maior ou igual a 0.5
-            if decimal >= 0.5:
+            if decimal < 0.5:
                 return round(media_x10) / 10
             else:
-                return inteiro / 10
-        
-        return arredondar_media(self.media_provas() + self.media_trabalhos())
+                return (inteiro + 1) / 10
+
+        prova = arredondar_media(self.media_provas()) * self.peso_prova
+        trabalho = arredondar_media(self.media_trabalhos()) * self.peso_trabalho
+
+        return arredondar_media(prova + trabalho)
         
         
     
@@ -117,7 +125,7 @@ class Boletim(abc.ABC):
     @staticmethod
     def valida_pesos(notas: List[Nota]) -> bool:
         pesos = round(sum([nota.peso for nota in notas]), 2)
-        if pesos != 1.00:
+        if abs(pesos - 1.00) > 0.01:
             return False
         return True
     
