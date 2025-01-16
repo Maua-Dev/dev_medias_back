@@ -11,7 +11,7 @@ class CalculateMeanUsecase:
     def __init__(self):
         pass
 
-    def __call__(self, provas_que_tenho: List[Nota], trabalhos_que_tenho: List[Nota]) -> float:
+    def __call__(self, peso_prova: float, peso_trabalho: float, provas_que_tenho: List[Nota], trabalhos_que_tenho: List[Nota]) -> float:
         if(len(provas_que_tenho) + len(trabalhos_que_tenho)== 0):
             raise InvalidInput("provas_que_tenho e trabalhos_que_tenho", "Não podem ser listas vazias")
         
@@ -24,7 +24,7 @@ class CalculateMeanUsecase:
             raise FunctionInputError("CalculateMeanUsecase", "O valor dos trabalhos que tenho devem estar preenchidos")
         
         # validação dos pesos feita pelo próprio boletim
-        boletim = Boletim(provas_que_quero=[], provas_que_tenho=provas_que_tenho, trabalhos_que_quero=[], trabalhos_que_tenho=trabalhos_que_tenho)
+        boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=[], provas_que_tenho=provas_que_tenho, trabalhos_que_quero=[], trabalhos_que_tenho=trabalhos_que_tenho)
         
         media_final = boletim.media_final()
         
