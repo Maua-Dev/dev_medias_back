@@ -33,10 +33,14 @@ class Boletim(abc.ABC):
         self.peso_prova = peso_prova
         self.peso_trabalho = peso_trabalho
         
-        if(not self.valida_pesos(notas=self.provas())):
+        if len(self.provas()) == 0:
+            peso_provas = 0
+        elif not self.valida_pesos(notas=self.provas()):
             raise EntityParameterError("A soma dos pesos das provas passadas deve ser 1")
-        
-        if(not self.valida_pesos(notas=self.trabalhos())):
+
+        if len(self.trabalhos()) == 0:
+            peso_trabalhos = 0
+        elif not self.valida_pesos(notas=self.trabalhos()):
             raise EntityParameterError("A soma dos pesos dos trabalhos passados deve ser 1")
         
     def provas(self) -> List[Nota]:
