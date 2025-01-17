@@ -7,23 +7,26 @@ from src.shared.helpers.errors.function_errors import FunctionInputError
 
 class Test_Boletim:
     def test_boletim(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
         
         provas_que_tenho = [P1]
         trabalhos_que_tenho = [T1, T2]
 
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.2, valor=None)
+        P4 = Nota(peso=0.4, valor=None)
+        T4 = Nota(peso=0.4, valor=None)
         
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
-        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
+        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+
+        boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         notas_que_tenho = provas_que_tenho + trabalhos_que_tenho
         notas_que_quero = provas_que_quero + trabalhos_que_quero
@@ -46,7 +49,9 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = []
         
-        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
+        peso_trabalho = 0.25 + 0.25 + 0.25 + 0.25
+        boletim = Boletim(peso_prova =peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         notas_que_tenho = provas_que_tenho + trabalhos_que_tenho
         notas_que_quero = provas_que_quero + trabalhos_que_quero
@@ -80,84 +85,96 @@ class Test_Boletim:
         assert boletim.idx_tenho == len(provas_que_tenho)
         
     def test_boletim_provas_que_tenho_nao_lista_de_notas(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
         
         provas_que_tenho = P1
         trabalhos_que_tenho = [T1, T2]
 
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.2, valor=None)
+        P4 = Nota(peso=0.4, valor=None)
+        T4 = Nota(peso=0.4, valor=None)
         
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
+        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
+        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+
         with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+            Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
     def test_boletim_provas_que_quero_nao_lista_de_notas(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
         
         provas_que_tenho = [P1]
         trabalhos_que_tenho = [T1, T2]
 
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.2, valor=None)
+        P4 = Nota(peso=0.4, valor=None)
+        T4 = Nota(peso=0.4, valor=None)
         
         provas_que_quero = P2
         trabalhos_que_quero = [T3, T4]
+
+        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
+        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
         
         with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+            Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
     def test_boletim_trabalhos_que_tenho_nao_lista_de_notas(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
         
         provas_que_tenho = [P1]
         trabalhos_que_tenho = T1
 
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.2, valor=None)
+        P4 = Nota(peso=0.4, valor=None)
+        T4 = Nota(peso=0.4, valor=None)
         
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
+        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
+        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+
         with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+            Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
     def test_boletim_trabalhos_que_quero_nao_lista_de_notas(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
         
         provas_que_tenho = [P1]
         trabalhos_que_tenho = [T1, T2]
 
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.2, valor=None)
+        P4 = Nota(peso=0.4, valor=None)
+        T4 = Nota(peso=0.4, valor=None)
         
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = T3
         
+        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
+        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+
         with pytest.raises(EntityParameterError):
-            Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+            Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
             
     def test_boletim_pesos_validos(self):
         P1 = Nota(peso=0.3, valor=6.0)
