@@ -388,8 +388,8 @@ class Test_Boletim:
         provas = [P1, P2, P3, P4]
         trabalhos = [T1, T2, T3, T4]
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = P1.peso + P2.peso + P3.peso + P4.peso
+        peso_trabalho = T1.peso + T2.peso + T3.peso + T4.peso
 
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
@@ -466,19 +466,23 @@ class Test_Boletim:
         assert round(boletim.media_provas(),1) == 4.2
         
     def test_media_trabalhos(self):
-        P1 = Nota(peso=0.24, valor=1.0)
+        P1 = Nota(peso=0.5, valor=1.0)
+
+
         provas_que_tenho = [P1]
         
         trabalhos_que_tenho = []
         
-        P2 = Nota(peso=0.36, valor=None)
+        P2 = Nota(peso=0.5, valor=None)
         provas_que_quero = [P2]
         
-        T1 = Nota(peso=0.12, valor=None)
-        T2 = Nota(peso=0.28, valor=None)
+        T1 = Nota(peso=0.5, valor=None)
+        T2 = Nota(peso=0.5, valor=None)
         trabalhos_que_quero = [T1, T2]
+        peso_prova = P1.peso + P2.peso 
+        peso_trabalho = T1.peso + T2.peso 
         
-        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho,provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         boletim.quero[0].valor = 7.5
         boletim.quero[1].valor = 7.5
@@ -502,8 +506,11 @@ class Test_Boletim:
         
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
+
+        peso_prova = P1.peso + P2.peso + P3.peso + P4.peso
+        peso_trabalho = T1.peso + T2.peso + T3.peso + T4.peso
         
-        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         with pytest.raises(FunctionInputError):
             boletim.media_provas()
