@@ -99,6 +99,8 @@ class Boletim(abc.ABC):
     @staticmethod
     def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota]) -> float:
         boletim = Boletim(
+            peso_prova=1.0,
+            peso_trabalho=1.0,
             provas_que_quero=quero[:idx_quero],
             provas_que_tenho=tenho[:idx_tenho],
             trabalhos_que_quero=quero[idx_quero:],

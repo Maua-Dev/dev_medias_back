@@ -38,7 +38,7 @@ class TestUtils:
     def test_minimo_valor_no_dominio_notas_que_quero_vazia(self):
         notas_que_tenho = [Nota(0.2, 10), Nota(0.3, 7), Nota(0.1, 5), Nota(0.3, 2)]
         notas_que_quero = []
-        assert Utils.minimo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 3.0
+        assert Utils.minimo_valor_no_dominio(notas_que_quero=notas_que_quero, notas_que_tenho =notas_que_tenho, peso_especifico=0.1, media_desejada=6, erro_max=0.5, distancia_max=1.5) == 2.5
         
     def test_minimo_valor_no_dominio_notas_que_quero_minimo_valor_0(self):
         notas_que_tenho = [Nota(0.2, 10), Nota(0.3, 10), Nota(0.1, 5), Nota(0.3, 2)]
