@@ -557,7 +557,6 @@ class Test_Boletim:
         quero = provas_que_quero + trabalhos_que_quero
         idx_tenho = len(provas_que_tenho)
         idx_quero = len(provas_que_quero)
-        
         assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero) == 6.1
     
     def test_media_final_externo_2(self):

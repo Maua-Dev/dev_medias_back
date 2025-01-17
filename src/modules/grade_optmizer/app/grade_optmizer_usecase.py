@@ -19,7 +19,7 @@ class GradeOptimizerUsecase:
             raise InvalidInput("media_desejada", "Deve estar compreendida entre 0 e 10")
         
         # validação dos pesos feita pelo próprio boletim
-        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        boletim = Boletim(peso_prova=1.0, peso_trabalho=1.0, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         response = Solucionador.algoritmo(boletim=boletim, media_desejada=media_desejada)
         
