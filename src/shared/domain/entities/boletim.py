@@ -43,12 +43,35 @@ class Boletim(abc.ABC):
         elif not self.valida_pesos(notas=self.trabalhos()):
             raise EntityParameterError("A soma dos pesos dos trabalhos passados deve ser 1")
         
+    def tenho_peso_global(self) -> List[Nota]:
+        return [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
+            for idx, nota in enumerate(self.tenho) 
+            if idx < self.idx_tenho
+        ] + [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
+            for idx, nota in enumerate(self.tenho) 
+            if idx >= self.idx_tenho
+        ]
+    
+    def quero_peso_global(self) -> List[Nota]:
+        return [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
+            for idx, nota in enumerate(self.quero) 
+            if idx < self.idx_quero
+        ] + [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
+            for idx, nota in enumerate(self.quero) 
+            if idx >= self.idx_quero
+        ]
+
     def provas(self) -> List[Nota]:
-        result = self.tenho[:self.idx_tenho] + self.quero[:self.idx_quero]
+        result = self.tenho_peso_global()[:self.idx_tenho] + self.quero_peso_global()[:self.idx_quero]
+        print(result)
         return result
     
     def trabalhos(self) -> List[Nota]:
-        result = self.tenho[self.idx_tenho:] + self.quero[self.idx_quero:]
+        result = self.tenho_peso_global()[self.idx_tenho:] + self.quero_peso_global()[self.idx_quero:]
         return result
     
     def provas_que_quero(self) -> List[Nota]:
@@ -97,12 +120,14 @@ class Boletim(abc.ABC):
         
     
     @staticmethod
-    def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota]) -> float:
+    def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota], peso_prova: float, peso_trabalho: float) -> float:
         boletim = Boletim(
             provas_que_quero=quero[:idx_quero],
             provas_que_tenho=tenho[:idx_tenho],
             trabalhos_que_quero=quero[idx_quero:],
-            trabalhos_que_tenho=tenho[idx_tenho:]
+            trabalhos_que_tenho=tenho[idx_tenho:],
+            peso_prova=peso_prova,
+            peso_trabalho=peso_trabalho
         )              
         return boletim.media_final()
 

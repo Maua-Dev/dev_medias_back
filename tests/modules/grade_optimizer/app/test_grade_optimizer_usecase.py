@@ -12,28 +12,31 @@ from src.shared.solucionador import Solucionador
 class TestGradeOptimizerUsecase:
 
     def test_possible_grade_usecase(self):
-        P1 = Nota(peso=0.12, valor=6.0)
-        T1 = Nota(peso=0.08, valor=6.0)
-        T2 = Nota(peso=0.08, valor=6.0)
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
         
         provas_que_tenho = [P1]
         trabalhos_que_tenho = [T1, T2]
 
-        P2 = Nota(peso=0.12, valor=None)
-        P3 = Nota(peso=0.18, valor=None)
-        T3 = Nota(peso=0.12, valor=None)
-        P4 = Nota(peso=0.18, valor=None)
-        T4 = Nota(peso=0.12, valor=None)
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.3, valor=None)
+        T3 = Nota(peso=0.3, valor=None)
+        P4 = Nota(peso=0.3, valor=None)
+        T4 = Nota(peso=0.3, valor=None)
         
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
+
+        peso_trabalho = 0.4
+        peso_prova = 0.6
         
         media_desejada = 6.0
 
         usecase = GradeOptimizerUsecase()
 
         for _ in range(10):
-            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            boletim_resp = usecase(peso_trabalho=peso_trabalho, peso_prova=peso_prova, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
             assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
 
     def test_possible_grade_usecase_2(self):
@@ -249,23 +252,26 @@ class TestGradeOptimizerUsecase:
                 usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
     def test_possible_grade_usecase_uma_nota_apenas(self):
-        P1 = Nota(peso=0.2, valor=6)
-        P2 = Nota(peso=0.2, valor=8.0)
-        T1 = Nota(peso=0.3, valor = 10.0)
+        P1 = Nota(peso=0.4, valor=6)
+        P2 = Nota(peso=0.6, valor=8.0)
+        T1 = Nota(peso=0.5, valor = 10.0)
         provas_que_tenho = [P1, P2]
         trabalhos_que_tenho = [T1]
         
         
-        T2 = Nota(peso=0.3, valor=None)
+        T2 = Nota(peso=0.5, valor=None)
         trabalhos_que_quero = [T2]
         provas_que_quero = []
+
+        peso_trabalho = 0.4
+        peso_prova = 0.6
 
         media_desejada = 6
         
         usecase = GradeOptimizerUsecase()
         
         for _ in range(10):
-            boletim_resp = usecase(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
+            boletim_resp = usecase(peso_trabalho=peso_trabalho, peso_prova=peso_prova, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
             assert boletim_resp.quero[0].valor == 0.5
         
