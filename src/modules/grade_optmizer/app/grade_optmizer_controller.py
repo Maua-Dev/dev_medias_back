@@ -97,6 +97,8 @@ class GradeOptmizerController:
                 trabalhos_que_tenho=trabalhos_que_tenho,
                 provas_que_quero=provas_que_quero,
                 trabalhos_que_quero=trabalhos_que_quero,
+                peso_prova=request.data.get('peso_prova'),
+                peso_trabalho=request.data.get('peso_trabalho'),
                 media_desejada=request.data.get('media_desejada')
             )
 

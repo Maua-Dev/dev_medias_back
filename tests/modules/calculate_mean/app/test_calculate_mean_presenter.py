@@ -52,19 +52,21 @@ class Test_CalculateMeanPresenter:
             'provas_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.3
+                    'peso':1.0
                 }
             ],
             'trabalhos_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.3
+                    'peso':0.4
                 },
                 {
                     'valor':6.0,
-                    'peso':0.4
+                    'peso':0.6
                 },
             ],
+            'peso_prova':0.3,
+            'peso_trabalho':0.7
         },
             "pathParameters": None,
             "isBase64Encoded": None,
@@ -72,6 +74,6 @@ class Test_CalculateMeanPresenter:
         }
 
         response = lambda_handler(event=event, context=None)
-        assert json.loads(response["body"])["message"] == "Média calculada com sucesso"
+        assert json.loads(response["body"])['message'] == "Média calculada com sucesso"
         assert response["statusCode"] == 200
         

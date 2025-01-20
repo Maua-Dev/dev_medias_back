@@ -552,12 +552,15 @@ class Test_Boletim:
         T1 = Nota(peso=0.4, valor=7.5)
         T2 = Nota(peso=0.6, valor=8)
         trabalhos_que_quero = [T1, T2]
+
+        peso_prova=0.6
+        peso_trabalho=0.4
         
         tenho = provas_que_tenho + trabalhos_que_tenho
         quero = provas_que_quero + trabalhos_que_quero
         idx_tenho = len(provas_que_tenho)
         idx_quero = len(provas_que_quero)
-        assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero) == 6.1
+        assert Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero, peso_prova=peso_prova, peso_trabalho=peso_trabalho) == 6.1
     
     def test_media_final_externo_2(self):
         provas_que_tenho = []
@@ -568,13 +571,16 @@ class Test_Boletim:
         
         trabalhos_que_quero = []
         provas_que_quero = []
+
+        peso_prova=0
+        peso_trabalho=1.0
         
         tenho = provas_que_tenho + trabalhos_que_tenho
         quero = provas_que_quero + trabalhos_que_quero
         idx_tenho = len(provas_que_tenho)
         idx_quero = len(provas_que_quero)
         
-        media_final = Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero)
+        media_final = Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero, peso_prova=peso_prova, peso_trabalho=peso_trabalho)
         
         assert media_final == 8.2
         
@@ -590,13 +596,16 @@ class Test_Boletim:
         
         trabalhos_que_quero = []
         provas_que_quero = []
+
+        peso_prova=0.6
+        peso_trabalho=0.4
         
         tenho = provas_que_tenho + trabalhos_que_tenho
         quero = provas_que_quero + trabalhos_que_quero
         idx_tenho = len(provas_que_tenho)
         idx_quero = len(provas_que_quero)
         
-        media_final = Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero)
+        media_final = Boletim.media_final_externo(idx_tenho=idx_tenho, idx_quero=idx_quero, tenho=tenho, quero=quero, peso_prova=peso_prova, peso_trabalho=peso_trabalho)
         
         assert media_final == 5.8
         

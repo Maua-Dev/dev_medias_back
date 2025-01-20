@@ -55,6 +55,8 @@ class CalculateMeanController:
             combinacao_de_notas = self.usecase(
                 provas_que_tenho=provas_que_tenho,
                 trabalhos_que_tenho=trabalhos_que_tenho,
+                peso_prova=request.data.get('peso_prova'),
+                peso_trabalho=request.data.get('peso_trabalho')
             )
 
             viewmodel = CalculateMeanViewmodel(combinacao_de_notas)

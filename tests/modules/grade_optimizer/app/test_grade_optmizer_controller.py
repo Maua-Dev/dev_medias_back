@@ -15,43 +15,45 @@ class TestGradeOptimizerController:
             'provas_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.12
+                    'peso':0.25
                 }
             ],
             'trabalhos_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.08
+                    'peso':0.25
                 },
                 {
                     'valor':6.0,
-                    'peso':0.08
+                    'peso':0.25
                 },
             ],
             'provas_que_quero':[
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.25
                 },
                 {
                     'valor':None,
-                    'peso':0.18
+                    'peso':0.25
                 },
                 {
                     'valor':None,
-                    'peso':0.18
+                    'peso':0.25
                 },
             ],
             'trabalhos_que_quero':[
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.25
                 },
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.25
                 }
             ],
+            'peso_prova':0.4,
+            'peso_trabalho':0.6,
             'media_desejada':6
         })
 

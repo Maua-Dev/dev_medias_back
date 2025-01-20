@@ -12,20 +12,23 @@ class TestCalculateMeanController:
             'provas_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.3
+                    'peso':1.0
                 }
             ],
             'trabalhos_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.3
+                    'peso':0.4
                 },
                 {
                     'valor':6.0,
-                    'peso':0.4
+                    'peso':0.6
                 },
             ],
+            'peso_prova':0.3,
+            'peso_trabalho':0.7
         })
+
 
         usecase = CalculateMeanUsecase()
         controller = CalculateMeanController(usecase=usecase)

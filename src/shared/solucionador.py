@@ -34,7 +34,7 @@ class Solucionador:
         # Verifica se existe combinações para médias maiores que a pedida,
         # mas não existem combinações para o intervalo da média desejada
         while(media_desejada + Solucionador.aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
-            
+            print(2)
             # garantia de que os domínios estão no valor original
             for nota in boletim.quero_peso_global():
                 nota.restaura_dominio()
@@ -89,7 +89,7 @@ class Solucionador:
 
             # rodará até encontrar `NOTAS_TOTAIS` notas possíveis ou acabar as notas
             while (not todas_as_notas_verificadas):
-
+                print(1)
                 # verifica se chegou a iteração da última nota
                 if (all([idx_possiveis_notas[idx] == len(boletim.quero_peso_global()[idx].dominio_da_nota) - 1 for idx in
                         range(len(idx_possiveis_notas))])):

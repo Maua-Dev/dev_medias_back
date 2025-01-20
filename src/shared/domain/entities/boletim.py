@@ -34,40 +34,39 @@ class Boletim(abc.ABC):
         self.peso_trabalho = peso_trabalho
         
         if len(self.provas()) == 0:
-            peso_provas = 0
+            peso_prova = 0
         elif not self.valida_pesos(notas=self.provas()):
             raise EntityParameterError("A soma dos pesos das provas passadas deve ser 1")
 
         if len(self.trabalhos()) == 0:
-            peso_trabalhos = 0
+            peso_trabalho = 0
         elif not self.valida_pesos(notas=self.trabalhos()):
             raise EntityParameterError("A soma dos pesos dos trabalhos passados deve ser 1")
         
     def tenho_peso_global(self) -> List[Nota]:
         return [
-            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
+            Nota(valor=nota.valor, peso=nota.peso)
             for idx, nota in enumerate(self.tenho) 
             if idx < self.idx_tenho
         ] + [
-            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
+            Nota(valor=nota.valor, peso=nota.peso)
             for idx, nota in enumerate(self.tenho) 
             if idx >= self.idx_tenho
         ]
     
     def quero_peso_global(self) -> List[Nota]:
         return [
-            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
+            Nota(valor=nota.valor, peso=nota.peso )
             for idx, nota in enumerate(self.quero) 
             if idx < self.idx_quero
         ] + [
-            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
+            Nota(valor=nota.valor, peso=nota.peso)
             for idx, nota in enumerate(self.quero) 
             if idx >= self.idx_quero
         ]
 
     def provas(self) -> List[Nota]:
         result = self.tenho_peso_global()[:self.idx_tenho] + self.quero_peso_global()[:self.idx_quero]
-        print(result)
         return result
     
     def trabalhos(self) -> List[Nota]:
@@ -111,7 +110,7 @@ class Boletim(abc.ABC):
                 return round(media_x10) / 10
             else:
                 return (inteiro + 1) / 10
-
+            
         prova = arredondar_media(self.media_provas()) * self.peso_prova
         trabalho = arredondar_media(self.media_trabalhos()) * self.peso_trabalho
 
@@ -122,8 +121,6 @@ class Boletim(abc.ABC):
     @staticmethod
     def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota], peso_prova: float, peso_trabalho: float) -> float:
         boletim = Boletim(
-            peso_prova=1.0,
-            peso_trabalho=1.0,
             provas_que_quero=quero[:idx_quero],
             provas_que_tenho=tenho[:idx_tenho],
             trabalhos_que_quero=quero[idx_quero:],
