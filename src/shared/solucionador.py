@@ -26,15 +26,14 @@ class Solucionador:
         # Se não for possível atingir tal nota, retornará uma lista vazia
         # ex: se o aluno escolher média 10, e tirou 0 em alguma nota, esse "if" captará
         # obs: Nota.DOMINIO_DE_NOTAS[-1] = 10
-        if (Utils.media(boletim.tenho_peso_global() + [Nota(peso=boletim.quero_peso_global()[i].peso, valor=Nota.DOMINIO_DE_NOTAS[-1]) for i in
-                                           range(len(boletim.quero_peso_global()))]) - media_desejada < 0):
+        if (Boletim.media_final_externo(idx_tenho=boletim.idx_tenho, idx_quero=boletim.idx_quero, tenho=boletim.tenho, quero=[Nota(valor=Nota.DOMINIO_DE_NOTAS[-1],peso=nota.peso) for nota in boletim.quero], peso_prova=boletim.peso_prova, peso_trabalho=boletim.peso_trabalho) < media_desejada):
+                                                    
             return None
-
 
         # Verifica se existe combinações para médias maiores que a pedida,
         # mas não existem combinações para o intervalo da média desejada
         while(media_desejada + Solucionador.aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
-            print(2)
+       
             # garantia de que os domínios estão no valor original
             for nota in boletim.quero_peso_global():
                 nota.restaura_dominio()
@@ -58,7 +57,7 @@ class Solucionador:
 
                 # Para o cálculo de uma nota apenas, e quando `valor_minimo` for encontrado, este será o valor da nota procurada
                 if(tamanho_notas_que_quero == 1):
-                    boletim.quero_peso_global()[0].valor = valor_minimo
+                    boletim.quero[0].valor = valor_minimo
                     return boletim
                 
                 # seleciona um máximo valor de cada nota para que seja possível calcular uma média válida
@@ -81,7 +80,7 @@ class Solucionador:
 
             # lista de notas que quero determinar, utilizando a lista de domínios
             # de notas para montá-las formando, assim, a combinação inicial de notas
-            for idx, nota in enumerate(boletim.quero_peso_global()):
+            for idx, nota in enumerate(boletim.quero):
                 nota.valor = nota.dominio_da_nota[idx_possiveis_notas[idx]]
 
             # variável que representa que todas as notas foram verificadas
@@ -89,7 +88,7 @@ class Solucionador:
 
             # rodará até encontrar `NOTAS_TOTAIS` notas possíveis ou acabar as notas
             while (not todas_as_notas_verificadas):
-                print(1)
+                
                 # verifica se chegou a iteração da última nota
                 if (all([idx_possiveis_notas[idx] == len(boletim.quero_peso_global()[idx].dominio_da_nota) - 1 for idx in
                         range(len(idx_possiveis_notas))])):

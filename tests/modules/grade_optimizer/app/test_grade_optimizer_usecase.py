@@ -39,6 +39,7 @@ class TestGradeOptimizerUsecase:
             boletim_resp = usecase(peso_trabalho=peso_trabalho, peso_prova=peso_prova, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
             assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
 
+    
     def test_possible_grade_usecase_2(self):
         P1 = Nota(peso=0.2, valor=6.0)
         P2 = Nota(peso=0.2, valor=8.0)
