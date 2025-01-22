@@ -45,31 +45,39 @@ class Boletim(abc.ABC):
         
     def tenho_peso_global(self) -> List[Nota]:
         return [
-            Nota(valor=nota.valor, peso=nota.peso)
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
             for idx, nota in enumerate(self.tenho) 
             if idx < self.idx_tenho
         ] + [
-            Nota(valor=nota.valor, peso=nota.peso)
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
             for idx, nota in enumerate(self.tenho) 
             if idx >= self.idx_tenho
         ]
     
     def quero_peso_global(self) -> List[Nota]:
         return [
-            Nota(valor=nota.valor, peso=nota.peso )
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
             for idx, nota in enumerate(self.quero) 
             if idx < self.idx_quero
         ] + [
-            Nota(valor=nota.valor, peso=nota.peso)
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
             for idx, nota in enumerate(self.quero) 
             if idx >= self.idx_quero
         ]
 
     def provas(self) -> List[Nota]:
+        result = self.tenho[:self.idx_tenho] + self.quero[:self.idx_quero]
+        return result
+    
+    def provas_peso_global(self) -> List[Nota]:
         result = self.tenho_peso_global()[:self.idx_tenho] + self.quero_peso_global()[:self.idx_quero]
         return result
     
     def trabalhos(self) -> List[Nota]:
+        result = self.tenho[self.idx_tenho:] + self.quero[self.idx_quero:]
+        return result
+    
+    def trabalhos_peso_global(self) -> List[Nota]:
         result = self.tenho_peso_global()[self.idx_tenho:] + self.quero_peso_global()[self.idx_quero:]
         return result
     
