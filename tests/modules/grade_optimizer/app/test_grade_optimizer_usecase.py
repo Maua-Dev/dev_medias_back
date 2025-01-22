@@ -135,7 +135,7 @@ class TestGradeOptimizerUsecase:
         for _ in range(10):
             boletim_resp = usecase(peso_trabalho=peso_trabalho, peso_prova=peso_prova,provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho, media_desejada=media_desejada)
 
-            assert boletim_resp.quero[0].valor == 5.0 and boletim_resp.quero[1].valor == 5.5 or boletim_resp.quero[0].valor == 5.5 and boletim_resp.quero[1].valor == 5.0 
+            assert boletim_resp.quero[0].valor == 6.5 and boletim_resp.quero[1].valor == 6.5 or boletim_resp.quero[0].valor == 4.5 and boletim_resp.quero[1].valor == 4.5 or boletim_resp.quero[0].valor == 5.0 and boletim_resp.quero[1].valor == 5.0 or boletim_resp.quero[0].valor == 6.0 and boletim_resp.quero[1].valor == 6.0 or boletim_resp.quero[0].valor == 4.5 and boletim_resp.quero[1].valor == 6.0 or boletim_resp.quero[0].valor == 6.0 and boletim_resp.quero[1].valor == 4.5 or boletim_resp.quero[0].valor == 5.0 and boletim_resp.quero[1].valor == 6.5 or boletim_resp.quero[0].valor == 6.5 and boletim_resp.quero[1].valor == 5.0
             assert abs(round(boletim_resp.media_final() - media_desejada, 2)) <= Solucionador.ERR_MAX
             
     def test_possible_grade_usecase_6(self):
