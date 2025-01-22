@@ -28,7 +28,7 @@ class Utils:
         print(round(sum(map(lambda x: x.peso, l)), 2))
         for nota in l:
             print(nota.valor, nota.peso)
-        if round(sum(map(lambda x: x.peso, l)), 2) != 2.00:
+        if round(sum(map(lambda x: x.peso, l)), 2) != 1.00:
             raise FunctionInputError("media", "A soma dos pesos deve ser 1")
         return sum(map(lambda x: x.valor * x.peso, l))
 

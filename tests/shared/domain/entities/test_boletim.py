@@ -263,13 +263,13 @@ class Test_Boletim:
         trabalhos_que_tenho = [T1, T2]
         trabalhos_que_quero = []
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         
-        assert boletim.media_final() == 19.2
+        assert boletim.media_final() == 9.5
         
     def test_media_final_ceil(self):
         P1 = Nota(peso=0.5, valor=4)
@@ -284,8 +284,8 @@ class Test_Boletim:
         T2 = Nota(peso=0.5, valor=None)
         trabalhos_que_quero = [T1, T2]
         
-        peso_prova = P1.peso+P2.peso
-        peso_trabalho = T1.peso+T2.peso
+        peso_prova = 0.5
+        peso_trabalho = 0.5
 
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
@@ -293,7 +293,7 @@ class Test_Boletim:
         boletim.quero[1].valor = 7.5
         boletim.quero[2].valor = 8
         
-        assert boletim.media_final() == 13.6
+        assert boletim.media_final() == 6.8
         
     def test_provas(self):
         P1 = Nota(peso=0.2, valor=6.0)
