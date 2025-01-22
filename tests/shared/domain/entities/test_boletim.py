@@ -23,8 +23,8 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
@@ -49,8 +49,8 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = []
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = 0.25 + 0.25 + 0.25 + 0.25
+        peso_prova = 1.0
+        peso_trabalho = 0.0
 
         boletim = Boletim(peso_prova =peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
@@ -75,8 +75,8 @@ class Test_Boletim:
         provas_que_quero = []
         trabalhos_que_quero = [T3, T4]
         
-        peso_prova = 0.25 + 0.25 + 0.25 + 0.25
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.0
+        peso_trabalho = 1.0
 
         boletim = Boletim(peso_prova =peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
@@ -105,8 +105,8 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         with pytest.raises(EntityParameterError):
             Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
@@ -128,8 +128,8 @@ class Test_Boletim:
         provas_que_quero = P2
         trabalhos_que_quero = [T3, T4]
 
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
         
         with pytest.raises(EntityParameterError):
             Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
@@ -151,8 +151,8 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         with pytest.raises(EntityParameterError):
             Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
@@ -174,8 +174,8 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = T3
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         with pytest.raises(EntityParameterError):
             Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
@@ -204,7 +204,7 @@ class Test_Boletim:
 
         assert Boletim.valida_pesos(notas) == False
     
-    def test_boletim_pesos_invalidos(self):
+    def test_boletim_peso_prova_invalido(self):
         P1 = Nota(peso=0.12, valor=6.0)
         T1 = Nota(peso=0.08, valor=6.0)
         T2 = Nota(peso=0.08, valor=6.0)
@@ -221,12 +221,35 @@ class Test_Boletim:
         provas_que_quero = [P2, P3, P4]
         trabalhos_que_quero = [T3, T4]
         
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0
+        peso_trabalho = 1.0
 
         with pytest.raises(EntityParameterError):
             Boletim(peso_prova=peso_prova,peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
     
+    def test_boletim_peso_trabalho_invalido(self):
+        P1 = Nota(peso=0.12, valor=6.0)
+        T1 = Nota(peso=0.08, valor=6.0)
+        T2 = Nota(peso=0.08, valor=6.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = [T1, T2]
+
+        P2 = Nota(peso=0.12, valor=None)
+        P3 = Nota(peso=0.18, valor=None)
+        T3 = Nota(peso=0.12, valor=None)
+        P4 = Nota(peso=0.18, valor=None)
+        T4 = Nota(peso=0.13, valor=None)
+        
+        provas_que_quero = [P2, P3, P4]
+        trabalhos_que_quero = [T3, T4]
+        
+        peso_prova = 1.0
+        peso_trabalho = 0
+
+        with pytest.raises(EntityParameterError):
+            Boletim(peso_prova=peso_prova,peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+            
     def test_media_final_floor(self):
         P1 = Nota(peso=0.24, valor=1.0)
         provas_que_tenho = [P1]
@@ -572,7 +595,7 @@ class Test_Boletim:
         trabalhos_que_quero = []
         provas_que_quero = []
 
-        peso_prova=0
+        peso_prova=0.0
         peso_trabalho=1.0
         
         tenho = provas_que_tenho + trabalhos_que_tenho

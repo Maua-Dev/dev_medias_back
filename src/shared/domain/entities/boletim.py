@@ -23,6 +23,10 @@ class Boletim(abc.ABC):
             raise EntityParameterError("Lista de trabalhos_que_tenho deve ser do tipo List[Nota]")
         if not self.valida_lista_de_notas(trabalhos_que_quero):
             raise EntityParameterError("Lista de trabalhos_que_quero deve ser do tipo List[Nota]")
+        if not self.valida_peso_prova(peso_prova):
+            raise EntityParameterError("Parâmetro peso_prova não é válido")
+        if not self.valida_peso_trabalho(peso_trabalho):
+            raise EntityParameterError("Parâmetro peso_trabalho não é válido")
         
         self.tenho = provas_que_tenho + trabalhos_que_tenho
         self.quero = provas_que_quero + trabalhos_que_quero
@@ -156,6 +160,26 @@ class Boletim(abc.ABC):
                 return False
             if nota.valor == None:
                 return False
+        return True
+    
+    @staticmethod
+    def valida_peso_prova(peso_prova: float) -> bool:
+        if peso_prova == None:
+            return False
+        
+        if type(peso_prova) != float:
+            return False
+        
+        return True
+    
+    @staticmethod
+    def valida_peso_trabalho(peso_trabalho: float) -> bool:
+        if peso_trabalho == None:
+            return False
+        
+        if type(peso_trabalho) != float:
+            return False
+
         return True
     
     @staticmethod

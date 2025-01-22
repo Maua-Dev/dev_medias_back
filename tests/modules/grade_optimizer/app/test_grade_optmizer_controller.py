@@ -1573,6 +1573,8 @@ class TestGradeOptimizerController:
                     'peso':0.3
                 }
             ],
+            'peso_prova':0.6,
+            'peso_trabalho':0.4,
             'media_desejada':6
         })
         
@@ -1636,4 +1638,222 @@ class TestGradeOptimizerController:
         assert notas_resp.status_code == 400
         assert notas_resp.body == "Valor de nota 6.1 deve estar entre 0 e 10, variando de 0.5 em 0.5"
         
-    
+    def test_possible_grade_controller_peso_prova_nao_tem_valor(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':None,
+            'peso_trabalho':0.6,
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro peso_prova não é válido"
+
+    def test_possible_grade_controller_peso_prova_nao_e_float(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':'0.5',
+            'peso_trabalho':0.5,
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro peso_prova não é válido"
+
+    def test_possible_grade_controller_peso_trabalho_nao_tem_valor(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':0.4,
+            'peso_trabalho':None,
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro peso_trabalho não é válido"
+
+    def test_possible_grade_controller_peso_trabalho_nao_e_float(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':0.4,
+            'peso_trabalho':'0.6',
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == "Parâmetro peso_trabalho não é válido"

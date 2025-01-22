@@ -101,7 +101,7 @@ class Solucionador:
                 # verifica se a média varia de 0.04 em relação à média desejada
                 if (media_desejada - Solucionador.ERR_MAX <= media and media <= media_desejada + Solucionador.ERR_MAX + Solucionador.aumento_range):
                     # verifica se todas as notas distam da média no máximo MENOR_DIST
-                    if (Utils.distancia_entre_notas(boletim.quero_peso_global(), Solucionador.MENOR_DIST)):
+                    if (Utils.distancia_entre_notas(boletim.quero, Solucionador.MENOR_DIST)):
                         combinacao_possivel = [Nota(peso=nota.peso, valor=nota.valor) for nota in boletim.quero]
                         notas_possiveis.append(tuple(combinacao_possivel))
 
