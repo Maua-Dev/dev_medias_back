@@ -203,6 +203,80 @@ class Test_Boletim:
         notas = [P1, P2]
 
         assert Boletim.valida_pesos(notas) == False
+
+    def test_boletim_pesos_trabalho_peso_prova_validos(self):
+        P1 = Nota(peso=0.2, valor=6.0)
+        T1 = Nota(peso=0.2, valor=6.0)
+        T2 = Nota(peso=0.2, valor=6.0)
+        
+        provas_que_tenho = [P1]
+        trabalhos_que_tenho = [T1, T2]
+
+        P2 = Nota(peso=0.2, valor=None)
+        P3 = Nota(peso=0.2, valor=None)
+        T3 = Nota(peso=0.2, valor=None)
+        P4 = Nota(peso=0.4, valor=None)
+        T4 = Nota(peso=0.4, valor=None)
+        
+        provas_que_quero = [P2, P3, P4]
+        trabalhos_que_quero = [T3, T4]
+
+        peso_trabalho = 0.4
+        peso_prova = 0.6
+
+        assert peso_trabalho + peso_prova == 1.0
+
+    def test_tenho_peso_global(self):
+        P1 = Nota(peso=0.4, valor=6.0)
+        P2 = Nota(peso=0.6, valor=7.0)
+        T1 = Nota(peso=1.0, valor=8.0)
+            
+        provas_que_tenho = [P1, P2]
+        trabalhos_que_tenho = [T1]
+
+        peso_prova = 0.6
+        peso_trabalho = 0.4
+
+        boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_tenho=provas_que_tenho, trabalhos_que_tenho=trabalhos_que_tenho)
+
+        expected_result = [
+            Nota(valor=6.0, peso=0.4 * 0.6),
+            Nota(valor=7.0, peso=0.6 * 0.6),
+            Nota(valor=8.0, peso=1.0 * 0.4)
+        ]
+
+        result = boletim.tenho_peso_global()
+
+        assert len(result) == len(expected_result)
+        for i in range(len(result)):
+            assert result[i].valor == expected_result[i].valor
+            assert result[i].peso == expected_result[i].peso
+
+    def test_quero_peso_global(self):
+        P1 = Nota(peso=0.4, valor=6.0)
+        P2 = Nota(peso=0.6, valor=7.0)
+        T1 = Nota(peso=1.0, valor=8.0)
+            
+        provas_que_quero = [P1, P2]
+        trabalhos_que_quero = [T1]
+
+        peso_prova = 0.6
+        peso_trabalho = 0.4
+
+        boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, trabalhos_que_quero=trabalhos_que_quero)
+
+        expected_result = [
+            Nota(valor=6.0, peso=0.4 * 0.6),
+            Nota(valor=7.0, peso=0.6 * 0.6),
+            Nota(valor=8.0, peso=1.0 * 0.4)
+        ]
+
+        result = boletim.quero_peso_global()
+
+        assert len(result) == len(expected_result)
+        for i in range(len(result)):
+            assert result[i].valor == expected_result[i].valor
+            assert result[i].peso == expected_result[i].peso
     
     def test_boletim_peso_prova_invalido(self):
         P1 = Nota(peso=0.12, valor=6.0)
@@ -338,8 +412,8 @@ class Test_Boletim:
         provas = [P1, P2, P3, P4]
         trabalhos = [T1, T2, T3, T4]
 
-        peso_prova = P1.peso+P2.peso+P3.peso+P4.peso
-        peso_trabalho = T1.peso+T2.peso+T3.peso+T4.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
         
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
