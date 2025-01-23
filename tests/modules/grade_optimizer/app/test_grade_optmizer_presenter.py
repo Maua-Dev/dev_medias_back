@@ -373,6 +373,8 @@ class Test_GradeOptmizerPresenter:
                 ],
                 'trabalhos_que_quero':[
                 ],
+                'peso_prova':0.6,
+                'peso_trabalho':0.4,
                 'media_desejada':6
             },
             "pathParameters": None,

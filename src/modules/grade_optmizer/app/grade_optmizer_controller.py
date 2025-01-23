@@ -10,7 +10,7 @@ from src.shared.helpers.external_interfaces.external_interface import IRequest, 
 from src.shared.helpers.external_interfaces.http_codes import OK, BadRequest, InternalServerError, NotFound
 
 
-class GradeOptmizerController:
+class   GradeOptmizerController:
 
     def __init__(self, usecase: GradeOptimizerUsecase):
         self.usecase = usecase
@@ -91,7 +91,27 @@ class GradeOptmizerController:
                     fieldTypeExpected="float",
                     fieldTypeReceived=request.data.get('media_desejada').__class__.__name__
                 )
-                
+            
+            if request.data.get('peso_prova') is None:
+                raise MissingParameters('peso_prova')
+
+            if type(request.data.get('peso_prova')) != float:
+                raise WrongTypeParameter(
+                    fieldName="peso_prova",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('peso_prova').__class__.__name__
+                )
+            
+            if request.data.get('peso_trabalho') is None:
+                raise MissingParameters('peso_trabalho')
+            
+            if type(request.data.get('peso_trabalho')) != float:
+                raise WrongTypeParameter(
+                    fieldName="peso_trabalho",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('peso_trabalho').__class__.__name__
+                )
+            
             combinacao_de_notas = self.usecase(
                 provas_que_tenho=provas_que_tenho,
                 trabalhos_que_tenho=trabalhos_que_tenho,

@@ -1469,6 +1469,8 @@ class TestGradeOptimizerController:
             ],
             'trabalhos_que_quero':[
             ],
+            'peso_prova':0.6,
+            'peso_trabalho':0.4,
             'media_desejada':6
         })
         usecase = GradeOptimizerUsecase()
@@ -1521,6 +1523,8 @@ class TestGradeOptimizerController:
                     'peso':0.12
                 }
             ],
+            'peso_prova':0.6,
+            'peso_trabalho':0.4,
             'media_desejada':16.2
         })
         usecase = GradeOptimizerUsecase()
@@ -1691,7 +1695,7 @@ class TestGradeOptimizerController:
         notas_resp = controller(request=request)
 
         assert notas_resp.status_code == 400
-        assert notas_resp.body == "Parâmetro peso_prova não é válido"
+        assert notas_resp.body == 'Parâmetro peso_prova não existe'
 
     def test_possible_grade_controller_peso_prova_nao_e_float(self):
         request = HttpRequest(body={
@@ -1746,7 +1750,7 @@ class TestGradeOptimizerController:
         notas_resp = controller(request=request)
 
         assert notas_resp.status_code == 400
-        assert notas_resp.body == "Parâmetro peso_prova não é válido"
+        assert notas_resp.body == 'Parâmetro peso_prova não possui tipo correto.\n Recebido: str.\n Esperado: float'
 
     def test_possible_grade_controller_peso_trabalho_nao_tem_valor(self):
         request = HttpRequest(body={
@@ -1801,7 +1805,7 @@ class TestGradeOptimizerController:
         notas_resp = controller(request=request)
 
         assert notas_resp.status_code == 400
-        assert notas_resp.body == "Parâmetro peso_trabalho não é válido"
+        assert notas_resp.body == 'Parâmetro peso_trabalho não existe'
 
     def test_possible_grade_controller_peso_trabalho_nao_e_float(self):
         request = HttpRequest(body={
@@ -1856,4 +1860,4 @@ class TestGradeOptimizerController:
         notas_resp = controller(request=request)
 
         assert notas_resp.status_code == 400
-        assert notas_resp.body == "Parâmetro peso_trabalho não é válido"
+        assert notas_resp.body == 'Parâmetro peso_trabalho não possui tipo correto.\n Recebido: str.\n Esperado: float'
