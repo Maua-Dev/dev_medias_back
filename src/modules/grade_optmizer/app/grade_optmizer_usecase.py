@@ -11,7 +11,7 @@ class GradeOptimizerUsecase:
     def __init__(self):
         pass
 
-    def __call__(self, provas_que_tenho: List[Nota], provas_que_quero: List[Nota], trabalhos_que_tenho: List[Nota], trabalhos_que_quero: List[Nota],  media_desejada: float) -> List[Nota]:
+    def __call__(self, peso_trabalho: float, peso_prova: float, provas_que_tenho: List[Nota], provas_que_quero: List[Nota], trabalhos_que_tenho: List[Nota], trabalhos_que_quero: List[Nota],  media_desejada: float) -> List[Nota]:
         if(len(provas_que_quero) + len(trabalhos_que_quero)== 0):
             raise InvalidInput("provas_que_quero e trabalhos_que_quero", "Não podem ser listas vazias")
         
@@ -19,7 +19,7 @@ class GradeOptimizerUsecase:
             raise InvalidInput("media_desejada", "Deve estar compreendida entre 0 e 10")
         
         # validação dos pesos feita pelo próprio boletim
-        boletim = Boletim(provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
+        boletim = Boletim(peso_trabalho=peso_trabalho, peso_prova=peso_prova, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
         response = Solucionador.algoritmo(boletim=boletim, media_desejada=media_desejada)
         

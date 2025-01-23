@@ -52,43 +52,45 @@ class Test_GradeOptmizerPresenter:
                 'provas_que_tenho':[
                     {
                         'valor':6.0,
-                        'peso':0.12
+                        'peso':0.2
                     }
                 ],
                 'trabalhos_que_tenho':[
                     {
                         'valor':6.0,
-                        'peso':0.08
+                        'peso':0.2
                     },
                     {
                         'valor':6.0,
-                        'peso':0.08
+                        'peso':0.2
                     },
                 ],
                 'provas_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.2
                     },
                     {
                         'valor':None,
-                        'peso':0.18
+                        'peso':0.3
                     },
                     {
                         'valor':None,
-                        'peso':0.18
+                        'peso':0.3
                     },
                 ],
                 'trabalhos_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.3
                     },
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.3
                     }
                 ],
+                'peso_prova':0.4,
+                'peso_trabalho':0.6,
                 'media_desejada':6
             },
             "pathParameters": None,
@@ -149,43 +151,45 @@ class Test_GradeOptmizerPresenter:
                 'provas_que_tenho':[
                     {
                         'valor':6.0,
-                        'peso':0.12
+                        'peso':0.2
                     }
                 ],
                 'trabalhos_que_tenho':[
                     {
                         'valor':6.0,
-                        'peso':0.08
+                        'peso':0.2
                     },
                     {
                         'valor':6.0,
-                        'peso':0.08
+                        'peso':0.2
                     },
                 ],
                 'provas_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.2
                     },
                     {
                         'valor':None,
-                        'peso':0.18
+                        'peso':0.3
                     }, 
                     {
                         'valor':None,
-                        'peso':0.18
+                        'peso':0.3
                     },
                 ],
                 'trabalhos_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.3
                     },
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.3
                     }
                 ],
+                'peso_prova':0.4,
+                'peso_trabalho':0.6,
                 'media_desejada':9.9
             },
             "pathParameters": None,
@@ -198,7 +202,7 @@ class Test_GradeOptmizerPresenter:
         assert json.loads(response["body"]) == "O algoritmo não encontrou uma combinação possível de notas"
         
     def test_grade_optmizer_presenter_3(self):
-        event = {'resource': '/mss-medias/grade-optmizer', 'path': '/mss-medias/grade-optmizer', 'httpMethod': 'POST', 'headers': {'Accept': 'application/json, text/plain, */*', 'Accept-Encoding': 'gzip, deflate, br', 'Accept-Language': 'pt-BR,pt;q=0.9', 'CloudFront-Forwarded-Proto': 'https', 'CloudFront-Is-Desktop-Viewer': 'true', 'CloudFront-Is-Mobile-Viewer': 'false', 'CloudFront-Is-SmartTV-Viewer': 'false', 'CloudFront-Is-Tablet-Viewer': 'false', 'CloudFront-Viewer-ASN': '262572', 'CloudFront-Viewer-Country': 'BR', 'content-type': 'application/x-www-form-urlencoded', 'Host': '6y6t219val.execute-api.us-east-1.amazonaws.com', 'User-Agent': 'dev_medias_front_rn/13 CFNetwork/1399 Darwin/22.1.0', 'Via': '2.0 f3d66dd6903122e5440aadd45dc50cc4.cloudfront.net (CloudFront)', 'X-Amz-Cf-Id': 'AfLnC3mA1yN6jdQlm8sQV2Ay1uMGueheaDKSDSXRvZY3Lt37eWDPHQ==', 'X-Amzn-Trace-Id': 'Root=1-65049ed9-19583a3f770e787702731a1e', 'X-Forwarded-For': '177.73.176.61, 15.158.37.228', 'X-Forwarded-Port': '443', 'X-Forwarded-Proto': 'https'}, 'multiValueHeaders': {'Accept': ['application/json, text/plain, */*'], 'Accept-Encoding': ['gzip, deflate, br'], 'Accept-Language': ['pt-BR,pt;q=0.9'], 'CloudFront-Forwarded-Proto': ['https'], 'CloudFront-Is-Desktop-Viewer': ['true'], 'CloudFront-Is-Mobile-Viewer': ['false'], 'CloudFront-Is-SmartTV-Viewer': ['false'], 'CloudFront-Is-Tablet-Viewer': ['false'], 'CloudFront-Viewer-ASN': ['262572'], 'CloudFront-Viewer-Country': ['BR'], 'content-type': ['application/x-www-form-urlencoded'], 'Host': ['6y6t219val.execute-api.us-east-1.amazonaws.com'], 'User-Agent': ['dev_medias_front_rn/13 CFNetwork/1399 Darwin/22.1.0'], 'Via': ['2.0 f3d66dd6903122e5440aadd45dc50cc4.cloudfront.net (CloudFront)'], 'X-Amz-Cf-Id': ['AfLnC3mA1yN6jdQlm8sQV2Ay1uMGueheaDKSDSXRvZY3Lt37eWDPHQ=='], 'X-Amzn-Trace-Id': ['Root=1-65049ed9-19583a3f770e787702731a1e'], 'X-Forwarded-For': ['177.73.176.61, 15.158.37.228'], 'X-Forwarded-Port': ['443'], 'X-Forwarded-Proto': ['https']}, 'queryStringParameters': None, 'multiValueQueryStringParameters': None, 'pathParameters': None, 'stageVariables': None, 'requestContext': {'resourceId': 'efmcxg', 'resourcePath': '/mss-medias/grade-optmizer', 'httpMethod': 'POST', 'extendedRequestId': 'LT3CDEbAIAMFhaA=', 'requestTime': '15/Sep/2023:18:13:45 +0000', 'path': '/prod/mss-medias/grade-optmizer', 'accountId': '264055331071', 'protocol': 'HTTP/1.1', 'stage': 'prod', 'domainPrefix': '6y6t219val', 'requestTimeEpoch': 1694801625664, 'requestId': '6268e957-9a15-4113-9235-d80770cb6939', 'identity': {'cognitoIdentityPoolId': None, 'accountId': None, 'cognitoIdentityId': None, 'caller': None, 'sourceIp': '177.73.176.61', 'principalOrgId': None, 'accessKey': None, 'cognitoAuthenticationType': None, 'cognitoAuthenticationProvider': None, 'userArn': None, 'userAgent': 'dev_medias_front_rn/13 CFNetwork/1399 Darwin/22.1.0', 'user': None}, 'domainName': '6y6t219val.execute-api.us-east-1.amazonaws.com', 'apiId': '6y6t219val'}, 'body': '{"provas_que_tenho":[{"valor":9.5,"peso":0.3}],"provas_que_quero":[{"peso":0.3}],"trabalhos_que_tenho":[{"valor":9,"peso":0.1},{"valor":9.5,"peso":0.1}],"trabalhos_que_quero":[{"peso":0.1},{"peso":0.1}],"media_desejada":6}', 'isBase64Encoded': False}
+        event = {'resource': '/mss-medias/grade-optmizer', 'path': '/mss-medias/grade-optmizer', 'httpMethod': 'POST', 'headers': {'Accept': 'application/json, text/plain, */*', 'Accept-Encoding': 'gzip, deflate, br', 'Accept-Language': 'pt-BR,pt;q=0.9', 'CloudFront-Forwarded-Proto': 'https', 'CloudFront-Is-Desktop-Viewer': 'true', 'CloudFront-Is-Mobile-Viewer': 'false', 'CloudFront-Is-SmartTV-Viewer': 'false', 'CloudFront-Is-Tablet-Viewer': 'false', 'CloudFront-Viewer-ASN': '262572', 'CloudFront-Viewer-Country': 'BR', 'content-type': 'application/x-www-form-urlencoded', 'Host': '6y6t219val.execute-api.us-east-1.amazonaws.com', 'User-Agent': 'dev_medias_front_rn/13 CFNetwork/1399 Darwin/22.1.0', 'Via': '2.0 f3d66dd6903122e5440aadd45dc50cc4.cloudfront.net (CloudFront)', 'X-Amz-Cf-Id': 'AfLnC3mA1yN6jdQlm8sQV2Ay1uMGueheaDKSDSXRvZY3Lt37eWDPHQ==', 'X-Amzn-Trace-Id': 'Root=1-65049ed9-19583a3f770e787702731a1e', 'X-Forwarded-For': '177.73.176.61, 15.158.37.228', 'X-Forwarded-Port': '443', 'X-Forwarded-Proto': 'https'}, 'multiValueHeaders': {'Accept': ['application/json, text/plain, */*'], 'Accept-Encoding': ['gzip, deflate, br'], 'Accept-Language': ['pt-BR,pt;q=0.9'], 'CloudFront-Forwarded-Proto': ['https'], 'CloudFront-Is-Desktop-Viewer': ['true'], 'CloudFront-Is-Mobile-Viewer': ['false'], 'CloudFront-Is-SmartTV-Viewer': ['false'], 'CloudFront-Is-Tablet-Viewer': ['false'], 'CloudFront-Viewer-ASN': ['262572'], 'CloudFront-Viewer-Country': ['BR'], 'content-type': ['application/x-www-form-urlencoded'], 'Host': ['6y6t219val.execute-api.us-east-1.amazonaws.com'], 'User-Agent': ['dev_medias_front_rn/13 CFNetwork/1399 Darwin/22.1.0'], 'Via': ['2.0 f3d66dd6903122e5440aadd45dc50cc4.cloudfront.net (CloudFront)'], 'X-Amz-Cf-Id': ['AfLnC3mA1yN6jdQlm8sQV2Ay1uMGueheaDKSDSXRvZY3Lt37eWDPHQ=='], 'X-Amzn-Trace-Id': ['Root=1-65049ed9-19583a3f770e787702731a1e'], 'X-Forwarded-For': ['177.73.176.61, 15.158.37.228'], 'X-Forwarded-Port': ['443'], 'X-Forwarded-Proto': ['https']}, 'queryStringParameters': None, 'multiValueQueryStringParameters': None, 'pathParameters': None, 'stageVariables': None, 'requestContext': {'resourceId': 'efmcxg', 'resourcePath': '/mss-medias/grade-optmizer', 'httpMethod': 'POST', 'extendedRequestId': 'LT3CDEbAIAMFhaA=', 'requestTime': '15/Sep/2023:18:13:45 +0000', 'path': '/prod/mss-medias/grade-optmizer', 'accountId': '264055331071', 'protocol': 'HTTP/1.1', 'stage': 'prod', 'domainPrefix': '6y6t219val', 'requestTimeEpoch': 1694801625664, 'requestId': '6268e957-9a15-4113-9235-d80770cb6939', 'identity': {'cognitoIdentityPoolId': None, 'accountId': None, 'cognitoIdentityId': None, 'caller': None, 'sourceIp': '177.73.176.61', 'principalOrgId': None, 'accessKey': None, 'cognitoAuthenticationType': None, 'cognitoAuthenticationProvider': None, 'userArn': None, 'userAgent': 'dev_medias_front_rn/13 CFNetwork/1399 Darwin/22.1.0', 'user': None}, 'domainName': '6y6t219val.execute-api.us-east-1.amazonaws.com', 'apiId': '6y6t219val'}, 'body': '{"provas_que_tenho":[{"valor":9.5,"peso":0.5}],"provas_que_quero":[{"peso":0.5}],"trabalhos_que_tenho":[{"valor":9,"peso":0.25},{"valor":9.5,"peso":0.25}],"trabalhos_que_quero":[{"peso":0.25},{"peso":0.25}],"peso_prova":0.5,"peso_trabalho":0.5,"media_desejada":6}', 'isBase64Encoded': False}
 
         for i in range(400):
             response = lambda_handler(event=event, context=None)
@@ -253,43 +257,45 @@ class Test_GradeOptmizerPresenter:
                 'provas_que_tenho':[
                     {
                         'valor':6.0,
-                        'peso':0.12
+                        'peso':0.2
                     }
                 ],
                 'trabalhos_que_tenho':[
                     {
                         'valor':6.0,
-                        'peso':0.08
+                        'peso':0.2
                     },
                     {
                         'valor':6.0,
-                        'peso':0.08
+                        'peso':0.2
                     },
                 ],
                 'provas_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.2
                     },
                     {
                         'valor':None,
-                        'peso':0.19
+                        'peso':0.3
                     },
                     {
                         'valor':None,
-                        'peso':0.18
+                        'peso':0.4
                     },
                 ],
                 'trabalhos_que_quero':[
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.3
                     },
                     {
                         'valor':None,
-                        'peso':0.12
+                        'peso':0.3
                     }
                 ],
+                'peso_prova':0.4,
+                'peso_trabalho':0.6,
                 'media_desejada':6
             },
             "pathParameters": None,
@@ -299,7 +305,7 @@ class Test_GradeOptmizerPresenter:
 
         response = lambda_handler(event=event, context=None)
         assert response["statusCode"] == 400
-        assert json.loads(response["body"]) == "A soma dos pesos das notas passadas deve ser 1"
+        assert json.loads(response["body"]) == "A soma dos pesos das provas passadas deve ser 1"
   
     def test_grade_optmizer_presenter_bad_request_2(self):
         event = {
@@ -367,6 +373,8 @@ class Test_GradeOptmizerPresenter:
                 ],
                 'trabalhos_que_quero':[
                 ],
+                'peso_prova':0.6,
+                'peso_trabalho':0.4,
                 'media_desejada':6
             },
             "pathParameters": None,

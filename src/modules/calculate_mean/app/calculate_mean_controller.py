@@ -49,12 +49,33 @@ class CalculateMeanController:
                     raise EntityError("valor")
                 if(nota.get('peso') == None):
                     raise EntityError("peso")
+            
+            if request.data.get('peso_prova') is None:
+                raise MissingParameters('peso_prova')
+            if type(request.data.get('peso_prova')) != float:
+                raise WrongTypeParameter(
+                    fieldName="peso_prova",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('peso_prova').__class__.__name__
+                )
+            
+            if request.data.get('peso_trabalho') is None:
+                raise MissingParameters('peso_trabalho')
+            if type(request.data.get('peso_trabalho')) != float:
+                raise WrongTypeParameter(
+                    fieldName="peso_trabalho",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('peso_trabalho').__class__.__name__
+                )
+            
             trabalhos_que_tenho = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('trabalhos_que_tenho')]
                 
                 
             combinacao_de_notas = self.usecase(
                 provas_que_tenho=provas_que_tenho,
                 trabalhos_que_tenho=trabalhos_que_tenho,
+                peso_prova=request.data.get('peso_prova'),
+                peso_trabalho=request.data.get('peso_trabalho')
             )
 
             viewmodel = CalculateMeanViewmodel(combinacao_de_notas)
