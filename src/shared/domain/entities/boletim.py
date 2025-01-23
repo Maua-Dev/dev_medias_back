@@ -10,9 +10,11 @@ class Boletim(abc.ABC):
     tenho: List[Nota]	
     quero: List[Nota]
     idx_tenho: int # idx que representa onde se iniciam os trabalhos que tenho no atributo `tenho` 
-    idx_quero: int # idx que representa onde se iniciam os trabalhos que quero no atributo `quero`
+    idx_quero: int # idx que representa onde se iniciam os trabalhos que quero no atributo `quero`peso_prova
+    peso_prova = float
+    peso_trabalho = float
 
-    def __init__(self, provas_que_tenho: List[Nota] = [], provas_que_quero: List[Nota] = [], trabalhos_que_tenho: List[Nota] = [], trabalhos_que_quero: List[Nota] = []):
+    def __init__(self, peso_prova: float, peso_trabalho: float,provas_que_tenho: List[Nota] = [], provas_que_quero: List[Nota] = [], trabalhos_que_tenho: List[Nota] = [], trabalhos_que_quero: List[Nota] = []):
         if not self.valida_lista_de_notas(provas_que_tenho):
             raise EntityParameterError("Lista de provas_que_tenho deve ser do tipo List[Nota]")
         if not self.valida_lista_de_notas(provas_que_quero):
@@ -21,22 +23,66 @@ class Boletim(abc.ABC):
             raise EntityParameterError("Lista de trabalhos_que_tenho deve ser do tipo List[Nota]")
         if not self.valida_lista_de_notas(trabalhos_que_quero):
             raise EntityParameterError("Lista de trabalhos_que_quero deve ser do tipo List[Nota]")
+        if not self.valida_peso_prova(peso_prova):
+            raise EntityParameterError("Parâmetro peso_prova não é válido")
+        if not self.valida_peso_trabalho(peso_trabalho):
+            raise EntityParameterError("Parâmetro peso_trabalho não é válido")
         
         self.tenho = provas_que_tenho + trabalhos_que_tenho
         self.quero = provas_que_quero + trabalhos_que_quero
         
         self.idx_tenho = len(provas_que_tenho)
         self.idx_quero = len(provas_que_quero)       
+
+        self.peso_prova = peso_prova
+        self.peso_trabalho = peso_trabalho
         
-        if(not self.valida_pesos(provas=self.provas(), trabalhos=self.trabalhos())):
-            raise EntityParameterError("A soma dos pesos das notas passadas deve ser 1")
+        if len(self.provas()) == 0:
+            peso_prova = 0
+        elif not self.valida_pesos(notas=self.provas()):
+            raise EntityParameterError("A soma dos pesos das provas passadas deve ser 1")
+
+        if len(self.trabalhos()) == 0:
+            peso_trabalho = 0
+        elif not self.valida_pesos(notas=self.trabalhos()):
+            raise EntityParameterError("A soma dos pesos dos trabalhos passados deve ser 1")
         
+    def tenho_peso_global(self) -> List[Nota]:
+        return [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
+            for idx, nota in enumerate(self.tenho) 
+            if idx < self.idx_tenho
+        ] + [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
+            for idx, nota in enumerate(self.tenho) 
+            if idx >= self.idx_tenho
+        ]
+    
+    def quero_peso_global(self) -> List[Nota]:
+        return [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_prova)
+            for idx, nota in enumerate(self.quero) 
+            if idx < self.idx_quero
+        ] + [
+            Nota(valor=nota.valor, peso=nota.peso * self.peso_trabalho)
+            for idx, nota in enumerate(self.quero) 
+            if idx >= self.idx_quero
+        ]
+
     def provas(self) -> List[Nota]:
         result = self.tenho[:self.idx_tenho] + self.quero[:self.idx_quero]
         return result
     
+    def provas_peso_global(self) -> List[Nota]:
+        result = self.tenho_peso_global()[:self.idx_tenho] + self.quero_peso_global()[:self.idx_quero]
+        return result
+    
     def trabalhos(self) -> List[Nota]:
         result = self.tenho[self.idx_tenho:] + self.quero[self.idx_quero:]
+        return result
+    
+    def trabalhos_peso_global(self) -> List[Nota]:
+        result = self.tenho_peso_global()[self.idx_tenho:] + self.quero_peso_global()[self.idx_quero:]
         return result
     
     def provas_que_quero(self) -> List[Nota]:
@@ -49,6 +95,8 @@ class Boletim(abc.ABC):
         if(self.valida_preenchimento(self.provas()) == False):
             raise FunctionInputError("media_provas", "O valor das provas devem estar preenchidos")
         decimal_value = sum(map(lambda x: x.valor * x.peso, self.provas()))
+        if decimal_value * 100 % 1 > 0.9999999999:
+            decimal_value = round(decimal_value, ndigits=2)
         return decimal_value
 
     
@@ -56,18 +104,41 @@ class Boletim(abc.ABC):
         if(self.valida_preenchimento(self.trabalhos()) == False):
             raise FunctionInputError("media_trabalhos", "O valor dos trabalhos devem estar preenchidos")
         decimal_value = sum(map(lambda x: x.valor * x.peso, self.trabalhos()))
+        if decimal_value * 100 % 1 > 0.9999999999:
+            decimal_value = round(decimal_value, ndigits=2)
         return decimal_value
 
     def media_final(self) -> float:
-        return round(self.media_provas() + self.media_trabalhos(), ndigits=1)
+        
+        def arredondar_media(media):
+            # Multiplica a média por 10 para trabalhar com o centésimo
+            media_x10 = media * 10
+            # Separa o valor inteiro e a parte decimal da multiplicação
+            inteiro = int(media_x10)
+            decimal = media_x10 - inteiro
+
+            # Verifica se o centésimo é maior ou igual a 0.5
+            if decimal < 0.5:
+                return round(media_x10) / 10
+            else:
+                return (inteiro + 1) / 10
+            
+        prova = arredondar_media(self.media_provas()) * self.peso_prova
+        trabalho = arredondar_media(self.media_trabalhos()) * self.peso_trabalho
+
+        return arredondar_media(prova + trabalho)
+        
+        
     
     @staticmethod
-    def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota]) -> float:
+    def media_final_externo(idx_tenho: int, idx_quero: int, tenho: List[Nota], quero: List[Nota], peso_prova: float, peso_trabalho: float) -> float:
         boletim = Boletim(
             provas_que_quero=quero[:idx_quero],
             provas_que_tenho=tenho[:idx_tenho],
             trabalhos_que_quero=quero[idx_quero:],
-            trabalhos_que_tenho=tenho[idx_tenho:]
+            trabalhos_que_tenho=tenho[idx_tenho:],
+            peso_prova=peso_prova,
+            peso_trabalho=peso_trabalho
         )              
         return boletim.media_final()
 
@@ -92,9 +163,29 @@ class Boletim(abc.ABC):
         return True
     
     @staticmethod
-    def valida_pesos(provas: List[Nota], trabalhos: List[Nota]) -> bool:
-        pesos = round(number=sum([prova.peso for prova in provas]) + sum([trabalho.peso for trabalho in trabalhos]), ndigits=2)
-        if pesos != 1.00:
+    def valida_peso_prova(peso_prova: float) -> bool:
+        if peso_prova == None:
+            return False
+        
+        if type(peso_prova) != float:
+            return False
+        
+        return True
+    
+    @staticmethod
+    def valida_peso_trabalho(peso_trabalho: float) -> bool:
+        if peso_trabalho == None:
+            return False
+        
+        if type(peso_trabalho) != float:
+            return False
+
+        return True
+    
+    @staticmethod
+    def valida_pesos(notas: List[Nota]) -> bool:
+        pesos = round(sum([nota.peso for nota in notas]), 2)
+        if abs(pesos - 1.00) > 0.01:
             return False
         return True
     

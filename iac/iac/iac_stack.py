@@ -1,14 +1,16 @@
 import os
 from aws_cdk import (
-    Stack,
+    aws_lambda as lambda_,
+    Stack
 )
+
 from constructs import Construct
 
 from .lambda_stack import LambdaStack
 from aws_cdk.aws_apigateway import RestApi, Cors
 
 from .subject_stack import SubjectStack
-
+from .lambda_contact_us_stack import LambdaContactUsStack
 
 class IacStack(Stack):
     lambda_stack: LambdaStack
@@ -54,4 +56,9 @@ class IacStack(Stack):
         self.lambda_stack = LambdaStack(self, api_gateway_resource=api_gateway_resource,
                                         environment_variables=ENVIRONMENT_VARIABLES)
 
+        self.contact_us_lambda_stack = LambdaContactUsStack(self, api_gateway_resource=api_gateway_resource,
+                                                            lambda_layer=self.lambda_stack.lambda_layer,
+                                                            stage=stage)
+        
         self.subject_stack = SubjectStack(self)
+

@@ -15,43 +15,45 @@ class TestGradeOptimizerController:
             'provas_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.12
+                    'peso':0.25
                 }
             ],
             'trabalhos_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.08
+                    'peso':0.25
                 },
                 {
                     'valor':6.0,
-                    'peso':0.08
+                    'peso':0.25
                 },
             ],
             'provas_que_quero':[
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.25
                 },
                 {
                     'valor':None,
-                    'peso':0.18
+                    'peso':0.25
                 },
                 {
                     'valor':None,
-                    'peso':0.18
+                    'peso':0.25
                 },
             ],
             'trabalhos_que_quero':[
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.25
                 },
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.25
                 }
             ],
+            'peso_prova':0.4,
+            'peso_trabalho':0.6,
             'media_desejada':6
         })
 
@@ -65,26 +67,27 @@ class TestGradeOptimizerController:
 
     def test_possible_grade_controller_2(self):
         request = HttpRequest(body={
-            "provas_que_tenho":[
-                {"valor":6,"peso":0.175},
-                {"valor":4,"peso":0.175}
+            'provas_que_tenho':[
+                {'valor':6,'peso':0.2},
+                {'valor':4,'peso':0.2}
             ],
-            "provas_que_quero":[
-                {"peso":0.175},{"peso":0.175}
+            'provas_que_quero':[
+                {'valor':None,'peso':0.3},{'valor':None,'peso':0.3}
             ],
-            "trabalhos_que_tenho":[
-                {"valor":6,"peso":0.0375},
-                {"valor":8.5,"peso":0.0375}
+            'trabalhos_que_tenho':[
+                {'valor':6,'peso':0.1},
+                {'valor':8.5,'peso':0.1}
             ],
             "trabalhos_que_quero":[
-                {"peso":0.0375},
-                {"peso":0.0375},
-                {"peso":0.0375},
-                {"peso":0.0375},
-                {"peso":0.0375},
-                {"peso":0.0375}
+                {'valor':None,'peso':0.1},
+                {'valor':None,'peso':0.1},
+                {'valor':None,'peso':0.2},
+                {'valor':None,'peso':0.2},
+                {'valor':None,'peso':0.2}
             ],
-            "media_desejada":6
+            'peso_prova':0.4,
+            'peso_trabalho':0.6,
+            'media_desejada':6
         })
 
         usecase = GradeOptimizerUsecase()
@@ -1466,6 +1469,8 @@ class TestGradeOptimizerController:
             ],
             'trabalhos_que_quero':[
             ],
+            'peso_prova':0.6,
+            'peso_trabalho':0.4,
             'media_desejada':6
         })
         usecase = GradeOptimizerUsecase()
@@ -1518,6 +1523,8 @@ class TestGradeOptimizerController:
                     'peso':0.12
                 }
             ],
+            'peso_prova':0.6,
+            'peso_trabalho':0.4,
             'media_desejada':16.2
         })
         usecase = GradeOptimizerUsecase()
@@ -1533,43 +1540,45 @@ class TestGradeOptimizerController:
             'provas_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.12
+                    'peso':0.2
                 }
             ],
             'trabalhos_que_tenho':[
                 {
                     'valor':6.0,
-                    'peso':0.08
+                    'peso':0.2
                 },
                 {
                     'valor':6.0,
-                    'peso':0.08
+                    'peso':0.2
                 },
             ],
             'provas_que_quero':[
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.2
                 },
                 {
                     'valor':None,
-                    'peso':0.19
+                    'peso':0.3
                 },
                 {
                     'valor':None,
-                    'peso':0.18
+                    'peso':0.4
                 },
             ],
             'trabalhos_que_quero':[
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.3
                 },
                 {
                     'valor':None,
-                    'peso':0.12
+                    'peso':0.3
                 }
             ],
+            'peso_prova':0.6,
+            'peso_trabalho':0.4,
             'media_desejada':6
         })
         
@@ -1579,7 +1588,7 @@ class TestGradeOptimizerController:
         notas_resp = controller(request=request)
 
         assert notas_resp.status_code == 400
-        assert notas_resp.body == "A soma dos pesos das notas passadas deve ser 1"
+        assert notas_resp.body == "A soma dos pesos das provas passadas deve ser 1"
         
     def test_possible_grade_controller_entity_parameter_error(self):
         request = HttpRequest(body={
@@ -1633,4 +1642,222 @@ class TestGradeOptimizerController:
         assert notas_resp.status_code == 400
         assert notas_resp.body == "Valor de nota 6.1 deve estar entre 0 e 10, variando de 0.5 em 0.5"
         
-    
+    def test_possible_grade_controller_peso_prova_nao_tem_valor(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':None,
+            'peso_trabalho':0.6,
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == 'Parâmetro peso_prova não existe'
+
+    def test_possible_grade_controller_peso_prova_nao_e_float(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':'0.5',
+            'peso_trabalho':0.5,
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == 'Parâmetro peso_prova não possui tipo correto.\n Recebido: str.\n Esperado: float'
+
+    def test_possible_grade_controller_peso_trabalho_nao_tem_valor(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':0.4,
+            'peso_trabalho':None,
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == 'Parâmetro peso_trabalho não existe'
+
+    def test_possible_grade_controller_peso_trabalho_nao_e_float(self):
+        request = HttpRequest(body={
+            'provas_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                }
+            ],
+            'trabalhos_que_tenho':[
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+                {
+                    'valor':6.0,
+                    'peso':0.25
+                },
+            ],
+            'provas_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+            ],
+            'trabalhos_que_quero':[
+                {
+                    'valor':None,
+                    'peso':0.25
+                },
+                {
+                    'valor':None,
+                    'peso':0.25
+                }
+            ],
+            'peso_prova':0.4,
+            'peso_trabalho':'0.6',
+            'media_desejada':6
+        })
+
+        usecase = GradeOptimizerUsecase()
+        controller = GradeOptmizerController(usecase=usecase)
+
+        notas_resp = controller(request=request)
+
+        assert notas_resp.status_code == 400
+        assert notas_resp.body == 'Parâmetro peso_trabalho não possui tipo correto.\n Recebido: str.\n Esperado: float'
