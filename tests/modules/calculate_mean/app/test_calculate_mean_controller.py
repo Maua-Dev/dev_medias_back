@@ -57,7 +57,7 @@ class TestCalculateMeanController:
                     'peso':0.6
                 },
             ],
-            'peso_trabalho':None
+            'peso_trabalho':None,
             'peso_trabalho':0.7
         })
 
