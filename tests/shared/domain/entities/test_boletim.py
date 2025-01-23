@@ -741,8 +741,8 @@ class Test_Boletim:
         T2 = Nota(peso=0.6, valor=None)
         trabalhos_que_quero = [T1, T2]
         
-        peso_prova = P1.peso + P2.peso
-        peso_trabalho = T1.peso + T2.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=provas_que_quero, provas_que_tenho=provas_que_tenho, trabalhos_que_quero=trabalhos_que_quero, trabalhos_que_tenho=trabalhos_que_tenho)
         
@@ -757,8 +757,8 @@ class Test_Boletim:
         T1 = Nota(peso=0.5, valor=4.0)
         T2 = Nota(peso=0.5, valor=6.0)
 
-        peso_prova = P1.peso + P2.peso + P3.peso
-        peso_trabalho = T1.peso + T2.peso
+        peso_prova = 0.6
+        peso_trabalho = 0.4
 
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=[], provas_que_tenho=[P1,P2,P3], trabalhos_que_quero=[T2], trabalhos_que_tenho=[T1])
         assert str(boletim) == 'Provas: [\nTenho: [ (Valor: 6.0, Peso: 0.2), (Valor: 3.0, Peso: 0.2), (Valor: 10.0, Peso: 0.6) ]\nQuero: [  ]\n]\nTrabalhos: [ (Valor: 4.0, Peso: 0.5) ]\nQuero: [ (Valor: 6.0, Peso: 0.5) ]\n]\n'
@@ -767,7 +767,7 @@ class Test_Boletim:
         P1 = Nota(peso=0.2, valor=6.0)
         P2 = Nota(peso=0.8, valor=6.0)
 
-        peso_prova = P1.peso + P2.peso
-        peso_trabalho = 0.5+0.5
+        peso_prova = 1.0
+        peso_trabalho = 0.0
         boletim = Boletim(peso_prova=peso_prova, peso_trabalho=peso_trabalho, provas_que_quero=[P2], provas_que_tenho=[P1], trabalhos_que_quero=[], trabalhos_que_tenho=[])
         assert str(boletim) == 'Provas: [\nTenho: [ (Valor: 6.0, Peso: 0.2) ]\nQuero: [ (Valor: 6.0, Peso: 0.8) ]\n]\nTrabalhos: [  ]\nQuero: [  ]\n]\n'
