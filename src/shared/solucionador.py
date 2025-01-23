@@ -7,7 +7,7 @@ from src.shared.helpers.functions.utils import Utils
 
 
 class Solucionador:
-    NOTAS_TOTAIS = 100  # quantidade de notas que o programa escolherá e parará ao encontrá-los
+    NOTAS_TOTAIS = 1  # quantidade de notas que o programa escolherá e parará ao encontrá-los
     MENOR_DIST = 1.5  # menor distância entre notas escolhidas e a média aritimética entre elas
                     # para que sejam escolhidas pelo algorítmo
     ERR_MAX = 0.04  # erro máximo permitido entre a média das notas escolhidas e a média desejada
@@ -18,7 +18,7 @@ class Solucionador:
     @staticmethod
     def algoritmo(boletim: Boletim,  media_desejada: float) -> Boletim:
         # variável que representa a quantidade de notas que quero calcular 
-        tamanho_notas_que_quero = len(boletim.quero)
+        tamanho_notas_que_quero = len(boletim.quero_peso_global())
 
         # lista que conterá as notas possíveis de serem retornadas
         notas_possiveis = list()
@@ -26,27 +26,27 @@ class Solucionador:
         # Se não for possível atingir tal nota, retornará uma lista vazia
         # ex: se o aluno escolher média 10, e tirou 0 em alguma nota, esse "if" captará
         # obs: Nota.DOMINIO_DE_NOTAS[-1] = 10
-        if (Utils.media(boletim.tenho + [Nota(peso=boletim.quero[i].peso, valor=Nota.DOMINIO_DE_NOTAS[-1]) for i in
-                                           range(len(boletim.quero))]) - media_desejada < 0):
+        if (Boletim.media_final_externo(idx_tenho=boletim.idx_tenho, idx_quero=boletim.idx_quero, tenho=boletim.tenho, quero=[Nota(valor=Nota.DOMINIO_DE_NOTAS[-1],peso=nota.peso) for nota in boletim.quero], peso_prova=boletim.peso_prova, peso_trabalho=boletim.peso_trabalho) < media_desejada):
+                                                    
             return None
-
 
         # Verifica se existe combinações para médias maiores que a pedida,
         # mas não existem combinações para o intervalo da média desejada
         while(media_desejada + Solucionador.aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
-            
+       
             # garantia de que os domínios estão no valor original
             for nota in boletim.quero:
                 nota.restaura_dominio()
             
             # limitando o domínio de cada nota
             for idx, nota in enumerate(boletim.quero):
-
+                tenho_peso_global = boletim.tenho_peso_global()
+                quero_peso_global = boletim.quero_peso_global()
                 # seleciona o mínimo valor de cada nota para que seja possível calcular uma média válida
-                valor_minimo = Utils.minimo_valor_no_dominio(notas_que_tenho=boletim.tenho,
-                                                            notas_que_quero=boletim.quero[:idx] + \
-                                                                            boletim.quero[idx + 1:],
-                                                            peso_especifico=nota.peso, 
+                valor_minimo = Utils.minimo_valor_no_dominio(notas_que_tenho=tenho_peso_global,
+                                                            notas_que_quero=quero_peso_global[:idx] + \
+                                                                            quero_peso_global[idx + 1:],
+                                                            peso_especifico=quero_peso_global[idx].peso, 
                                                             media_desejada=media_desejada,
                                                             erro_max=Solucionador.ERR_MAX, 
                                                             distancia_max=Solucionador.MENOR_DIST,
@@ -62,10 +62,10 @@ class Solucionador:
                     return boletim
                 
                 # seleciona um máximo valor de cada nota para que seja possível calcular uma média válida
-                valor_maximo = Utils.maximo_valor_no_dominio(notas_que_tenho=boletim.tenho,
-                                                                notas_que_quero=boletim.quero[:idx] + boletim.quero[
+                valor_maximo = Utils.maximo_valor_no_dominio(notas_que_tenho=tenho_peso_global,
+                                                                notas_que_quero=quero_peso_global[:idx] + quero_peso_global[
                                                                                                         idx + 1:],
-                                                                peso_especifico=nota.peso, media_desejada=media_desejada,
+                                                                peso_especifico=quero_peso_global[idx].peso, media_desejada=media_desejada,
                                                                 erro_max=Solucionador.ERR_MAX+Solucionador.aumento_range, distancia_max=Solucionador.MENOR_DIST)
 
                 # limitando o domínio da nota
@@ -89,9 +89,9 @@ class Solucionador:
 
             # rodará até encontrar `NOTAS_TOTAIS` notas possíveis ou acabar as notas
             while (not todas_as_notas_verificadas):
-
+                
                 # verifica se chegou a iteração da última nota
-                if (all([idx_possiveis_notas[idx] == len(boletim.quero[idx].dominio_da_nota) - 1 for idx in
+                if (all([idx_possiveis_notas[idx] == len(boletim.quero_peso_global()[idx].dominio_da_nota) - 1 for idx in
                         range(len(idx_possiveis_notas))])):
                     todas_as_notas_verificadas = True
 
@@ -119,12 +119,16 @@ class Solucionador:
                                     idx_tenho=boletim.idx_tenho,
                                     idx_quero=boletim.idx_quero,
                                     tenho=boletim.tenho,
-                                    quero=list(notas_possiveis[idx_nota])
+                                    quero=list(notas_possiveis[idx_nota]),
+                                    peso_prova=boletim.peso_prova,
+                                    peso_trabalho=boletim.peso_trabalho
                                 ) < Boletim.media_final_externo(
                                     idx_tenho=boletim.idx_tenho,
                                     idx_quero=boletim.idx_quero,
                                     tenho=boletim.tenho,
-                                    quero=list(melhor_combinacao)    
+                                    quero=list(melhor_combinacao),
+                                    peso_prova=boletim.peso_prova,
+                                    peso_trabalho=boletim.peso_trabalho    
                                 )
                             ):
                                 melhor_combinacao = notas_possiveis[idx_nota]
@@ -169,12 +173,16 @@ class Solucionador:
                                 idx_tenho=boletim.idx_tenho,
                                 idx_quero=boletim.idx_quero,
                                 tenho=boletim.tenho,
-                                quero=list(notas_possiveis[idx_nota])
+                                quero=list(notas_possiveis[idx_nota]),
+                                peso_prova=boletim.peso_prova,
+                                peso_trabalho=boletim.peso_trabalho
                             ) < Boletim.media_final_externo(
                                 idx_tenho=boletim.idx_tenho,
                                 idx_quero=boletim.idx_quero,
                                 tenho=boletim.tenho,
-                                quero=list(melhor_combinacao)    
+                                quero=list(melhor_combinacao),
+                                peso_prova=boletim.peso_prova,
+                                peso_trabalho=boletim.peso_trabalho    
                             )
                         ):
                             melhor_combinacao = notas_possiveis[idx_nota]
