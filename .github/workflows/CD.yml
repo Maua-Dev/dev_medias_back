@@ -1,12 +1,9 @@
-name: CD
+name: AWS CD
 
 on:
   push:
     branches:
       - dev
-      - homolog
-      - prod
-
   workflow_dispatch:
 
 jobs:
@@ -19,36 +16,56 @@ jobs:
       contents: read
 
     steps:
-        - uses: actions/checkout@v2
+        - uses: actions/checkout@v3
+
+        - name: Determine AWS Account ID
+          run: |
+              if [[ "${{ github.ref_name }}" == "dev" ]]; then
+                echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
+              elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
+                echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
+              elif [[ "${{ github.ref_name }}" == "prod" ]]; then
+                echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
+              else
+                echo "Invalid branch name!" && exit 1
+              fi
 
         - name: Setup AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v1
+          uses: aws-actions/configure-aws-credentials@v2
           with:
-            aws-region: ${{ vars.AWS_REGION }}
-            role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
-            role-session-name: github-action
+              aws-region: sa-east-1
+              role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
+              role-session-name: github-action
 
         - name: Setting stage and stack name
           run: |
-              echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
+              echo "STAGE=${{ github.ref_name }}" 
+              PROJECT_NAME=$(echo ${{ github.event.repository.name }} | sed -e 's/[-_]/ /g' | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1' | sed -e 's/ //g')
+              echo "PROJECT_NAME=${PROJECT_NAME}"
+              echo "STACK_NAME=${PROJECT_NAME}StackSimpleFastAPI${{github.ref_name}}"
+
+              echo "STACK_NAME=${PROJECT_NAME}StackSimpleFastAPI${{github.ref_name}}" >> $GITHUB_ENV
+              echo "PROJECT_NAME=${PROJECT_NAME}SimpleFastAPI" >> $GITHUB_ENV
 
         - name: Installing Dependencies
           run: |
             npm install -g aws-cdk
             cd iac
             pip install -r requirements.txt
-                 
 
-        - name: DeployWithCDK
+        - name: Setup envs
+          run: |
+              echo AWS_REGION=sa-east-1 >> $GITHUB_ENV
+              echo AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }} >> $GITHUB_ENV
+              echo GITHUB_REF_NAME=${{ github.ref_name }} >> $GITHUB_ENV
+
+              echo ${{ env.AWS_REGION }}
+              echo ${{ env.AWS_ACCOUNT_ID }}
+              echo ${{ env.STACK_NAME }}
+              echo ${{ env.GITHUB_REF_NAME }}
+
+        - name: Deploy with CDK
           run: |
             cd iac
             cdk synth
             cdk deploy --require-approval never
-          env:
-            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-            AWS_REGION: ${{ vars.AWS_REGION }}
-            STACK_NAME: ${{ env.STACK_NAME }}
-            GITHUB_REF_NAME: ${{ github.ref_name }}
-            FROM_EMAIL: ${{ vars.FROM_EMAIL }}  
-            HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
-            REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}  
