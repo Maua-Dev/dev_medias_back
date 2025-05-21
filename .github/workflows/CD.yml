@@ -3,7 +3,7 @@ name: AWS CD
 on:
   push:
     branches:
-      - chore/new-aws-deploy
+      - new-aws-deploy
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
       - name: Determine AWS Account ID
         run: |
           case "${{ github.ref_name }}" in
-            dev|chore/new-aws-deploy)
+            dev|new-aws-deploy)
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
               ;;
             homolog)
@@ -52,12 +52,12 @@ jobs:
             | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1' \
             | tr -d ' ')
           # Sanitiza o nome do branch
-          SAFE_REF=$(echo "${{ github.ref_name }}" | sed -E 's#[^a-zA-Z0-9_-]+#-#g')
+          SANITIZED_BRANCH=$(echo "${{ github.ref_name }}" | tr '/' '-')
           STACK_NAME="${PROJECT_NAME}StackSimpleFastAPI${SAFE_REF}"
 
           echo "PROJECT_NAME=${PROJECT_NAME}" >> $GITHUB_ENV
-          echo "STACK_NAME=${STACK_NAME}"     >> $GITHUB_ENV
-          echo "SAFE_REF=${SAFE_REF}"         >> $GITHUB_ENV
+          echo "SANITIZED_BRANCH=${SANITIZED_BRANCH}" >> $GITHUB_ENV
+          echo "STACK_NAME=${PROJECT_NAME}StackSimpleFastAPI${SANITIZED_BRANCH}" >> $GITHUB_ENV
 
       - name: Install Dependencies
         run: |
@@ -68,7 +68,7 @@ jobs:
       - name: Inject Required Envs
         run: |
           echo "AWS_REGION=sa-east-1"        >> $GITHUB_ENV
-          echo "GITHUB_REF_NAME=${{ env.SAFE_REF }}" >> $GITHUB_ENV
+          echo "GITHUB_REF_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "FROM_EMAIL=${{ secrets.FROM_EMAIL }}"    >> $GITHUB_ENV
           echo "REPLY_TO_EMAIL=${{ secrets.REPLY_TO_EMAIL }}" >> $GITHUB_ENV
           echo "HIDDEN_COPY=${{ secrets.HIDDEN_COPY }}"  >> $GITHUB_ENV
@@ -82,7 +82,7 @@ jobs:
           AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
           AWS_REGION:     ${{ env.AWS_REGION }}
           STACK_NAME:     ${{ env.STACK_NAME }}
-          GITHUB_REF_NAME: ${{ env.SAFE_REF }}
+          GITHUB_REF_NAME: ${{ env.GITHUB_REF_NAME }}
           FROM_EMAIL:     ${{ env.FROM_EMAIL }}
           REPLY_TO_EMAIL: ${{ env.REPLY_TO_EMAIL }}
           HIDDEN_COPY:    ${{ env.HIDDEN_COPY }}
