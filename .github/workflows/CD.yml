@@ -3,7 +3,9 @@ name: AWS CD
 on:
   push:
     branches:
-      - new-aws-deploy
+      - dev
+      - homolog
+      - prod
   workflow_dispatch:
 
 jobs:
@@ -21,7 +23,7 @@ jobs:
       - name: Determine AWS Account ID
         run: |
           case "${{ github.ref_name }}" in
-            dev|new-aws-deploy)
+            dev)
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
               ;;
             homolog)
@@ -39,14 +41,13 @@ jobs:
       - name: Setup AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-region: sa-east-1
+          aws-region: us-east-1
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
           role-session-name: github-action
           role-duration-seconds: 3600
 
       - name: Compute Stack & Project Names
         run: |
-          # Converte kebab_case ou snake_case em PascalCase
           PROJECT_NAME=$(echo "${{ github.event.repository.name }}" \
             | sed -E 's/[-_]+/ /g' \
             | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1' \
@@ -67,7 +68,7 @@ jobs:
 
       - name: Inject Required Envs
         run: |
-          echo "AWS_REGION=sa-east-1"        >> $GITHUB_ENV
+          echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
           echo "GITHUB_REF_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "FROM_EMAIL=${{ secrets.FROM_EMAIL }}"    >> $GITHUB_ENV
           echo "REPLY_TO_EMAIL=${{ secrets.REPLY_TO_EMAIL }}" >> $GITHUB_ENV
