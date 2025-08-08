@@ -18,7 +18,7 @@ class LambdaStack(Construct):
             runtime=lambda_.Runtime.PYTHON_3_9,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(15)
+            timeout=Duration.seconds(30)
         )
 
         api_resource.add_resource(module_name.replace("_", "-")).add_method(method,
