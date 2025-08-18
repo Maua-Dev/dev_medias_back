@@ -177,7 +177,7 @@ class Solucionador:
 
             # primeira soma do `aumento_range`, para tornar a média desejada inteira
             if((media_desejada + Solucionador.ERR_MAX + aumento_range)*2 % 1 != 0):
-                aumento_range += round(Solucionador.PRIMEIRO_PASSO - (media_desejada + Solucionador.ERR_MAX + aumento_range) % 1,  2)
+                aumento_range += round(Solucionador.PRIMEIRO_PASSO - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
 
             else:
                 aumento_range += Solucionador.PASSO
