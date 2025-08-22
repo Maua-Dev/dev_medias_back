@@ -409,51 +409,51 @@ class TestGradeOptimizerController:
         
     def test_possible_grade_controller_provas_que_tenho_peso_nao_e_float(self):
         request = HttpRequest(body={
-            'provas_que_tenho':[
+            "provas_que_tenho":[
                 {
-                    'valor': 1.0,
-                    'peso':0.06
+                    "valor": 1.0,
+                    "peso":0.06
                 },
                 {
-                    'valor': 1.0,
-                    'peso':'0.06'
+                    "valor": 1.0,
+                    "peso":"0.06"
                 }
             ],
-            'trabalhos_que_tenho':[
+            "trabalhos_que_tenho":[
                 {
-                    'valor':6.0,
-                    'peso':0.08
+                    "valor":6.0,
+                    "peso":0.08
                 },
                 {
-                    'valor':6.0,
-                    'peso':0.08
-                },
-            ],
-            'provas_que_quero':[
-                {
-                    'valor':None,
-                    'peso':0.12
-                },
-                {
-                    'valor':None,
-                    'peso':0.18
-                },
-                {
-                    'valor':None,
-                    'peso':0.18
+                    "valor":6.0,
+                    "peso":0.08
                 },
             ],
-            'trabalhos_que_quero':[
+            "provas_que_quero":[
                 {
-                    'valor':None,
-                    'peso':0.12
+                    "valor":None,
+                    "peso":0.12
                 },
                 {
-                    'valor':None,
-                    'peso':0.12
+                    "valor":None,
+                    "peso":0.18
+                },
+                {
+                    "valor":None,
+                    "peso":0.18
+                },
+            ],
+            "trabalhos_que_quero":[
+                {
+                    "valor":None,
+                    "peso":0.12
+                },
+                {
+                    "valor":None,
+                    "peso":0.12
                 }
             ],
-            'media_desejada':6
+            "media_desejada":6
         })
         
         usecase = GradeOptimizerUsecase()

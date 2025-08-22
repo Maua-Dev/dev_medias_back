@@ -1,6 +1,8 @@
 import os
 from aws_cdk import (
     aws_lambda as lambda_,
+    aws_apigateway as apigateway,
+    aws_logs as logs,
     Stack
 )
 
@@ -21,6 +23,8 @@ class IacStack(Stack):
         self.github_ref_name = os.environ.get("GITHUB_REF_NAME")
         self.aws_region = os.environ.get("AWS_REGION")
         self.s3_assets_cdn = os.environ.get("S3_ASSETS_CDN")
+        
+        log_group = logs.LogGroup(self, f"DevMedias_ApiGateway_AccessLogs_{stage}")
 
         self.rest_api = RestApi(self, f"DevMedias_RestApi_{self.github_ref_name}",
                                 rest_api_name=f"DevMedias_RestApi_{self.github_ref_name}",
@@ -31,7 +35,25 @@ class IacStack(Stack):
                                     "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
                                     "allow_headers": ["*"]
                                 },
+                                deploy_options=apigateway.StageOptions(
+                                    stage_name=stage, 
+                                    access_log_destination=apigateway.LogGroupLogDestination(log_group),
+                                    access_log_format=apigateway.AccessLogFormat.json_with_standard_fields(
+                                        caller=True,
+                                        http_method=True,
+                                        ip=True,
+                                        protocol=True,
+                                        request_time=True,
+                                        resource_path=True,
+                                        response_length=True,
+                                        status=True,
+                                        user=True
+                                    ),
+                                    logging_level=apigateway.MethodLoggingLevel.INFO, 
+                                    data_trace_enabled=True, 
+                                    metrics_enabled=True 
                                 )
+        )
 
         api_gateway_resource = self.rest_api.root.add_resource("mss-medias", default_cors_preflight_options=
         {
