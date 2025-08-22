@@ -24,6 +24,15 @@ class IacStack(Stack):
         self.aws_region = os.environ.get("AWS_REGION")
         self.s3_assets_cdn = os.environ.get("S3_ASSETS_CDN")
         
+        if 'prod' in self.github_ref_name:
+            stage = 'PROD'
+
+        elif 'homolog' in self.github_ref_name:
+            stage = 'HOMOLOG'
+
+        else:
+            stage = 'DEV'
+        
         log_group = logs.LogGroup(self, f"DevMedias_ApiGateway_AccessLogs_{stage}")
 
         self.rest_api = RestApi(self, f"DevMedias_RestApi_{self.github_ref_name}",
@@ -61,15 +70,8 @@ class IacStack(Stack):
             "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": Cors.DEFAULT_HEADERS
         }
-                                                               )
-        if 'prod' in self.github_ref_name:
-            stage = 'PROD'
-
-        elif 'homolog' in self.github_ref_name:
-            stage = 'HOMOLOG'
-
-        else:
-            stage = 'DEV'
+        )
+                                                               
 
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
