@@ -14,6 +14,8 @@ from aws_cdk.aws_apigateway import RestApi, Cors
 from .subject_stack import SubjectStack
 from .lambda_contact_us_stack import LambdaContactUsStack
 
+import json
+
 class IacStack(Stack):
     lambda_stack: LambdaStack
 
@@ -45,18 +47,22 @@ class IacStack(Stack):
                                     "allow_headers": ["*"]
                                 },
                                 deploy_options=apigateway.StageOptions(
-                                    stage_name=stage, 
+                                    stage_name="prod",  # deixar como o padrao que estava errado, tem que comunicar que para arrumar aqui é apenas trocar pela variavel stage
                                     access_log_destination=apigateway.LogGroupLogDestination(log_group),
-                                    access_log_format=apigateway.AccessLogFormat.json_with_standard_fields(
-                                        caller=True,
-                                        http_method=True,
-                                        ip=True,
-                                        protocol=True,
-                                        request_time=True,
-                                        resource_path=True,
-                                        response_length=True,
-                                        status=True,
-                                        user=True
+                                    access_log_format=apigateway.AccessLogFormat.custom(
+                                        json.dumps({
+                                            "requestId": "$context.requestId",
+                                            "ip": "$context.identity.sourceIp",
+                                            "caller": "$context.identity.caller",
+                                            "user": "$context.identity.user",
+                                            "requestTime": "$context.requestTime",
+                                            "httpMethod": "$context.httpMethod",
+                                            "resourcePath": "$context.resourcePath",
+                                            "status": "$context.status",
+                                            "protocol": "$context.protocol",
+                                            "responseLength": "$context.responseLength",
+                                            "queryString": "$context.requestOverride.path.querystring"
+                                        })
                                     ),
                                     logging_level=apigateway.MethodLoggingLevel.INFO, 
                                     data_trace_enabled=True, 

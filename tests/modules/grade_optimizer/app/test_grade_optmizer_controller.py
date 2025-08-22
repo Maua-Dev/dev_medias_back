@@ -12,49 +12,49 @@ class TestGradeOptimizerController:
 
     def test_possible_grade_controller_1(self):
         request = HttpRequest(body={
-            'provas_que_tenho':[
+            "provas_que_tenho":[
                 {
-                    'valor':6.0,
-                    'peso':0.25
+                    "valor":6.0,
+                    "peso":0.25
                 }
             ],
-            'trabalhos_que_tenho':[
+            "trabalhos_que_tenho":[
                 {
-                    'valor':6.0,
-                    'peso':0.25
+                    "valor":6.0,
+                    "peso":0.25
                 },
                 {
-                    'valor':6.0,
-                    'peso':0.25
-                },
-            ],
-            'provas_que_quero':[
-                {
-                    'valor':None,
-                    'peso':0.25
-                },
-                {
-                    'valor':None,
-                    'peso':0.25
-                },
-                {
-                    'valor':None,
-                    'peso':0.25
+                    "valor":6.0,
+                    "peso":0.25
                 },
             ],
-            'trabalhos_que_quero':[
+            "provas_que_quero":[
                 {
-                    'valor':None,
-                    'peso':0.25
+                    "valor":None,
+                    "peso":0.25
                 },
                 {
-                    'valor':None,
-                    'peso':0.25
+                    "valor":None,
+                    "peso":0.25
+                },
+                {
+                    "valor":None,
+                    "peso":0.25
+                },
+            ],
+            "trabalhos_que_quero":[
+                {
+                    "valor":None,
+                    "peso":0.25
+                },
+                {
+                    "valor":None,
+                    "peso":0.25
                 }
             ],
-            'peso_prova':0.4,
-            'peso_trabalho':0.6,
-            'media_desejada':6
+            "peso_prova":0.4,
+            "peso_trabalho":0.6,
+            "media_desejada":6
         })
 
         usecase = GradeOptimizerUsecase()
