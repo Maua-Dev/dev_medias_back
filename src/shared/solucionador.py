@@ -5,6 +5,8 @@ from src.shared.domain.entities.boletim import Boletim
 from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.functions.utils import Utils
 
+from itertools import product
+
 
 class Solucionador:
     NOTAS_TOTAIS = 1  # quantidade de notas que o programa escolherá e parará ao encontrá-los
@@ -13,10 +15,12 @@ class Solucionador:
     ERR_MAX = 0.04  # erro máximo permitido entre a média das notas escolhidas e a média desejada
     PRIMEIRO_PASSO = 0.5  # primeiro passo para aumentar o range de média desejada
     PASSO = 0.5 # passo para aumentar o range de média desejada
-    aumento_range = 0  # aumento da média desejada para que o algorítmo encontre mais notas
-
+    
     @staticmethod
     def algoritmo(boletim: Boletim,  media_desejada: float) -> Boletim:
+        
+        aumento_range = 0
+                
         # variável que representa a quantidade de notas que quero calcular 
         tamanho_notas_que_quero = len(boletim.quero_peso_global())
 
@@ -26,13 +30,19 @@ class Solucionador:
         # Se não for possível atingir tal nota, retornará uma lista vazia
         # ex: se o aluno escolher média 10, e tirou 0 em alguma nota, esse "if" captará
         # obs: Nota.DOMINIO_DE_NOTAS[-1] = 10
-        if (Boletim.media_final_externo(idx_tenho=boletim.idx_tenho, idx_quero=boletim.idx_quero, tenho=boletim.tenho, quero=[Nota(valor=Nota.DOMINIO_DE_NOTAS[-1],peso=nota.peso) for nota in boletim.quero], peso_prova=boletim.peso_prova, peso_trabalho=boletim.peso_trabalho) < media_desejada):
+        if (Boletim.media_final_externo(idx_tenho=boletim.idx_tenho, 
+                                        idx_quero=boletim.idx_quero, 
+                                        tenho=boletim.tenho, 
+                                        quero=[Nota(valor=Nota.DOMINIO_DE_NOTAS[-1],
+                                                    peso=nota.peso) for nota in boletim.quero], 
+                                        peso_prova=boletim.peso_prova, 
+                                        peso_trabalho=boletim.peso_trabalho) < media_desejada):
                                                     
             return None
 
         # Verifica se existe combinações para médias maiores que a pedida,
         # mas não existem combinações para o intervalo da média desejada
-        while(media_desejada + Solucionador.aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
+        while(media_desejada + aumento_range <= Nota.DOMINIO_DE_NOTAS[-1]):
        
             # garantia de que os domínios estão no valor original
             for nota in boletim.quero:
@@ -50,7 +60,7 @@ class Solucionador:
                                                             media_desejada=media_desejada,
                                                             erro_max=Solucionador.ERR_MAX, 
                                                             distancia_max=Solucionador.MENOR_DIST,
-                                                            aumento_do_range=Solucionador.aumento_range)
+                                                            aumento_do_range=aumento_range)
 
                 # se `valor_minimo` for igual a -1, significa que não é possível atingir a média desejada
                 if (valor_minimo == -1):
@@ -66,7 +76,7 @@ class Solucionador:
                                                                 notas_que_quero=quero_peso_global[:idx] + quero_peso_global[
                                                                                                         idx + 1:],
                                                                 peso_especifico=quero_peso_global[idx].peso, media_desejada=media_desejada,
-                                                                erro_max=Solucionador.ERR_MAX+Solucionador.aumento_range, distancia_max=Solucionador.MENOR_DIST)
+                                                                erro_max=Solucionador.ERR_MAX+aumento_range, distancia_max=Solucionador.MENOR_DIST)
 
                 # limitando o domínio da nota
                 nota.limita_dominio(valor_minimo, valor_maximo)
@@ -87,86 +97,57 @@ class Solucionador:
             # variável que representa que todas as notas foram verificadas
             todas_as_notas_verificadas = False
 
-            # rodará até encontrar `NOTAS_TOTAIS` notas possíveis ou acabar as notas
-            while (not todas_as_notas_verificadas):
-                
-                # verifica se chegou a iteração da última nota
-                if (all([idx_possiveis_notas[idx] == len(boletim.quero_peso_global()[idx].dominio_da_nota) - 1 for idx in
-                        range(len(idx_possiveis_notas))])):
-                    todas_as_notas_verificadas = True
+            # O loop 'while' externo (while media_desejada + aumento_range <= 10.0) ainda existe
+            # para controlar o aumento do range de busca.
+            # O codigo abaixo substitui APENAS o loop 'while' interno que gerava as combinacoes.
 
-                # cálculo da média desta iteração
+            # Cria uma lista de listas. Cada lista interna contem todas as notas possiveis
+            # (o dominio) para uma das notas que queremos descobrir.
+            # Ex: [[5.0, 5.5, 6.0], [7.0, 7.5]] para duas notas.
+            dominios = [nota.dominio_da_nota for nota in boletim.quero]
+
+            # O product recebe as listas de dominios e gera UMA combinacao completa por vez.
+            # Isso substitui toda a logica manual de indices (idx_possiveis_notas) do 'while'.
+            # O '*' antes de 'dominios' desempacota a lista, tratando cada dominio como um argumento separado.
+            for combinacao in product(*dominios):
+                
+                # Dentro deste loop, 'combinacao' e uma tupla com uma solucao candidata.
+                # Ex: (5.5, 7.0)
+
+                # Pega os valores da tupla 'combinacao' e os atribui as notas que queremos descobrir
+                # no objeto 'boletim'.
+                for i, valor_nota in enumerate(combinacao):
+                    boletim.quero[i].valor = valor_nota
+
+                # Calcula a media final para a combinacao atual que foi carregada no boletim.
                 media = boletim.media_final()
 
-                # verifica se a média varia de 0.04 em relação à média desejada
-                if (media_desejada - Solucionador.ERR_MAX <= media and media <= media_desejada + Solucionador.ERR_MAX + Solucionador.aumento_range):
-                    # verifica se todas as notas distam da média no máximo MENOR_DIST
+                # Verifica se a media calculada esta dentro do intervalo de busca aceitavel.
+                # O limite superior deste intervalo cresce com o 'aumento_range'.
+                if (media_desejada - Solucionador.ERR_MAX <= media <= media_desejada + Solucionador.ERR_MAX + aumento_range):
+                    
+                    # Se a media e valida, verifica o criterio de proximidade entre as notas.
                     if (Utils.distancia_entre_notas(boletim.quero, Solucionador.MENOR_DIST)):
+                        
+                        # Se todos os criterios passaram, armazena esta combinacao como uma solucao viavel.
                         combinacao_possivel = [Nota(peso=nota.peso, valor=nota.valor) for nota in boletim.quero]
                         notas_possiveis.append(tuple(combinacao_possivel))
 
-                # faz o break do laço se encontra NOTAS_TOTAIS como
-                # tamanho da lista de combinações de notas possíveis
+                # Se o numero de solucoes viaveis encontradas atingiu o nosso objetivo (NOTAS_TOTAIS),
+                # o 'break' interrompe o loop 'for'. Nao ha necessidade de testar mais milhoes de combinacoes.
                 if (len(notas_possiveis) == Solucionador.NOTAS_TOTAIS):
-                    melhor_combinacao = notas_possiveis[0]
+                    break # Sai do loop 'for'
 
-                    # lógica para verificar quais das combinações escolhidas
-                    # de notas possui o menor desvio padrão
-                    for idx_nota in range(1, len(notas_possiveis)):
-                        if(round(Utils.desvio_padrao(notas_possiveis[idx_nota]), 4) == round(Utils.desvio_padrao(melhor_combinacao), 4)):
-                            if(
-                                Boletim.media_final_externo(
-                                    idx_tenho=boletim.idx_tenho,
-                                    idx_quero=boletim.idx_quero,
-                                    tenho=boletim.tenho,
-                                    quero=list(notas_possiveis[idx_nota]),
-                                    peso_prova=boletim.peso_prova,
-                                    peso_trabalho=boletim.peso_trabalho
-                                ) < Boletim.media_final_externo(
-                                    idx_tenho=boletim.idx_tenho,
-                                    idx_quero=boletim.idx_quero,
-                                    tenho=boletim.tenho,
-                                    quero=list(melhor_combinacao),
-                                    peso_prova=boletim.peso_prova,
-                                    peso_trabalho=boletim.peso_trabalho    
-                                )
-                            ):
-                                melhor_combinacao = notas_possiveis[idx_nota]
-                            
-                    # adiciona a melhor combinação no boletim e retorna-o na saída do algoritmo
-                    boletim.quero = list(melhor_combinacao)
-                    return boletim
-
-                # se não for possível parar o laço, adiciona 1 ao último index da lista de index
-                # ex: [0, 0, 0, ..., 0, 0] --(+1)--> [0, 0, 0, ..., 0, 1]
-                # ex2: [0, 0, 0, ..., 0, 19] --(+1)--> [0, 0, 0, ..., 0, 20] -> [0, 0, 0, ..., 1, 0]
-                # ex3: [0, 0, 0, ..., 0, 19, 19] --(+1)--> [0, 0, 0, ..., 0, 19, 20] -> [0, 0, 0, ..., 0, 20, 0] ->
-                # -> [0, 0, 0, ..., 1, 0, 0]
+            # Este bloco so e executado se o loop encontrou pelo menos uma solucao.
+            if (len(notas_possiveis) > 0):
                 
-                idx_possiveis_notas[-1] += 1
-
-                if (not all([nota.valor == nota.dominio_da_nota[-1] for nota in boletim.quero])):
-                    for idx in list(range(len(idx_possiveis_notas)))[::-1]:
-                        if (idx_possiveis_notas[idx] == len(boletim.quero[idx].dominio_da_nota) and idx != 0):
-                            # zera o valor do index da nota dessa iteração
-                            idx_possiveis_notas[idx] = 0
-
-                            # alterando o valor da nota dessa iteração para o primeiro valor do domínio
-                            boletim.quero[idx].valor = boletim.quero[idx].dominio_da_nota[idx_possiveis_notas[idx]]
-
-                            # aumentando o index da nota seguinte
-                            idx_possiveis_notas[idx - 1] += 1
-                        else:
-                            # alterando valor da nota dessa iteração
-                            boletim.quero[idx].valor = boletim.quero[idx].dominio_da_nota[idx_possiveis_notas[idx]]
-                            break
-
-
-            # se encontrou alguma(s) combinação(ões) de nota(s), faz o cálculo
-            # do desvio padrão e retorna a combinação com menor desvio padrão
-            if (len(notas_possiveis) != 0):
+                # Assume a primeira solucao como a melhor inicialmente.
                 melhor_combinacao = notas_possiveis[0]
+                
+                # Itera sobre as outras solucoes encontradas para ver se alguma e melhor.
                 for idx_nota in range(1, len(notas_possiveis)):
+                    
+                    # O criterio de desempate principal e o desvio padrao (preferimos notas mais proximas).
                     if(round(Utils.desvio_padrao(notas_possiveis[idx_nota]), 4) == round(Utils.desvio_padrao(melhor_combinacao), 4)):
                         if(
                             Boletim.media_final_externo(
@@ -186,18 +167,20 @@ class Solucionador:
                             )
                         ):
                             melhor_combinacao = notas_possiveis[idx_nota]
+                    # Se o desvio padrao da combinacao atual for menor, ela se torna a nova melhor.
                     elif (Utils.desvio_padrao(notas_possiveis[idx_nota]) < Utils.desvio_padrao(melhor_combinacao)):
                         melhor_combinacao = notas_possiveis[idx_nota]
+                        
+                # Carrega a melhor combinacao encontrada no boletim e o retorna como a resposta final.
                 boletim.quero = list(melhor_combinacao)
                 return boletim
 
             # primeira soma do `aumento_range`, para tornar a média desejada inteira
-            elif((media_desejada + Solucionador.ERR_MAX + Solucionador.aumento_range)*2 % 1 != 0):
-                Solucionador.aumento_range += round(Solucionador.PRIMEIRO_PASSO - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
-                
-            # a primeira soma `aumento_range` já foi feita
+            if((media_desejada + Solucionador.ERR_MAX + aumento_range)*2 % 1 != 0):
+                aumento_range += round(Solucionador.PRIMEIRO_PASSO - (media_desejada + Solucionador.ERR_MAX) % 1,  2)
+
             else:
-                Solucionador.aumento_range += Solucionador.PASSO
+                aumento_range += Solucionador.PASSO
                 
         # se não encontrou nenhuma nota, retorna uma lista vazia
         return None
