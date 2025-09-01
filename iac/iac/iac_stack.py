@@ -8,7 +8,7 @@ from aws_cdk import (
 
 from constructs import Construct
 
-from iac.iac.bucket_construct import BucketConstruct
+from .bucket_construct import BucketConstruct
 
 from .lambda_stack import LambdaStack
 from aws_cdk.aws_apigateway import RestApi, Cors
