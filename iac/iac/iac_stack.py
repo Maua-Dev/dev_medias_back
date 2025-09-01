@@ -8,6 +8,8 @@ from aws_cdk import (
 
 from constructs import Construct
 
+from iac.iac.bucket_construct import BucketConstruct
+
 from .lambda_stack import LambdaStack
 from aws_cdk.aws_apigateway import RestApi, Cors
 
@@ -77,18 +79,22 @@ class IacStack(Stack):
             "allow_headers": Cors.DEFAULT_HEADERS
         }
         )
+        
+        self.bucket_construct = BucketConstruct(self)
                                                                
-
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
+            "PLANS_BUCKET_NAME": self.bucket_construct.plans_bucket.bucket_name,
+            "SUBJECT_BUCKET_NAME": self.bucket_construct.subject_bucket.bucket_name
         }
 
-        self.lambda_stack = LambdaStack(self, api_gateway_resource=api_gateway_resource,
-                                        environment_variables=ENVIRONMENT_VARIABLES)
+        self.lambda_stack = LambdaStack(
+            self, 
+            api_gateway_resource=api_gateway_resource,
+            environment_variables=ENVIRONMENT_VARIABLES
+        )
 
         self.contact_us_lambda_stack = LambdaContactUsStack(self, api_gateway_resource=api_gateway_resource,
                                                             lambda_layer=self.lambda_stack.lambda_layer,
                                                             stage=stage)
         
-        self.subject_stack = SubjectStack(self)
-

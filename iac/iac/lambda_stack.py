@@ -1,5 +1,7 @@
 from aws_cdk import (
     aws_lambda as lambda_,
+    aws_s3 as s3,
+    aws_lambda_event_sources as lambda_event_sources,
     Duration
 )
 from constructs import Construct
@@ -27,7 +29,14 @@ class LambdaStack(Construct):
 
         return function
 
-    def __init__(self, scope: Construct, api_gateway_resource: Resource, environment_variables: dict) -> None:
+    def __init__(
+        self, 
+        scope: Construct, 
+        api_gateway_resource: Resource,
+        bucket_plans: s3.Bucket,
+        environment_variables: dict
+    ) -> None:
+        
         super().__init__(scope, "DevMediasLambda")
 
         self.lambda_layer = lambda_.LayerVersion(self, "DevMedias_Layer",
@@ -44,3 +53,18 @@ class LambdaStack(Construct):
                                                                                    "POST",
                                                                                    api_resource=api_gateway_resource,
                                                                                    environment_variables=environment_variables)
+
+        self.plans_extractor_function = self.create_lambda_api_gateway_integration(
+            "plans_extractor",
+            "POST",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables
+        )
+        
+        self.plans_extractor_function.add_event_source(lambda_event_sources.S3EventSource(
+            bucket_plans,
+            events=[s3.EventType.OBJECT_CREATED, s3.EventType.OBJECT_REMOVED_DELETE],
+            filters=[s3.NotificationKeyFilter(prefix="planos/")] 
+        ))
+        
+        
