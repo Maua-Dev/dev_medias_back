@@ -48,7 +48,7 @@ class BucketConstruct(Construct):
 
         cache_policy_subjects = aws_cloudfront.CachePolicy(
             self,
-            "S3CachePolicy",
+            "S3CachePolicySubjects",
             cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
             comment=f"DevMedias Policy for {self.github_ref_name}. Supports Gzip and Brotli.",
             min_ttl=Duration.seconds(1),
@@ -60,7 +60,7 @@ class BucketConstruct(Construct):
         
         cache_policy_plans = aws_cloudfront.CachePolicy(
             self,
-            "S3CachePolicy",
+            "S3CachePolicyPlans",
             cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
             comment=f"DevMedias Policy for {self.github_ref_name}. Supports Gzip and Brotli.",
             min_ttl=Duration.seconds(1),
