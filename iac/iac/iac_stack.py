@@ -3,6 +3,7 @@ from aws_cdk import (
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
     aws_logs as logs,
+    aws_iam as iam,
     Stack
 )
 
@@ -94,6 +95,18 @@ class IacStack(Stack):
             api_gateway_resource=api_gateway_resource,
             plans_bucket=self.plans_stack.bucket,
             environment_variables=ENVIRONMENT_VARIABLES
+        )
+        
+        bedrock_policy = iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=[
+                "bedrock:InvokeModel"
+            ],
+            resources=["*"]  # Simplified to avoid ARN parsing issues
+        )
+        
+        self.lambda_stack.plans_extractor_function.add_to_role_policy(
+            bedrock_policy
         )
 
         self.contact_us_lambda_stack = LambdaContactUsStack(self, api_gateway_resource=api_gateway_resource,

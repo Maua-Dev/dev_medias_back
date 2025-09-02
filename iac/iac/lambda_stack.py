@@ -35,7 +35,7 @@ class LambdaStack(Construct):
         module_name: str,
         bucket: s3.Bucket,
         environment_variables: dict
-    ):
+    ) -> lambda_.Function:
         
         function = lambda_.Function(
             self,
@@ -52,6 +52,8 @@ class LambdaStack(Construct):
             s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(function)
         )
+        
+        return function
         
         # bucket.add_event_notification(
         #     s3.EventType.OBJECT_REMOVED_DELETE,
