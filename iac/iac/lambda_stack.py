@@ -49,10 +49,14 @@ class LambdaStack(Construct):
         )
         
         bucket.add_event_notification(
-            [s3.EventType.OBJECT_CREATED, s3.EventType.OBJECT_REMOVED_DELETE],
+            s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(function)
         )
         
+        bucket.add_event_notification(
+            s3.EventType.OBJECT_REMOVED_DELETE,
+            s3n.LambdaDestination(function)
+        )
         
 
     def __init__(
