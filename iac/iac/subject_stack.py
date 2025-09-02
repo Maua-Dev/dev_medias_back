@@ -109,7 +109,7 @@ class SubjectStack(Construct):
                     self,
                     origin_request_policy_id,
                     comment=f"DevMedias Policy for SubjectBucket origin with CORS {self.github_ref_name}",
-                    origin_request_policy_name=f"CORS-S3Origin-{self.github_ref_name}",
+                    origin_request_policy_name=f"CORS-S3Origin-Subject-{self.github_ref_name}",
                     header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
                         "Origin",
                         "Access-Control-Request-Headers",
