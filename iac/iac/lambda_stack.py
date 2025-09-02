@@ -58,6 +58,8 @@ class LambdaStack(Construct):
             s3n.LambdaDestination(function)
         )
         
+        bucket.grant_read(function)
+        
 
     def __init__(
         self, 
