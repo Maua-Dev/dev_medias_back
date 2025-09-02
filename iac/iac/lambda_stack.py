@@ -52,15 +52,15 @@ class LambdaStack(Construct):
             s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(function)
         )
-        
-        return function
-        
+                
         # bucket.add_event_notification(
         #     s3.EventType.OBJECT_REMOVED_DELETE,
         #     s3n.LambdaDestination(function)
         # )
         
         bucket.grant_read(function)
+        
+        return function
         
 
     def __init__(
