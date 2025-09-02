@@ -33,7 +33,6 @@ class LambdaStack(Construct):
         self, 
         scope: Construct, 
         api_gateway_resource: Resource,
-        bucket_plans: s3.Bucket,
         environment_variables: dict
     ) -> None:
         
@@ -53,18 +52,3 @@ class LambdaStack(Construct):
                                                                                    "POST",
                                                                                    api_resource=api_gateway_resource,
                                                                                    environment_variables=environment_variables)
-
-        self.plans_extractor_function = self.create_lambda_api_gateway_integration(
-            "plans_extractor",
-            "POST",
-            api_resource=api_gateway_resource,
-            environment_variables=environment_variables
-        )
-        
-        self.plans_extractor_function.add_event_source(lambda_event_sources.S3EventSource(
-            bucket_plans,
-            events=[s3.EventType.OBJECT_CREATED, s3.EventType.OBJECT_REMOVED_DELETE],
-            filters=[s3.NotificationKeyFilter(prefix="planos/")] 
-        ))
-        
-        
