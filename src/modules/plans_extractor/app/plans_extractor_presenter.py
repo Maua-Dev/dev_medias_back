@@ -190,7 +190,7 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename):
     try:
         # Call Claude Sonnet 4 using cross-region inference profile
         response = bedrock_client.invoke_model(
-            modelId='us.anthropic.claude-sonnet-4-20250514-v1:0',
+            modelId='anthropic.claude-3-sonnet-20240229-v1:0',
             contentType='application/json',
             accept='application/json',
             body=json.dumps({
