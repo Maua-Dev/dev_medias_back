@@ -80,14 +80,19 @@ class IacStack(Stack):
             "allow_headers": Cors.DEFAULT_HEADERS
         }
         )
-                                                               
+        
+        self.subject_stack = SubjectStack(self)
+        self.plans_stack = PlansStack(self)
+        
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
+            "PLANS_BUCKET_NAME": self.plans_stack.bucket.bucket_name
         }
 
         self.lambda_stack = LambdaStack(
             self, 
             api_gateway_resource=api_gateway_resource,
+            plans_bucket=self.plans_stack.bucket,
             environment_variables=ENVIRONMENT_VARIABLES
         )
 
@@ -95,5 +100,3 @@ class IacStack(Stack):
                                                             lambda_layer=self.lambda_stack.lambda_layer,
                                                             stage=stage)
         
-        self.subject_stack = SubjectStack(self)
-        self.plans_stack = PlansStack(self)
