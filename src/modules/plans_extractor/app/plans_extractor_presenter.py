@@ -3,6 +3,7 @@ import boto3
 import urllib.parse
 import os
 from urllib.parse import unquote_plus
+import fitz
 
 def lambda_handler(event, context):
     """
@@ -14,7 +15,7 @@ def lambda_handler(event, context):
     plans_bucket = os.environ.get("PLANS_BUCKET_NAME")
     
     s3 = boto3.client("s3")
-    bedrock = boto3.client("bedrock-runtime", region_name="sa-east-1")
+    bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
     
     try:
         
@@ -38,8 +39,17 @@ def lambda_handler(event, context):
                 except UnicodeDecodeError:
                     content_for_claude = {"type": "text", "content": "Binary file content that couldn't be decoded"}
             elif object_key.lower().endswith('.pdf'):
-                # For PDF files, use the new document structure
-                content_for_claude = {"type": "document", "content": file_content}
+                # CORREÇÃO: Extrai o texto do PDF antes de enviar para o Claude
+                try:
+                    with fitz.open(stream=file_content, filetype="pdf") as doc:
+                        pdf_text = ""
+                        for page in doc:
+                            pdf_text += page.get_text()
+                    content_for_claude = {"type": "text", "content": pdf_text}
+                except Exception as e:
+                    print(f"Failed to extract text from PDF {object_key}: {e}")
+                    content_for_claude = {"type": "text", "content": "Error extracting text from PDF."}
+
             else:
                 # For other file types, convert to base64 for analysis
                 import base64
@@ -162,30 +172,12 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename):
         Retorne APENAS o JSON válido, sem texto adicional antes ou depois. Comece sua resposta com {{ e termine com }}.
     """
 
-    # Prepare the message content based on the content type
-    if content_data["type"] == "document":
-        # For PDF documents using the new structure - encode bytes to base64
-        import base64
-        encoded_bytes = base64.b64encode(content_data["content"]).decode('utf-8')
-        message_content = [
-            {"type": "text", "text": schema_prompt},
-            {
-                "type": "document",
-                "source": {
-                    "type": "base64",
-                    "media_type": "application/pdf",
-                    "data": encoded_bytes,
-                }
-            },
-        ]
-    else:
-        # For text content
-        message_content = [
-            {
-                "type": "text",
-                "text": f"Conteúdo do arquivo '{filename}':\n{content_data['content']}\n\n{schema_prompt}",
-            }
-        ]
+    message_content = [
+        {
+            "type": "text",
+            "text": f"Conteúdo do arquivo '{filename}':\n{content_data['content']}\n\n{schema_prompt}",
+        }
+    ]
 
     try:
         # Call Claude Sonnet 4 using cross-region inference profile
