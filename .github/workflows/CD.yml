@@ -19,7 +19,13 @@ jobs:
       contents: read
 
     steps:
-        - uses: actions/checkout@v2
+        - name: Checkout repository
+          uses: actions/checkout@v4 
+
+        - name: Setup Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.9'
 
         - name: Set AWS Account ID
           run: |
@@ -50,11 +56,38 @@ jobs:
             echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
 
         - name: Setup AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v1
+          uses: aws-actions/configure-aws-credentials@v4
           with:
             aws-region: ${{ vars.AWS_REGION }}
             role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
+
+        - name: Configure pip caching
+          uses: actions/cache@v4
+          with:
+            path: ~/.cache/pip
+            key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+            restore-keys: |
+              ${{ runner.os }}-pip-
+
+        - name: Build Lambda Layer using Docker
+          run: |
+            echo "Building Lambda Layer in a Lambda-compatible environment..."
+            # Cria um Dockerfile na hora para construir a layer
+            cat <<EOF > Dockerfile
+            FROM public.ecr.aws/lambda/python:3.9
+            WORKDIR /app
+            COPY iac/requirements-layer.txt .
+            RUN mkdir -p build/python
+            RUN pip install -r requirements-layer.txt -t build/python --no-cache-dir
+            EOF
+            
+            # Executa o build, copia a pasta 'build' para fora do container
+            docker build -t lambda-layer-builder .
+            docker create --name temp_builder lambda-layer-builder
+            docker cp temp_builder:/app/build ./iac/build
+            docker rm temp_builder
+            echo "Lambda Layer artifacts created in ./iac/build"
 
         - name: Installing Dependencies
           run: |
@@ -62,7 +95,6 @@ jobs:
             cd iac
             pip install -r requirements.txt
                  
-
         - name: DeployWithCDK
           run: |
             cd iac
