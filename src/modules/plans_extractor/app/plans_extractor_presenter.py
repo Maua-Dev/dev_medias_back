@@ -68,40 +68,40 @@ def lambda_handler(event, context):
                     context_from_excel = f"ERRO: Falha ao carregar dados de contexto do Excel: {e}\n\n"
 
 
-                    for record in event["Records"]:
-                        bucket_name = record['s3']['bucket']['name']
-                        object_key = unquote_plus(record['s3']['object']['key'])
+                for record in event["Records"]:
+                    bucket_name = record['s3']['bucket']['name']
+                    object_key = unquote_plus(record['s3']['object']['key'])
+        
+                    if object_key.startswith("plans/"):
+                        print(f"Processing plan file: {object_key}")
+
+                        # 1. Extrai o código da disciplina do nome do arquivo
+                        filename = os.path.basename(object_key)
+                        subject_code = filename.split('.')[0]
+                        print(f"Extracted subject code: {subject_code}")
+
+                        # 2. Busca TODAS as linhas no Excel e monta o objeto 'courses'
+                        courses_from_excel = {}
+                        period_from_excel = "S" # Default para Semestral
+                        
+                        all_matching_rows = df_truth[df_truth['CODIGO DISCIPLINA'] == subject_code]
             
-                        if object_key.startswith("plans/"):
-                            print(f"Processing plan file: {object_key}")
+                    if not all_matching_rows.empty:
+                        print(f"Encontradas {len(all_matching_rows)} entradas para {subject_code} no Excel.")
+                        for index, row in all_matching_rows.iterrows():
+                            course_acronym = row['CURSO']
+                            # Extrai o número do período/ano do texto (ex: "2º Semestre" -> 2)
+                            periodo_match = re.search(r'(\d+)', str(row['PERIODO']))
+                            if periodo_match:
+                                year = int(int(periodo_match.group(1)) / 2) if int(periodo_match.group(1)) > 5 else int(periodo_match.group(1))
+                                courses_from_excel[course_acronym] = year
 
-                            # 1. Extrai o código da disciplina do nome do arquivo
-                            filename = os.path.basename(object_key)
-                            subject_code = filename.split('.')[0]
-                            print(f"Extracted subject code: {subject_code}")
-
-                            # 2. Busca TODAS as linhas no Excel e monta o objeto 'courses'
-                            courses_from_excel = {}
-                            period_from_excel = "S" # Default para Semestral
-                            
-                            all_matching_rows = df_truth[df_truth['CODIGO DISCIPLINA'] == subject_code]
-                
-                        if not all_matching_rows.empty:
-                            print(f"Encontradas {len(all_matching_rows)} entradas para {subject_code} no Excel.")
-                            for index, row in all_matching_rows.iterrows():
-                                course_acronym = row['CURSO']
-                                # Extrai o número do período/ano do texto (ex: "2º Semestre" -> 2)
-                                periodo_match = re.search(r'(\d+)', str(row['PERIODO']))
-                                if periodo_match:
-                                    year = int(int(periodo_match.group(1)) / 2) if int(periodo_match.group(1)) > 5 else int(periodo_match.group(1))
-                                    courses_from_excel[course_acronym] = year
-
-                            # Pega a semestralidade da primeira linha encontrada (deve ser igual para todas)
-                            semestralidade = str(all_matching_rows.iloc[0]['SEMESTRALIDADE']).strip().upper()
-                            if semestralidade.startswith('A'):
-                                period_from_excel = 'A'
-                        else:
-                            print(f"Nenhuma entrada para {subject_code} encontrada na fonte da verdade.")
+                        # Pega a semestralidade da primeira linha encontrada (deve ser igual para todas)
+                        semestralidade = str(all_matching_rows.iloc[0]['SEMESTRALIDADE']).strip().upper()
+                        if semestralidade.startswith('A'):
+                            period_from_excel = 'A'
+                    else:
+                        print(f"Nenhuma entrada para {subject_code} encontrada na fonte da verdade.")
 
                     # 3. Processa o PDF para extrair o texto
                     pdf_response = s3.get_object(Bucket=bucket_name, Key=object_key)
