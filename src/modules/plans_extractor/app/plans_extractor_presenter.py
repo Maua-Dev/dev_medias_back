@@ -3,7 +3,6 @@ import boto3
 import urllib.parse
 import os
 from urllib.parse import unquote_plus
-import fitz
 
 def lambda_handler(event, context):
     """
@@ -26,7 +25,7 @@ def lambda_handler(event, context):
             
             print(f"Processing file: {object_key} from bucket: {bucket_name}")
             
-            # Downloading from plans bucket
+            # Download the file from raw bucket
             response = s3.get_object(Bucket=bucket_name, Key=object_key)
             file_content = response['Body'].read()
             
@@ -39,17 +38,8 @@ def lambda_handler(event, context):
                 except UnicodeDecodeError:
                     content_for_claude = {"type": "text", "content": "Binary file content that couldn't be decoded"}
             elif object_key.lower().endswith('.pdf'):
-                # CORREÇÃO: Extrai o texto do PDF antes de enviar para o Claude
-                try:
-                    with fitz.open(stream=file_content, filetype="pdf") as doc:
-                        pdf_text = ""
-                        for page in doc:
-                            pdf_text += page.get_text()
-                    content_for_claude = {"type": "text", "content": pdf_text}
-                except Exception as e:
-                    print(f"Failed to extract text from PDF {object_key}: {e}")
-                    content_for_claude = {"type": "text", "content": "Error extracting text from PDF."}
-
+                # For PDF files, use the new document structure
+                content_for_claude = {"type": "document", "content": file_content}
             else:
                 # For other file types, convert to base64 for analysis
                 import base64
@@ -94,8 +84,8 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename):
             "name": {"type": "string", "description": "Nome completo da disciplina"},
             "code": {"type": "string", "description": "Código da disciplina (ex: DSG244)"},
             "period": {"type": "string", "enum": ["A", "S"], "description": "A para Anual, S para Semestral"},
-            "examWeight": {"type": "number", "minimum": 0.0, "maximum": 100.0, "description": "Peso das provas em %"},
-            "assignmentWeight": {"type": "number", "minimum": 0.0, "maximum": 100.0, "description": "Peso dos trabalhos em %"},
+            "examWeight": {"type": "number", "minimum": 0, "maximum": 100, "description": "Peso das provas em %"},
+            "assignmentWeight": {"type": "number", "minimum": 0, "maximum": 100, "description": "Peso dos trabalhos em %"},
             "exams": {
                 "type": "array",
                 "maxItems": 4,
@@ -103,7 +93,7 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename):
                     "type": "object",
                     "properties": {
                         "name": {"type": "string", "enum": ["P1", "P2", "P3", "P4"]},
-                        "weight": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+                        "weight": {"type": "number", "minimum": 0, "maximum": 1}
                     },
                     "required": ["name", "weight"]
                 }
@@ -115,7 +105,7 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename):
                     "type": "object",
                     "properties": {
                         "name": {"type": "string", "enum": ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10"]},
-                        "weight": {"type": "number", "minimum": 0.0, "maximum": 1.0}
+                        "weight": {"type": "number", "minimum": 0, "maximum": 1}
                     },
                     "required": ["name", "weight"]
                 }
@@ -138,51 +128,69 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename):
     
     # Create the base prompt for JSON schema
     schema_prompt = f"""
-        Analise o conteúdo do documento e extraia informações de UMA disciplina específica no formato JSON especificado.
+Analise o conteúdo do documento e extraia informações de UMA disciplina específica no formato JSON especificado.
 
-        Por favor, extraia os dados da disciplina e formate de acordo com este esquema JSON:
-        {json.dumps(schema, indent=2)}
+Por favor, extraia os dados da disciplina e formate de acordo com este esquema JSON:
+{json.dumps(schema, indent=2)}
 
-        INSTRUÇÕES IMPORTANTES:
-        1. NOME DA DISCIPLINA: Extraia o nome EXATO da disciplina conforme aparece no plano de ensino
-        2. CÓDIGO: Extraia o código exato da disciplina (ex: ECM401)
-        3. PERÍODO: Use "A" para disciplinas ANUAIS, "S" para disciplinas SEMESTRAIS
-        4. PROVAS: 
-        - Procure pela seção "AVALIAÇÃO" ou "INSTRUMENTOS DE AVALIAÇÃO"
-        - Se encontrar texto como "com trabalhos e provas (quatro e duas substitutivas)", isso significa 4 provas
-        - Conte APENAS as provas principais (P1, P2, P3, P4)
-        - NÃO conte provas substitutivas ou de recuperação
-        - Se mencionar "quatro provas", crie: [{{"name": "P1", "weight": 0.25}}, {{"name": "P2", "weight": 0.25}}, {{"name": "P3", "weight": 0.25}}, {{"name": "P4", "weight": 0.25}}]
-        5. TRABALHOS:
-        - Procure por "trabalhos", "Individual e/ou em Equipes"
-        - Siga os pesos em K a quantidade de trabalhos inddicados
-        6. PESOS PERCENTUAIS (IMPORTANTE):
-        - Procure por "Peso de MT(%)" e "Peso de MP(%)" na seção de avaliação
-        - MT = Média dos Trabalhos, MP = Média de Prova
-        - Se encontrar "Peso de MP(%): 0,7" significa examWeight = 70
-        - Se encontrar "Peso de MT(%): 0,3" significa assignmentWeight = 30
-        - examWeight + assignmentWeight DEVE somar 100
-        7. PESOS INDIVIDUAIS:
-        - Para cada prova/trabalho: peso individual que soma 1.0 dentro do respectivo array
-        - Ex: 4 provas = 0.25 cada; 3 trabalhos = 0.33, 0.33, 0.34
-        8. COURSES: Identifique para quais cursos esta disciplina é oferecida e em que ano
-        9. SEJA PRECISO: Use as informações EXATAS do documento, não invente dados
+INSTRUÇÕES IMPORTANTES:
+1. NOME DA DISCIPLINA: Extraia o nome EXATO da disciplina conforme aparece no plano de ensino
+2. CÓDIGO: Extraia o código exato da disciplina (ex: ECM401)
+3. PERÍODO: Use "A" para disciplinas ANUAIS, "S" para disciplinas SEMESTRAIS
+4. PROVAS: 
+   - Procure pela seção "AVALIAÇÃO" ou "INSTRUMENTOS DE AVALIAÇÃO"
+   - Se encontrar texto como "com trabalhos e provas (quatro e duas substitutivas)", isso significa 4 provas
+   - Conte APENAS as provas principais (P1, P2, P3, P4)
+   - NÃO conte provas substitutivas ou de recuperação
+   - Se mencionar "quatro provas", crie: [{{"name": "P1", "weight": 0.25}}, {{"name": "P2", "weight": 0.25}}, {{"name": "P3", "weight": 0.25}}, {{"name": "P4", "weight": 0.25}}]
+5. TRABALHOS:
+   - Procure por "trabalhos", "Individual e/ou em Equipes"
+   - Siga os pesos em K a quantidade de trabalhos inddicados
+6. PESOS PERCENTUAIS (IMPORTANTE):
+   - Procure por "Peso de MT(%)" e "Peso de MP(%)" na seção de avaliação
+   - MT = Média dos Trabalhos, MP = Média de Prova
+   - Se encontrar "Peso de MP(%): 0,7" significa examWeight = 70
+   - Se encontrar "Peso de MT(%): 0,3" significa assignmentWeight = 30
+   - examWeight + assignmentWeight DEVE somar 100
+7. PESOS INDIVIDUAIS:
+   - Para cada prova/trabalho: peso individual que soma 1.0 dentro do respectivo array
+   - Ex: 4 provas = 0.25 cada; 3 trabalhos = 0.33, 0.33, 0.34
+8. COURSES: Identifique para quais cursos esta disciplina é oferecida e em que ano
+9. SEJA PRECISO: Use as informações EXATAS do documento, não invente dados
 
-        FORMATO DE RESPOSTA:
-        Retorne APENAS o JSON válido, sem texto adicional antes ou depois. Comece sua resposta com {{ e termine com }}.
-    """
+FORMATO DE RESPOSTA:
+Retorne APENAS o JSON válido, sem texto adicional antes ou depois. Comece sua resposta com {{ e termine com }}.
+"""
 
-    message_content = [
-        {
-            "type": "text",
-            "text": f"Conteúdo do arquivo '{filename}':\n{content_data['content']}\n\n{schema_prompt}",
-        }
-    ]
+    # Prepare the message content based on the content type
+    if content_data["type"] == "document":
+        # For PDF documents using the new structure - encode bytes to base64
+        import base64
+        encoded_bytes = base64.b64encode(content_data["content"]).decode('utf-8')
+        message_content = [
+            {"type": "text", "text": schema_prompt},
+            {
+                "type": "document",
+                "source": {
+                    "type": "base64",
+                    "media_type": "application/pdf",
+                    "data": encoded_bytes,
+                }
+            },
+        ]
+    else:
+        # For text content
+        message_content = [
+            {
+                "type": "text",
+                "text": f"Conteúdo do arquivo '{filename}':\n{content_data['content']}\n\n{schema_prompt}",
+            }
+        ]
 
     try:
         # Call Claude Sonnet 4 using cross-region inference profile
         response = bedrock_client.invoke_model(
-            modelId='anthropic.claude-3-sonnet-20240229-v1:0',
+            modelId='us.anthropic.claude-sonnet-4-20250514-v1:0',
             contentType='application/json',
             accept='application/json',
             body=json.dumps({
