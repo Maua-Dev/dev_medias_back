@@ -3,7 +3,8 @@ import json
 import boto3
 import os
 import re
-import fitz  
+from io import BytesIO 
+from pypdf import PdfReader 
 from urllib.parse import unquote_plus
 
 def clean_and_optimize_text(raw_text: str) -> str:
@@ -48,50 +49,37 @@ def lambda_handler(event, context):
             file_content_bytes = response['Body'].read()
             
             content_for_claude = None
-            if object_key.lower().endswith(('.txt', '.csv', '.json')):
+            if object_key.lower().endswith('.pdf'):
                 try:
-                    text_content = file_content_bytes.decode('utf-8')
-                    content_for_claude = {"type": "text", "content": text_content}
-                except UnicodeDecodeError:
-                    content_for_claude = {"type": "text", "content": "Binary file content that couldn't be decoded"}
-            
-            elif object_key.lower().endswith('.pdf'):
-                try:
-                    print("PDF detectado. Extraindo e otimizando o texto...")
-                    raw_text = ""
-                    with fitz.open(stream=file_content_bytes, filetype="pdf") as doc:
-                        for page in doc:
-                            raw_text += page.get_text()
+                    print("PDF detectado. Extraindo texto com pypdf...")
                     
-                    print(f"Tamanho do texto bruto: {len(raw_text)} caracteres. Estimativa de tokens: ~{len(raw_text)/4:.0f}")
+                    pdf_file = BytesIO(file_content_bytes)
+                    reader = PdfReader(pdf_file)
+                    raw_text = ""
+                    for page in reader.pages:
+                        raw_text += page.extract_text() or ""
 
+                    print(f"Tamanho do texto bruto: {len(raw_text)} caracteres.")
+                    
                     optimized_text = clean_and_optimize_text(raw_text)
-
-                    print(f"Tamanho do texto otimizado: {len(optimized_text)} caracteres. Estimativa de tokens: ~{len(optimized_text)/4:.0f}")
+                    print(f"Tamanho do texto otimizado: {len(optimized_text)} caracteres.")
                     
                     content_for_claude = {"type": "text", "content": optimized_text}
+
                 except Exception as e:
-                    print(f"Falha ao processar PDF {object_key}: {e}")
+                    print(f"Falha ao processar PDF com pypdf: {e}")
                     content_for_claude = {"type": "text", "content": f"Erro ao extrair texto do PDF: {e}"}
             else:
-                import base64
-                base64_content = base64.b64encode(file_content_bytes).decode('utf-8')
-                content_for_claude = {"type": "text", "content": f"Binary file content (base64): {base64_content[:1000]}..."}
+                # Lógica para outros arquivos continua a mesma
+                text_content = file_content_bytes.decode('utf-8', errors='ignore')
+                content_for_claude = {"type": "text", "content": text_content}
+
             
             structured_data = extract_course_data_with_claude(bedrock, content_for_claude, object_key)
             print("Dados estruturados recebidos do Claude:")
             print(json.dumps(structured_data, indent=2))
             
-            processed_key = f"processed-{os.path.basename(object_key).split('.')[0]}.json"
-            # Adicionar lógica para salvar 'structured_data' em um bucket de destino, se necessário
-            
-        return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'message': 'Files processed successfully',
-                'processed_files': len(event['Records'])
-            })
-        }
+        return {'statusCode': 200, 'body': json.dumps({'message': 'Files processed successfully'})}
         
     except Exception as e:
         print(f"Error processing file: {str(e)}")
