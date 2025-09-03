@@ -45,7 +45,7 @@ class LambdaStack(Construct):
             runtime=lambda_.Runtime.PYTHON_3_9,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(30)
+            timeout=Duration.seconds(90) # increased time for excel and bedrock
         )
         
         bucket.add_event_notification(
