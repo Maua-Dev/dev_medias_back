@@ -77,7 +77,7 @@ jobs:
             cat <<EOF > Dockerfile
             FROM public.ecr.aws/lambda/python:3.9
             WORKDIR /app
-            COPY iac/requirements-layer.txt .
+            COPY requirements-layer.txt .
             RUN mkdir -p build/python
             RUN pip install -r requirements-layer.txt -t build/python --no-cache-dir
             EOF
