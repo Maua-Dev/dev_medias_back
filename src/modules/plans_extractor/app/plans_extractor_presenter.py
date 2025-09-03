@@ -5,6 +5,7 @@ import os
 import re
 from io import BytesIO 
 from pypdf import PdfReader 
+import pandas as pd
 from urllib.parse import unquote_plus
 
 def clean_and_optimize_text(raw_text: str) -> str:
@@ -40,53 +41,105 @@ def lambda_handler(event, context):
     
     try:
         for record in event["Records"]:
+            
             bucket_name = record['s3']['bucket']['name']
             object_key = unquote_plus(record['s3']['object']['key'])
             
-            print(f"Processing file: {object_key} from bucket: {bucket_name}")
+            # 1. Verifica de forma mais robusta se o arquivo está na pasta 'plans'
+            if object_key.startswith("plans/"):
             
-            response = s3.get_object(Bucket=bucket_name, Key=object_key)
-            file_content_bytes = response['Body'].read()
-            
-            content_for_claude = None
-            if object_key.lower().endswith('.pdf'):
-                try:
-                    print("PDF detectado. Extraindo texto com pypdf...")
-                    
-                    pdf_file = BytesIO(file_content_bytes)
-                    reader = PdfReader(pdf_file)
-                    raw_text = ""
-                    for page in reader.pages:
-                        raw_text += page.extract_text() or ""
+                print(f"Processing plan file: {object_key} from bucket: {bucket_name}")
 
-                    print(f"Tamanho do texto bruto: {len(raw_text)} caracteres.")
+                # 2. Extrai o código da disciplina do nome do arquivo
+                # ex: 'plans/ARQ203.pdf' -> 'ARQ203.pdf' -> 'ARQ203'
+                filename = os.path.basename(object_key)
+                subject_code = filename.split('.')[0]
+                print(f"Extracted subject code: {subject_code}")
+
+                # 3. Carrega o arquivo Excel da "fonte da verdade"
+                try:
+                    excel_response = s3.get_object(Bucket=bucket_name, Key="relacao_disciplinas.xlsx")
+                    excel_bytes = excel_response["Body"].read()
+                    df_truth = pd.read_excel(BytesIO(excel_bytes), skiprows=2)
+                    print("Fonte da verdade carregada com sucesso.")
                     
+                except Exception as e:
+                    print(f"Erro ao ler ou processar o arquivo Excel: {e}")
+                    context_from_excel = f"ERRO: Falha ao carregar dados de contexto do Excel: {e}\n\n"
+
+
+                    for record in event["Records"]:
+                        bucket_name = record['s3']['bucket']['name']
+                        object_key = unquote_plus(record['s3']['object']['key'])
+            
+                        if object_key.startswith("plans/"):
+                            print(f"Processing plan file: {object_key}")
+
+                            # 1. Extrai o código da disciplina do nome do arquivo
+                            filename = os.path.basename(object_key)
+                            subject_code = filename.split('.')[0]
+                            print(f"Extracted subject code: {subject_code}")
+
+                            # 2. Busca TODAS as linhas no Excel e monta o objeto 'courses'
+                            courses_from_excel = {}
+                            period_from_excel = "S" # Default para Semestral
+                            
+                            all_matching_rows = df_truth[df_truth['CODIGO DISCIPLINA'] == subject_code]
+                
+                        if not all_matching_rows.empty:
+                            print(f"Encontradas {len(all_matching_rows)} entradas para {subject_code} no Excel.")
+                            for index, row in all_matching_rows.iterrows():
+                                course_acronym = row['CURSO']
+                                # Extrai o número do período/ano do texto (ex: "2º Semestre" -> 2)
+                                periodo_match = re.search(r'(\d+)', str(row['PERIODO']))
+                                if periodo_match:
+                                    year = int(int(periodo_match.group(1)) / 2) if int(periodo_match.group(1)) > 5 else int(periodo_match.group(1))
+                                    courses_from_excel[course_acronym] = year
+
+                            # Pega a semestralidade da primeira linha encontrada (deve ser igual para todas)
+                            semestralidade = str(all_matching_rows.iloc[0]['SEMESTRALIDADE']).strip().upper()
+                            if semestralidade.startswith('A'):
+                                period_from_excel = 'A'
+                        else:
+                            print(f"Nenhuma entrada para {subject_code} encontrada na fonte da verdade.")
+
+                    # 3. Processa o PDF para extrair o texto
+                    pdf_response = s3.get_object(Bucket=bucket_name, Key=object_key)
+                    pdf_bytes = pdf_response['Body'].read()
+                    raw_text = "".join([page.extract_text() or "" for page in PdfReader(BytesIO(pdf_bytes)).pages])
                     optimized_text = clean_and_optimize_text(raw_text)
-                    print(f"Tamanho do texto otimizado: {len(optimized_text)} caracteres.")
-                    
                     content_for_claude = {"type": "text", "content": optimized_text}
 
-                except Exception as e:
-                    print(f"Falha ao processar PDF com pypdf: {e}")
-                    content_for_claude = {"type": "text", "content": f"Erro ao extrair texto do PDF: {e}"}
-            else:
-                # Lógica para outros arquivos continua a mesma
-                text_content = file_content_bytes.decode('utf-8', errors='ignore')
-                content_for_claude = {"type": "text", "content": text_content}
+                    # 4. Chama o Claude para extrair os dados DO PDF
+                    structured_data_from_claude = extract_course_data_with_claude(bedrock, content_for_claude, object_key)
 
-            
-            structured_data = extract_course_data_with_claude(bedrock, content_for_claude, object_key)
-            print("Dados estruturados recebidos do Claude:")
-            print(json.dumps(structured_data, indent=2))
-            
-        return {'statusCode': 200, 'body': json.dumps({'message': 'Files processed successfully'})}
+                    if "error" in structured_data_from_claude:
+                        print(f"Erro na extração do Claude para {object_key}. Pulando.")
+                        continue
+
+                    # 5. MERGE: Corrige os dados do Claude com a fonte da verdade do Excel
+                    print("Mesclando dados do Claude com a fonte da verdade do Excel...")
+                    structured_data_from_claude['courses'] = courses_from_excel
+                    structured_data_from_claude['period'] = period_from_excel
+                    
+                    final_data = structured_data_from_claude
+
+                    print("Dados Finais Corrigidos:")
+                    print(json.dumps(final_data, indent=2))
+                    
+                    # Salvar `final_data` no S3 de destino
+                
+            else:
+                    print(f"Skipping file, not a plan file: {object_key}")
+
+        return {'statusCode': 200, 'body': json.dumps({'message': 'Event processed successfully'})}
         
     except Exception as e:
-        print(f"Error processing file: {str(e)}")
+        print(f"Erro geral no handler: {str(e)}")
         return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
 
 
-def extract_course_data_with_claude(bedrock_client, content_data, filename):
+def extract_course_data_with_claude(bedrock_client, content_data, filename, context_from_excel: str):
     """
     Usa o Claude 3 Sonnet para extrair dados estruturados do conteúdo.
     """
@@ -140,6 +193,30 @@ Analise o conteúdo do documento e extraia informações de UMA disciplina espec
 Por favor, extraia os dados da disciplina e formate de acordo com este esquema JSON:
 {json.dumps(schema, indent=2)}
 
+Lembretes Importantes:
+
+1. CORRESPONDENCIA DE MATERIAS:
+o nome dos cursos segue o seguinte padrao em relacao ao codigo das disciplinas
+EAL - Engenharia de Alimentos
+ECA - Engenharia de Controle e Automação
+ECM - Engenharia de Computação
+ENN - Engenharia Eletronica
+EET - Engenharia Elétrica
+EMC - Engenharia Mecanica
+EPM - Engenharia de Produção
+EQM - Engenharia Química
+ETC - Engenharia Civil
+ADM - Administração
+DSG - Design
+CIC - Ciencia da Computação
+SIN - Sistemas da Informação
+IA - Inteligêngia Artificial e Dados
+ARQ - Arquitetura e Urbanismo
+RI - Relações Internacionais
+
+2. O PDF TALVEZ ESTEJA ERRADO EM RELACAO A: PERIODO e NOME DO CURSO, procure antes no conteudo do excel e confie mais no excel do que no pdf. 
+
+
 INSTRUÇÕES IMPORTANTES:
 1. NOME DA DISCIPLINA: Extraia o nome EXATO da disciplina conforme aparece no plano de ensino
 2. CÓDIGO: Extraia o código exato da disciplina (ex: ECM401)
@@ -162,7 +239,7 @@ INSTRUÇÕES IMPORTANTES:
 7. PESOS INDIVIDUAIS:
    - Para cada prova/trabalho: peso individual que soma 1.0 dentro do respectivo array
    - Ex: 4 provas = 0.25 cada; 3 trabalhos = 0.33, 0.33, 0.34
-8. COURSES: Identifique para quais cursos esta disciplina é oferecida e em que ano
+8. COURSES: Identifique para quais cursos esta disciplina é oferecida e em que ano, inserindo o CODIGO DO CURSO (ex: ECM, EQM, ADM....) seguido do ano (ex: ECM:1 caso ecm apareca no primeiro ano dessa materia)
 9. SEJA PRECISO: Use as informações EXATAS do documento, não invente dados
 
 FORMATO DE RESPOSTA:
@@ -171,7 +248,15 @@ Retorne APENAS o JSON válido, sem texto adicional antes ou depois. Comece sua r
 
     message_content = [{
         "type": "text",
-        "text": f"Analise o conteúdo do arquivo '{filename}' a seguir:\n\n--- INÍCIO DO CONTEÚDO ---\n{content_data['content']}\n--- FIM DO CONTEÚDO ---\n\n{schema_prompt}",
+        "text": (
+            f"--- Conteudo do excel ---"
+            f"{context_from_excel}"
+            f"Analise o conteúdo do arquivo PDF '{filename}' a seguir:\n\n"
+            f"--- INÍCIO DO CONTEÚDO DO PDF ---\n"
+            f"{content_data['content']}\n"
+            f"--- FIM DO CONTEÚDO DO PDF ---\n\n"
+            f"{schema_prompt}"
+        )
     }]
 
     try:
