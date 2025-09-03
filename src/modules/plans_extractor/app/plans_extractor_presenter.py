@@ -40,97 +40,59 @@ def lambda_handler(event, context):
     bedrock = boto3.client("bedrock-runtime", region_name=bedrock_region)
     
     try:
+        first_record_bucket = event["Records"][0]['s3']['bucket']['name']
+        print(f"Carregando a fonte da verdade de: {first_record_bucket}/relacao_disciplinas.xlsx")
+        excel_response = s3.get_object(Bucket=first_record_bucket, Key="relacao_disciplinas.xlsx")
+        excel_bytes = excel_response["Body"].read()
+        df_truth = pd.read_excel(BytesIO(excel_bytes), skiprows=2)
+        print("Fonte da verdade carregada com sucesso.")
+
         for record in event["Records"]:
-            
             bucket_name = record['s3']['bucket']['name']
             object_key = unquote_plus(record['s3']['object']['key'])
             
-            # 1. Verifica de forma mais robusta se o arquivo está na pasta 'plans'
             if object_key.startswith("plans/"):
-            
-                print(f"Processing plan file: {object_key} from bucket: {bucket_name}")
+                print(f"Processing plan file: {object_key}")
 
-                # 2. Extrai o código da disciplina do nome do arquivo
-                # ex: 'plans/ARQ203.pdf' -> 'ARQ203.pdf' -> 'ARQ203'
                 filename = os.path.basename(object_key)
                 subject_code = filename.split('.')[0]
                 print(f"Extracted subject code: {subject_code}")
 
-                # 3. Carrega o arquivo Excel da "fonte da verdade"
-                try:
-                    excel_response = s3.get_object(Bucket=bucket_name, Key="relacao_disciplinas.xlsx")
-                    excel_bytes = excel_response["Body"].read()
-                    df_truth = pd.read_excel(BytesIO(excel_bytes), skiprows=2)
-                    print("Fonte da verdade carregada com sucesso.")
-                    
-                except Exception as e:
-                    print(f"Erro ao ler ou processar o arquivo Excel: {e}")
-                    context_from_excel = f"ERRO: Falha ao carregar dados de contexto do Excel: {e}\n\n"
-
-
-                for record in event["Records"]:
-                    bucket_name = record['s3']['bucket']['name']
-                    object_key = unquote_plus(record['s3']['object']['key'])
-        
-                    if object_key.startswith("plans/"):
-                        print(f"Processing plan file: {object_key}")
-
-                        # 1. Extrai o código da disciplina do nome do arquivo
-                        filename = os.path.basename(object_key)
-                        subject_code = filename.split('.')[0]
-                        print(f"Extracted subject code: {subject_code}")
-
-                        # 2. Busca TODAS as linhas no Excel e monta o objeto 'courses'
-                        courses_from_excel = {}
-                        period_from_excel = "S" # Default para Semestral
-                        
-                        all_matching_rows = df_truth[df_truth['CODIGO DISCIPLINA'] == subject_code]
+                context_from_excel = ""
+                all_matching_rows = df_truth[df_truth['CODIGO DISCIPLINA'] == subject_code]
             
-                    if not all_matching_rows.empty:
-                        print(f"Encontradas {len(all_matching_rows)} entradas para {subject_code} no Excel.")
-                        for index, row in all_matching_rows.iterrows():
-                            course_acronym = row['CURSO']
-                            # Extrai o número do período/ano do texto (ex: "2º Semestre" -> 2)
-                            periodo_match = re.search(r'(\d+)', str(row['PERIODO']))
-                            if periodo_match:
-                                year = int(int(periodo_match.group(1)) / 2) if int(periodo_match.group(1)) > 5 else int(periodo_match.group(1))
-                                courses_from_excel[course_acronym] = year
-
-                        # Pega a semestralidade da primeira linha encontrada (deve ser igual para todas)
-                        semestralidade = str(all_matching_rows.iloc[0]['SEMESTRALIDADE']).strip().upper()
-                        if semestralidade.startswith('A'):
-                            period_from_excel = 'A'
-                    else:
-                        print(f"Nenhuma entrada para {subject_code} encontrada na fonte da verdade.")
-
-                    # 3. Processa o PDF para extrair o texto
-                    pdf_response = s3.get_object(Bucket=bucket_name, Key=object_key)
-                    pdf_bytes = pdf_response['Body'].read()
-                    raw_text = "".join([page.extract_text() or "" for page in PdfReader(BytesIO(pdf_bytes)).pages])
-                    optimized_text = clean_and_optimize_text(raw_text)
-                    content_for_claude = {"type": "text", "content": optimized_text}
-
-                    # 4. Chama o Claude para extrair os dados DO PDF
-                    structured_data_from_claude = extract_course_data_with_claude(bedrock, content_for_claude, object_key)
-
-                    if "error" in structured_data_from_claude:
-                        print(f"Erro na extração do Claude para {object_key}. Pulando.")
-                        continue
-
-                    # 5. MERGE: Corrige os dados do Claude com a fonte da verdade do Excel
-                    print("Mesclando dados do Claude com a fonte da verdade do Excel...")
-                    structured_data_from_claude['courses'] = courses_from_excel
-                    structured_data_from_claude['period'] = period_from_excel
+                if not all_matching_rows.empty:
+                    print(f"Encontradas {len(all_matching_rows)} entradas para {subject_code} no Excel.")
+                    info_list = all_matching_rows.to_dict(orient='records')
                     
-                    final_data = structured_data_from_claude
+                    context_from_excel = (
+                        "Aqui estão os dados da fonte da verdade (Excel) para esta disciplina. "
+                        "Use estes dados para preencher ou corrigir as informações do PDF, especialmente os campos 'period' e 'courses'.\n"
+                        f"{json.dumps(info_list, indent=2, ensure_ascii=False)}"
+                    )
+                else:
+                    context_from_excel = "AVISO: Nenhuma informação de contexto encontrada no arquivo Excel para este código de disciplina."
+                    print(f"Contexto para {subject_code} não encontrado no Excel.")
 
-                    print("Dados Finais Corrigidos:")
-                    print(json.dumps(final_data, indent=2))
-                    
-                    # Salvar `final_data` no S3 de destino
-                
+                pdf_response = s3.get_object(Bucket=bucket_name, Key=object_key)
+                pdf_bytes = pdf_response['Body'].read()
+                raw_text = "".join([page.extract_text() or "" for page in PdfReader(BytesIO(pdf_bytes)).pages])
+                optimized_text = clean_and_optimize_text(raw_text)
+                content_for_claude = {"type": "text", "content": optimized_text}
+
+                final_data = extract_course_data_with_claude(
+                    bedrock, 
+                    content_for_claude, 
+                    object_key, 
+                    context_from_excel  
+                )
+
+
+                print("Dados Finais (processados pelo Claude com contexto):")
+                print(json.dumps(final_data, indent=2))
+            
             else:
-                    print(f"Skipping file, not a plan file: {object_key}")
+                print(f"Skipping file, not a plan file: {object_key}")
 
         return {'statusCode': 200, 'body': json.dumps({'message': 'Event processed successfully'})}
         
@@ -188,73 +150,96 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename, cont
     }
     
     schema_prompt = f"""
-Analise o conteúdo do documento e extraia informações de UMA disciplina específica no formato JSON especificado.
+Você é um assistente de extração de dados altamente preciso. Sua tarefa é analisar o contexto de um arquivo Excel e o texto de um plano de ensino em PDF para preencher um objeto JSON de acordo com um esquema específico.
 
-Por favor, extraia os dados da disciplina e formate de acordo com este esquema JSON:
+Siga estas regras rigorosamente:
+
+1.  **Prioridade da Fonte da Verdade:** O conteúdo dentro das tags `<excel_context>` é a fonte da verdade absoluta para os campos `courses` e `period`. Se houver um conflito com o PDF, a informação do Excel SEMPRE vence.
+2.  **Extração do PDF:** Para todos os outros campos (`name`, `code`, `examWeight`, `assignmentWeight`, `exams`, `assignments`), use o texto dentro das tags `<pdf_text>`.
+3.  **Raciocínio Lógico:** Antes de gerar o JSON final, pense passo a passo dentro de tags `<thinking>`. Descreva como você encontrou cada valor e por que tomou cada decisão.
+4.  **Formato de Saída:** Após a tag `</thinking>`, forneça APENAS o objeto JSON válido, sem comentários, explicações ou formatação de bloco de código.
+
+---
+**EXEMPLO DE USO:**
+
+<excel_context>
+[
+  {{
+    "CODIGO DISCIPLINA": "ECM206",
+    "DISCIPLINA": "Física II",
+    "CURSO": "ECM",
+    "PERIODO": "2º Semestre",
+    "SEMESTRALIDADE": "Semestral"
+  }},
+  {{
+    "CODIGO DISCIPLINA": "ECM206",
+    "DISCIPLINA": "Física II",
+    "CURSO": "EET",
+    "PERIODO": "2º Semestre",
+    "SEMESTRALIDADE": "Semestral"
+  }}
+]
+</excel_context>
+
+<pdf_text>
+Disciplina: FISICA 2
+Código da Disciplina: ECM206
+Peso de MP(kp): 7
+Peso de MT(kt): 3
+Critério de aprovação: C1/2007 (2 provas)
+</pdf_text>
+
+<json_schema>
 {json.dumps(schema, indent=2)}
+</json_schema>
 
-Lembretes Importantes:
+**SAÍDA ESPERADA:**
 
-1. CORRESPONDENCIA DE MATERIAS:
-o nome dos cursos segue o seguinte padrao em relacao ao codigo das disciplinas
-EAL - Engenharia de Alimentos
-ECA - Engenharia de Controle e Automação
-ECM - Engenharia de Computação
-ENN - Engenharia Eletronica
-EET - Engenharia Elétrica
-EMC - Engenharia Mecanica
-EPM - Engenharia de Produção
-EQM - Engenharia Química
-ETC - Engenharia Civil
-ADM - Administração
-DSG - Design
-CIC - Ciencia da Computação
-SIN - Sistemas da Informação
-IA - Inteligêngia Artificial e Dados
-ARQ - Arquitetura e Urbanismo
-RI - Relações Internacionais
+<thinking>
+1.  **course**: O Excel e o PDF mencionam "Física II", mas o schema pede o nome completo do curso, não da disciplina. O campo CURSO no Excel indica os cursos que têm a disciplina. O PDF não informa o nome do curso. Vou deixar este campo em branco ou com um valor padrão, pois não há informação suficiente para preenchê-lo com um nome completo de curso como "Engenharia de Computação". [Nota: O schema pode precisar de ajuste aqui, ou o Claude pode precisar de mais instrução. Por enquanto, a extração será literal]. Vou preencher com o nome da disciplina, pois é a informação mais proeminente.
+2.  **name**: O PDF diz "FISICA 2". Vou usar isso.
+3.  **code**: O PDF e o Excel concordam em "ECM206".
+4.  **period**: O Excel é a fonte da verdade. A "SEMESTRALIDADE" é "Semestral", então o valor é "S".
+5.  **examWeight**: O PDF diz "Peso de MP(kp): 7". Isso se traduz para 70.
+6.  **assignmentWeight**: O PDF diz "Peso de MT(kt): 3". Isso se traduz para 30.
+7.  **exams**: O critério "C1/2007" e a menção de "(2 provas)" indicam 2 provas. Com peso 0.5 cada.
+8.  **assignments**: Não há menção a trabalhos específicos, então vou deixar o array vazio.
+9.  **courses**: O Excel é a fonte da verdade. O código ECM206 está associado aos cursos ECM e EET, ambos no "2º Semestre", que corresponde ao ano 1. O objeto será {{"ECM": 1, "EET": 1}}.
+</thinking>
+{{
+  "course": "Física II",
+  "name": "FISICA 2",
+  "code": "ECM206",
+  "period": "S",
+  "examWeight": 70.0,
+  "assignmentWeight": 30.0,
+  "exams": [
+    {{
+      "name": "P1",
+      "weight": 0.5
+    }},
+    {{
+      "name": "P2",
+      "weight": 0.5
+    }}
+  ],
+  "assignments": [],
+  "courses": {{
+    "ECM": 1,
+    "EET": 1
+  }}
+}}
 
-2. O PDF TALVEZ ESTEJA ERRADO EM RELACAO A: PERIODO e NOME DO CURSO, procure antes no conteudo do excel e confie mais no excel do que no pdf. 
-
-
-INSTRUÇÕES IMPORTANTES:
-1. NOME DA DISCIPLINA: Extraia o nome EXATO da disciplina conforme aparece no plano de ensino
-2. CÓDIGO: Extraia o código exato da disciplina (ex: ECM401)
-3. PERÍODO: Use "A" para disciplinas ANUAIS, "S" para disciplinas SEMESTRAIS
-4. PROVAS: 
-   - Procure pela seção "AVALIAÇÃO" ou "INSTRUMENTOS DE AVALIAÇÃO"
-   - Se encontrar texto como "com trabalhos e provas (quatro e duas substitutivas)", isso significa 4 provas
-   - Conte APENAS as provas principais (P1, P2, P3, P4)
-   - NÃO conte provas substitutivas ou de recuperação
-   - Se mencionar "quatro provas", crie: [{{"name": "P1", "weight": 0.25}}, {{"name": "P2", "weight": 0.25}}, {{"name": "P3", "weight": 0.25}}, {{"name": "P4", "weight": 0.25}}]
-5. TRABALHOS:
-   - Procure por "trabalhos", "Individual e/ou em Equipes"
-   - Siga os pesos em K a quantidade de trabalhos inddicados
-6. PESOS PERCENTUAIS (IMPORTANTE):
-   - Procure por "Peso de MT(kt)" e "Peso de MP(kp)" na seção de avaliação
-   - MT = Média dos Trabalhos, MP = Média de Prova
-   - Se encontrar "Peso de MP(kp): 7" significa examWeight = 70
-   - Se encontrar "Peso de MT(kt): 3" significa assignmentWeight = 30
-   - examWeight + assignmentWeight DEVE somar 100
-7. PESOS INDIVIDUAIS:
-   - Para cada prova/trabalho: peso individual que soma 1.0 dentro do respectivo array
-   - Ex: 4 provas = 0.25 cada; 3 trabalhos = 0.33, 0.33, 0.34
-8. COURSES: Identifique para quais cursos esta disciplina é oferecida e em que ano, inserindo o CODIGO DO CURSO (ex: ECM, EQM, ADM....) seguido do ano (ex: ECM:1 caso ecm apareca no primeiro ano dessa materia)
-9. SEJA PRECISO: Use as informações EXATAS do documento, não invente dados
-
-FORMATO DE RESPOSTA:
-Retorne APENAS o JSON válido, sem texto adicional antes ou depois. Comece sua resposta com {{ e termine com }}.
+---
+**AGORA, SUA VEZ. ANALISE OS DADOS A SEGUIR E GERE A SAÍDA NO FORMATO DESCRITO.**
 """
 
     message_content = [{
         "type": "text",
         "text": (
-            f"--- Conteudo do excel ---"
-            f"{context_from_excel}"
-            f"Analise o conteúdo do arquivo PDF '{filename}' a seguir:\n\n"
-            f"--- INÍCIO DO CONTEÚDO DO PDF ---\n"
-            f"{content_data['content']}\n"
-            f"--- FIM DO CONTEÚDO DO PDF ---\n\n"
+            f"<excel_context>\n{context_from_excel}\n</excel_context>\n\n"
+            f"<pdf_text>\n{content_data['content']}\n</pdf_text>\n\n"
+            f"<json_schema>\n{json.dumps(schema, indent=2)}\n</json_schema>\n\n"
             f"{schema_prompt}"
         )
     }]
@@ -274,6 +259,18 @@ Retorne APENAS o JSON válido, sem texto adicional antes ou depois. Comece sua r
         
         response_body = json.loads(response['body'].read())
         claude_response = response_body['content'][0]['text']
+        
+        thinking_block_end = "</thinking>"
+        if thinking_block_end in claude_response:
+            json_part = claude_response.split(thinking_block_end, 1)[1].strip()
+            
+            json_part = re.sub(r'^```json\s*', '', json_part)
+            json_part = re.sub(r'```$', '', json_part)
+
+            structured_data = json.loads(json_part)
+        else:
+            print("Bloco <thinking> não encontrado. Tentando parse direto do JSON.")
+            structured_data = json.loads(claude_response)
         
         usage = response_body.get('usage', {})
         input_tokens = usage.get('input_tokens', 0)
