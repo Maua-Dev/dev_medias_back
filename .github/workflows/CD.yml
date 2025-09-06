@@ -19,25 +19,39 @@ jobs:
       contents: read
 
     steps:
-        - uses: actions/checkout@v2
+        - name: Checkout repository
+          uses: actions/checkout@v4 
+
+        - name: Setup Python 3.9
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.9'
+
+        - name: Set AWS Account ID and other variables
+          run: |
+            if [[ "${{ github.ref_name }}" == "dev" ]]; then
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
+            elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOMOLOG }}" >> $GITHUB_ENV
+            elif [[ "${{ github.ref_name }}" == "prod" ]]; then
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
+            else
+              echo "Invalid branch name!" && exit 1
+            fi
+            echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
 
         - name: Setup AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v1
+          uses: aws-actions/configure-aws-credentials@v4 # --> ATUALIZADO
           with:
             aws-region: ${{ vars.AWS_REGION }}
-            role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
+            role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
-
-        - name: Setting stage and stack name
-          run: |
-              echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
 
         - name: Installing Dependencies
           run: |
             npm install -g aws-cdk
             cd iac
             pip install -r requirements.txt
-                 
 
         - name: DeployWithCDK
           run: |
@@ -45,10 +59,10 @@ jobs:
             cdk synth
             cdk deploy --require-approval never
           env:
-            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+            AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
             AWS_REGION: ${{ vars.AWS_REGION }}
             STACK_NAME: ${{ env.STACK_NAME }}
             GITHUB_REF_NAME: ${{ github.ref_name }}
             FROM_EMAIL: ${{ vars.FROM_EMAIL }}  
             HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
-            REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}  
+            REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}

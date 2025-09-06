@@ -3,10 +3,14 @@ from aws_cdk import (
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
     aws_logs as logs,
+    aws_iam as iam,
     Stack
 )
 
 from constructs import Construct
+
+from .plans_stack import PlansStack
+
 
 from .lambda_stack import LambdaStack
 from aws_cdk.aws_apigateway import RestApi, Cors
@@ -77,18 +81,35 @@ class IacStack(Stack):
             "allow_headers": Cors.DEFAULT_HEADERS
         }
         )
-                                                               
-
+        
+        self.subject_stack = SubjectStack(self)
+        self.plans_stack = PlansStack(self)
+        
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
+            "PLANS_BUCKET_NAME": self.plans_stack.bucket.bucket_name
         }
 
-        self.lambda_stack = LambdaStack(self, api_gateway_resource=api_gateway_resource,
-                                        environment_variables=ENVIRONMENT_VARIABLES)
+        self.lambda_stack = LambdaStack(
+            self, 
+            api_gateway_resource=api_gateway_resource,
+            plans_bucket=self.plans_stack.bucket,
+            environment_variables=ENVIRONMENT_VARIABLES
+        )
+        
+        bedrock_policy = iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=[
+                "bedrock:InvokeModel"
+            ],
+            resources=["*"]  # Simplified to avoid ARN parsing issues
+        )
+        
+        self.lambda_stack.plans_extractor_function.add_to_role_policy(
+            bedrock_policy
+        )
 
         self.contact_us_lambda_stack = LambdaContactUsStack(self, api_gateway_resource=api_gateway_resource,
                                                             lambda_layer=self.lambda_stack.lambda_layer,
                                                             stage=stage)
         
-        self.subject_stack = SubjectStack(self)
-
