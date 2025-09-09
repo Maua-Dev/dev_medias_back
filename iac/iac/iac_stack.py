@@ -3,10 +3,14 @@ from aws_cdk import (
     aws_lambda as lambda_,
     aws_apigateway as apigateway,
     aws_logs as logs,
+    aws_iam as iam,
     Stack
 )
 
 from constructs import Construct
+
+from .plans_stack import PlansStack
+
 
 from .lambda_stack import LambdaStack
 from aws_cdk.aws_apigateway import RestApi, Cors
@@ -35,7 +39,7 @@ class IacStack(Stack):
         else:
             stage = 'DEV'
         
-        log_group = logs.LogGroup(self, f"DevMedias_ApiGateway_AccessLogs_{stage}")
+        # log_group = logs.LogGroup(self, f"DevMedias_ApiGateway_AccessLogs_{stage}")
 
         self.rest_api = RestApi(self, f"DevMedias_RestApi_{self.github_ref_name}",
                                 rest_api_name=f"DevMedias_RestApi_{self.github_ref_name}",
@@ -48,25 +52,25 @@ class IacStack(Stack):
                                 },
                                 deploy_options=apigateway.StageOptions(
                                     stage_name="prod",  # deixar como o padrao que estava errado, tem que comunicar que para arrumar aqui é apenas trocar pela variavel stage
-                                    access_log_destination=apigateway.LogGroupLogDestination(log_group),
-                                    access_log_format=apigateway.AccessLogFormat.custom(
-                                        json.dumps({
-                                            "requestId": "$context.requestId",
-                                            "ip": "$context.identity.sourceIp",
-                                            "caller": "$context.identity.caller",
-                                            "user": "$context.identity.user",
-                                            "requestTime": "$context.requestTime",
-                                            "httpMethod": "$context.httpMethod",
-                                            "resourcePath": "$context.resourcePath",
-                                            "status": "$context.status",
-                                            "protocol": "$context.protocol",
-                                            "responseLength": "$context.responseLength",
-                                            "queryString": "$context.requestOverride.path.querystring"
-                                        })
-                                    ),
-                                    logging_level=apigateway.MethodLoggingLevel.INFO, 
-                                    data_trace_enabled=True, 
-                                    metrics_enabled=True 
+                                    # access_log_destination=apigateway.LogGroupLogDestination(log_group),
+                                    # access_log_format=apigateway.AccessLogFormat.custom(
+                                    #     json.dumps({
+                                    #         "requestId": "$context.requestId",
+                                    #         "ip": "$context.identity.sourceIp",
+                                    #         "caller": "$context.identity.caller",
+                                    #         "user": "$context.identity.user",
+                                    #         "requestTime": "$context.requestTime",
+                                    #         "httpMethod": "$context.httpMethod",
+                                    #         "resourcePath": "$context.resourcePath",
+                                    #         "status": "$context.status",
+                                    #         "protocol": "$context.protocol",
+                                    #         "responseLength": "$context.responseLength",
+                                    #         "queryString": "$context.requestOverride.path.querystring"
+                                    #     })
+                                    # ),
+                                    logging_level=apigateway.MethodLoggingLevel.OFF, #INFO
+                                    data_trace_enabled=False, #True
+                                    metrics_enabled=True
                                 )
         )
 
@@ -77,18 +81,35 @@ class IacStack(Stack):
             "allow_headers": Cors.DEFAULT_HEADERS
         }
         )
-                                                               
-
+        
+        self.subject_stack = SubjectStack(self)
+        self.plans_stack = PlansStack(self)
+        
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
+            "PLANS_BUCKET_NAME": self.plans_stack.bucket.bucket_name
         }
 
-        self.lambda_stack = LambdaStack(self, api_gateway_resource=api_gateway_resource,
-                                        environment_variables=ENVIRONMENT_VARIABLES)
+        self.lambda_stack = LambdaStack(
+            self, 
+            api_gateway_resource=api_gateway_resource,
+            plans_bucket=self.plans_stack.bucket,
+            environment_variables=ENVIRONMENT_VARIABLES
+        )
+        
+        bedrock_policy = iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=[
+                "bedrock:InvokeModel"
+            ],
+            resources=["*"]  # Simplified to avoid ARN parsing issues
+        )
+        
+        self.lambda_stack.plans_extractor_function.add_to_role_policy(
+            bedrock_policy
+        )
 
         self.contact_us_lambda_stack = LambdaContactUsStack(self, api_gateway_resource=api_gateway_resource,
                                                             lambda_layer=self.lambda_stack.lambda_layer,
                                                             stage=stage)
         
-        self.subject_stack = SubjectStack(self)
-

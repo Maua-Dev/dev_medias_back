@@ -1,21 +1,13 @@
+from aws_cdk import aws_s3, aws_cloudfront, RemovalPolicy, Duration, aws_iam as iam
+from constructs import Construct
 import os
 import uuid
 
-from constructs import Construct
 
-from aws_cdk import (
-    Duration,
-    aws_s3,
-    RemovalPolicy,
-    aws_iam as iam, aws_cloudfront
-)
-
-
-class SubjectStack(Construct):
-
-
+class PlansStack(Construct):
+    
     def __init__(self, scope: Construct, **kwargs) -> None:
-        super().__init__(scope, "SubjectStack")
+        super().__init__(scope, "PlansStack")
         self.github_ref_name = os.environ.get("GITHUB_REF_NAME")
         self.aws_region = os.environ.get("AWS_REGION")
         self.aws_account_id = os.environ.get("AWS_ACCOUNT_ID")
@@ -23,23 +15,23 @@ class SubjectStack(Construct):
         REMOVAL_POLICY = RemovalPolicy.RETAIN if 'prod' in self.github_ref_name else RemovalPolicy.DESTROY
 
         self.bucket = aws_s3.Bucket(
-            self, "SubjectBucket",
+            self, "PlansBucket",
             block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
             removal_policy=REMOVAL_POLICY
         )
 
         oac = aws_cloudfront.CfnOriginAccessControl(
             self, "OAC", origin_access_control_config={
-                "name": f"DevMedias Subject Bucket OAC {self.github_ref_name}",
+                "name": f"DevMedias Plans Bucket OAC {self.github_ref_name}",
                 "originAccessControlOriginType": "s3",
                 "signingBehavior": "always",
                 "signingProtocol": "sigv4"
             }
         )
-
+        
         cloudFrontWebDistribution = aws_cloudfront.CloudFrontWebDistribution(
-            self, "CloudFrontWebDistributionSubject",
-            comment=f"DevMedias Subject S3 CDN {self.github_ref_name}",
+            self, "CloudFrontWebDistributionPlans",
+            comment=f"DevMedias Plans S3 CDN {self.github_ref_name}",
             origin_configs=[
                 aws_cloudfront.SourceConfiguration(
                     s3_origin_source=aws_cloudfront.S3OriginConfig(
@@ -72,7 +64,7 @@ class SubjectStack(Construct):
             "DistributionConfig.Origins.0.OriginAccessControlId",
             oac.get_att("Id")
         )
-
+        
         cache_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"CP-{self.github_ref_name}"))
 
         def get_policy_id():
@@ -83,11 +75,11 @@ class SubjectStack(Construct):
                 cache_policy = aws_cloudfront.CachePolicy(
                     self,
                     cache_policy_id,
-                    cache_policy_name=f"DevMediasS3CachingOptimized-{self.github_ref_name}",
-                    comment=f"DevMedias Policy for SubjectBucket {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
+                    cache_policy_name=f"DevMediasS3PlansCachingOptimized-{self.github_ref_name}",
+                    comment=f"DevMedias Policy for {self.github_ref_name}. Policy with caching enabled. Supports Gzip and Brotli compression.",
                     min_ttl=Duration.seconds(1),
                     max_ttl=Duration.days(365),
-                    default_ttl=Duration.seconds(86400),
+                    default_ttl=Duration.seconds(30), # precisamos mesmo de um time to live?
                     enable_accept_encoding_gzip=True,
                     enable_accept_encoding_brotli=True
                 )
@@ -99,7 +91,7 @@ class SubjectStack(Construct):
         )
 
         origin_request_policy_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"ORP-{self.github_ref_name}"))
-
+        
         def get_origin_request_policy_id():
             try:
                 origin_request_policy = aws_cloudfront.OriginRequestPolicy.from_origin_request_policy_id(origin_request_policy_id)
@@ -108,8 +100,8 @@ class SubjectStack(Construct):
                 origin_request_policy = aws_cloudfront.OriginRequestPolicy(
                     self,
                     origin_request_policy_id,
-                    comment=f"DevMedias Policy for SubjectBucket origin with CORS {self.github_ref_name}",
-                    origin_request_policy_name=f"CORS-S3Origin-Subject-{self.github_ref_name}",
+                    comment=f"DevMedias Policy for S3 PlansBucket origin with CORS {self.github_ref_name}",
+                    origin_request_policy_name=f"CORS-S3Origin-Plans-{self.github_ref_name}",
                     header_behavior=aws_cloudfront.OriginRequestHeaderBehavior.allow_list(
                         "Origin",
                         "Access-Control-Request-Headers",
@@ -137,3 +129,4 @@ class SubjectStack(Construct):
                 f"cloudfront.amazonaws.com"
             )]
         ))
+

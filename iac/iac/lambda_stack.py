@@ -1,5 +1,8 @@
 from aws_cdk import (
     aws_lambda as lambda_,
+    aws_s3 as s3,
+    aws_s3_notifications as s3n,
+    aws_lambda_event_sources as lambda_event_sources,
     Duration
 )
 from constructs import Construct
@@ -26,12 +29,52 @@ class LambdaStack(Construct):
                                                                                 function))
 
         return function
+    
+    def create_lambda_s3_object_creation_deletion_trigger_integration(
+        self,
+        module_name: str,
+        bucket: s3.Bucket,
+        environment_variables: dict
+    ) -> lambda_.Function:
+        
+        function = lambda_.Function(
+            self,
+            module_name.title(),
+            code=lambda_.Code.from_asset(f"../src/modules/{ module_name }"),
+            handler=f"app.{module_name}_presenter.lambda_handler",
+            runtime=lambda_.Runtime.PYTHON_3_9,
+            layers=[self.lambda_layer],
+            environment=environment_variables,
+            timeout=Duration.seconds(90) # increased time for excel and bedrock
+        )
+        
+        bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            s3n.LambdaDestination(function)
+        )
+                
+        # bucket.add_event_notification(
+        #     s3.EventType.OBJECT_REMOVED_DELETE,
+        #     s3n.LambdaDestination(function)
+        # )
+        
+        bucket.grant_read(function)
+        
+        return function
+        
 
-    def __init__(self, scope: Construct, api_gateway_resource: Resource, environment_variables: dict) -> None:
+    def __init__(
+        self, 
+        scope: Construct, 
+        api_gateway_resource: Resource,
+        plans_bucket: s3.Bucket,
+        environment_variables: dict
+    ) -> None:
+        
         super().__init__(scope, "DevMediasLambda")
 
         self.lambda_layer = lambda_.LayerVersion(self, "DevMedias_Layer",
-                                                 code=lambda_.Code.from_asset("./lambda_layer_out_temp"),
+                                                 code=lambda_.Code.from_asset("./build"),
                                                  compatible_runtimes=[lambda_.Runtime.PYTHON_3_9]
                                                 )
 
@@ -44,3 +87,9 @@ class LambdaStack(Construct):
                                                                                    "POST",
                                                                                    api_resource=api_gateway_resource,
                                                                                    environment_variables=environment_variables)
+
+        self.plans_extractor_function = self.create_lambda_s3_object_creation_deletion_trigger_integration(
+            module_name="plans_extractor",
+            bucket=plans_bucket,
+            environment_variables=environment_variables
+        )
