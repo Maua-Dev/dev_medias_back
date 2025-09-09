@@ -39,7 +39,7 @@ class IacStack(Stack):
         else:
             stage = 'DEV'
         
-        log_group = logs.LogGroup(self, f"DevMedias_ApiGateway_AccessLogs_{stage}")
+        # log_group = logs.LogGroup(self, f"DevMedias_ApiGateway_AccessLogs_{stage}")
 
         self.rest_api = RestApi(self, f"DevMedias_RestApi_{self.github_ref_name}",
                                 rest_api_name=f"DevMedias_RestApi_{self.github_ref_name}",
@@ -52,25 +52,25 @@ class IacStack(Stack):
                                 },
                                 deploy_options=apigateway.StageOptions(
                                     stage_name="prod",  # deixar como o padrao que estava errado, tem que comunicar que para arrumar aqui é apenas trocar pela variavel stage
-                                    access_log_destination=apigateway.LogGroupLogDestination(log_group),
-                                    access_log_format=apigateway.AccessLogFormat.custom(
-                                        json.dumps({
-                                            "requestId": "$context.requestId",
-                                            "ip": "$context.identity.sourceIp",
-                                            "caller": "$context.identity.caller",
-                                            "user": "$context.identity.user",
-                                            "requestTime": "$context.requestTime",
-                                            "httpMethod": "$context.httpMethod",
-                                            "resourcePath": "$context.resourcePath",
-                                            "status": "$context.status",
-                                            "protocol": "$context.protocol",
-                                            "responseLength": "$context.responseLength",
-                                            "queryString": "$context.requestOverride.path.querystring"
-                                        })
-                                    ),
-                                    logging_level=apigateway.MethodLoggingLevel.INFO, 
-                                    data_trace_enabled=True, 
-                                    metrics_enabled=True 
+                                    # access_log_destination=apigateway.LogGroupLogDestination(log_group),
+                                    # access_log_format=apigateway.AccessLogFormat.custom(
+                                    #     json.dumps({
+                                    #         "requestId": "$context.requestId",
+                                    #         "ip": "$context.identity.sourceIp",
+                                    #         "caller": "$context.identity.caller",
+                                    #         "user": "$context.identity.user",
+                                    #         "requestTime": "$context.requestTime",
+                                    #         "httpMethod": "$context.httpMethod",
+                                    #         "resourcePath": "$context.resourcePath",
+                                    #         "status": "$context.status",
+                                    #         "protocol": "$context.protocol",
+                                    #         "responseLength": "$context.responseLength",
+                                    #         "queryString": "$context.requestOverride.path.querystring"
+                                    #     })
+                                    # ),
+                                    logging_level=apigateway.MethodLoggingLevel.OFF, #INFO
+                                    data_trace_enabled=False, #True
+                                    metrics_enabled=True
                                 )
         )
 
