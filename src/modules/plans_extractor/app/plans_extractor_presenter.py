@@ -1,4 +1,3 @@
-
 import json
 import boto3
 import os
@@ -44,7 +43,9 @@ def lambda_handler(event, context):
         print(f"Carregando a fonte da verdade de: {first_record_bucket}/relacao_disciplinas.xlsx")
         excel_response = s3.get_object(Bucket=first_record_bucket, Key="relacao_disciplinas.xlsx")
         excel_bytes = excel_response["Body"].read()
-        df_truth = pd.read_excel(BytesIO(excel_bytes), skiprows=2)
+        df_truth = pd.read_excel(BytesIO(excel_bytes), skiprows=1)  # Ajustado para skiprows=1 baseado na estrutura
+        # Assumindo colunas: Ano, Turno, CODIGO DISCIPLINA, DISCIPLINA, CURSO, PERIODO, SERIE, SEMESTRALIDADE, ...
+        # Renomear colunas se necessário para consistência, mas usando nomes aproximados
         print("Fonte da verdade carregada com sucesso.")
 
         for record in event["Records"]:
@@ -67,7 +68,7 @@ def lambda_handler(event, context):
                     
                     context_from_excel = (
                         "Aqui estão os dados da fonte da verdade (Excel) para esta disciplina. "
-                        "Use estes dados para preencher ou corrigir as informações do PDF, especialmente os campos 'period' e 'courses'.\n"
+                        "Use estes dados para preencher ou corrigir as informações do PDF, especialmente os campos 'period' (baseado em SEMESTRALIDADE: S1/S2 -> 'S', A1/A2 -> 'A') e 'courses' (extraia o prefixo de CURSO como chave, e use SERIE para determinar o ano: 1ª Série -> 1, 2ª Série -> 2, etc., até 5).\n"
                         f"{json.dumps(info_list, indent=2, ensure_ascii=False)}"
                     )
                 else:
@@ -108,12 +109,12 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename, cont
     schema = {
         "type": "object",
         "properties": {
-            "course": {"type": "string", "description": "Nome completo do curso"},
-            "name": {"type": "string", "description": "Nome completo da disciplina"},
-            "code": {"type": "string", "description": "Código da disciplina (ex: DSG244)"},
-            "period": {"type": "string", "enum": ["A", "S"], "description": "A para Anual, S para Semestral"},
-            "examWeight": {"type": "number", "minimum": 0, "maximum": 100, "description": "Peso das provas em %"},
-            "assignmentWeight": {"type": "number", "minimum": 0, "maximum": 100, "description": "Peso dos trabalhos em %"},
+            "course": {"type": "string", "description": "Nome do curso ou ciclo (ex: 'Ciclo Básico', extraído do PDF)"},
+            "name": {"type": "string", "description": "Nome completo da disciplina (extraído do PDF)"},
+            "code": {"type": "string", "description": "Código da disciplina (ex: DSG244, extraído do PDF)"},
+            "period": {"type": "string", "enum": ["A", "S"], "description": "A para Anual, S para Semestral (PRIORIDADE: Excel, baseado em SEMESTRALIDADE)"},
+            "examWeight": {"type": "number", "minimum": 0, "maximum": 100, "description": "Peso das provas em % (extraído do PDF)"},
+            "assignmentWeight": {"type": "number", "minimum": 0, "maximum": 100, "description": "Peso dos trabalhos em % (extraído do PDF)"},
             "exams": {
                 "type": "array",
                 "maxItems": 4,
@@ -138,26 +139,32 @@ def extract_course_data_with_claude(bedrock_client, content_data, filename, cont
             },
             "courses": {
                 "type": "object",
-                "description": "Informações sobre quais cursos possuem esta disciplina e em qual ano",
+                "description": "Informações sobre quais cursos possuem esta disciplina e em qual ano (PRIORIDADE: Excel, use prefixo de CURSO como chave, ano de SERIE)",
                 "patternProperties": {
-                    "^(EAL|ECA|ECM|EEN|EET|EMC|EPM|EQM|ETC|ADM|DSG|CIC|SIN|IA|ARQ|RI|ADS)$": {
+                    "^(EAL|ECA|ECM|EEN|EET|EMC|EPM|EQM|ETC|ADM|DSG|CIC|SIN|IA|ARQ|RI|ADS|AL|CA|CMP|CV|EN|ET|FB|MC|PM|QM)$": {
                         "type": "number", "minimum": 1, "maximum": 5, "description": "Ano do curso (1 a 5)"
                     }
                 }
             }
         },
-        "required": ["course", "name", "code", "period", "examWeight", "assignmentWeight", "exams", "assignments"]
+        "required": ["course", "name", "code", "period", "examWeight", "assignmentWeight", "exams", "assignments", "courses"]
     }
     
     schema_prompt = f"""
-Você é um assistente de extração de dados altamente preciso. Sua tarefa é analisar o contexto de um arquivo Excel e o texto de um plano de ensino em PDF para preencher um objeto JSON de acordo com um esquema específico.
+Você é um assistente de extração de dados altamente preciso. Sua tarefa é analisar o contexto de um arquivo Excel (fonte da verdade para 'period' e 'courses') e o texto de um plano de ensino em PDF (para todos os outros campos) para preencher um objeto JSON de acordo com um esquema específico.
 
 Siga estas regras rigorosamente:
 
-1.  **Prioridade da Fonte da Verdade:** O conteúdo dentro das tags `<excel_context>` é a fonte da verdade absoluta para os campos `courses` e `period`. Se houver um conflito com o PDF, a informação do Excel SEMPRE vence.
-2.  **Extração do PDF:** Para todos os outros campos (`name`, `code`, `examWeight`, `assignmentWeight`, `exams`, `assignments`), use o texto dentro das tags `<pdf_text>`.
-3.  **Raciocínio Lógico:** Antes de gerar o JSON final, pense passo a passo dentro de tags `<thinking>`. Descreva como você encontrou cada valor e por que tomou cada decisão.
-4.  **Formato de Saída:** Após a tag `</thinking>`, forneça APENAS o objeto JSON válido, sem comentários, explicações ou formatação de bloco de código.
+1.  **Prioridade da Fonte da Verdade (Excel):** Use o conteúdo dentro das tags <excel_context> APENAS para os campos 'period' e 'courses'. 
+   - Para 'period': Baseado em 'SEMESTRALIDADE'. Se contém 'S' (ex: S1, S2), use 'S'. Se contém 'A' (ex: A1, A2), use 'A'. Se múltiplas linhas, use o mais comum ou o primeiro.
+   - Para 'courses': Agregue por disciplina. Para cada linha única, extraia o prefixo de 3 letras do campo 'CURSO' (ex: 'ADM/21' -> 'ADM', 'EFB' -> 'EFB', etc.) como chave. Determine o ano do campo 'SERIE' (ex: '1ª Série' -> 1, '2º Semestre' -> 2, '4ª Série' -> 4). Se múltiplas linhas para o mesmo curso, use o ano mais apropriado (mínimo ou médio). Ignore linhas duplicadas para o mesmo curso/ano.
+   - Se o Excel estiver vazio, use inferência do PDF ou valores padrão (period: 'S', courses: vazio).
+
+2.  **Extração do PDF:** Para todos os outros campos ('course', 'name', 'code', 'examWeight', 'assignmentWeight', 'exams', 'assignments'), use EXCLUSIVAMENTE o texto dentro das tags <pdf_text>. Inferir pesos, nomes de provas/trabalhos logicamente do conteúdo (ex: pesos totais devem somar 1.0 para exams e assignments; examWeight + assignmentWeight = 100).
+
+3.  **Raciocínio Lógico:** Antes de gerar o JSON final, pense passo a passo dentro de tags <thinking>. Descreva como você encontrou cada valor, especialmente como processou 'period' e 'courses' do Excel, e o resto do PDF. Explique agregações em 'courses' se houver múltiplas linhas.
+
+4.  **Formato de Saída:** Após a tag </thinking>, forneça APENAS o objeto JSON válido, sem comentários, explicações ou formatação de bloco de código. Certifique-se de que é um JSON válido e completo conforme o schema.
 
 ---
 **EXEMPLO DE USO:**
@@ -165,69 +172,76 @@ Siga estas regras rigorosamente:
 <excel_context>
 [
   {{
-    "CODIGO DISCIPLINA": "ECM206",
-    "DISCIPLINA": "Física II",
-    "CURSO": "ECM",
-    "PERIODO": "2º Semestre",
-    "SEMESTRALIDADE": "Semestral"
+    "CODIGO DISCIPLINA": "ADM112",
+    "DISCIPLINA": "Cálculo Aplicado à Administração",
+    "CURSO": "ADM",
+    "PERIODO": "ADM/21",
+    "SERIE": "1ª Série",
+    "SEMESTRALIDADE": "S1"
   }},
   {{
-    "CODIGO DISCIPLINA": "ECM206",
-    "DISCIPLINA": "Física II",
-    "CURSO": "EET",
-    "PERIODO": "2º Semestre",
-    "SEMESTRALIDADE": "Semestral"
+    "CODIGO DISCIPLINA": "ADM113",
+    "DISCIPLINA": "Cálculo e Pesquisa Operacional",
+    "CURSO": "ADM",
+    "PERIODO": "ADM/21",
+    "SERIE": "1ª Série",
+    "SEMESTRALIDADE": "S1"
+  }},
+  {{
+    "CODIGO DISCIPLINA": "ADM114",
+    "DISCIPLINA": "Inovação e Novas Abordagens em Administração",
+    "CURSO": "ADM",
+    "PERIODO": "ADM/21",
+    "SERIE": "4ª Série",
+    "SEMESTRALIDADE": "S1"
   }}
 ]
 </excel_context>
 
 <pdf_text>
-Disciplina: FISICA 2
-Código da Disciplina: ECM206
-Peso de MP(kp): 7
-Peso de MT(kt): 3
-Critério de aprovação: C1/2007 (2 provas)
+Disciplina: Cálculo Aplicado à Administração
+Código da Disciplina: ADM112
+Peso de Provas: 70%
+Peso de Trabalhos: 30%
+Provas: P1 (0.4), P2 (0.3), P3 (0.3)
+Trabalhos: T1 (0.5), T2 (0.5)
+Curso: Administração
 </pdf_text>
 
 <json_schema>
 {json.dumps(schema, indent=2)}
 </json_schema>
 
-**SAÍDA ESPERADA:**
+**SAÍDA ESPERADA (para ADM112):**
 
 <thinking>
-1.  **course**: O Excel e o PDF mencionam "Física II", mas o schema pede o nome completo do curso, não da disciplina. O campo CURSO no Excel indica os cursos que têm a disciplina. O PDF não informa o nome do curso. Vou deixar este campo em branco ou com um valor padrão, pois não há informação suficiente para preenchê-lo com um nome completo de curso como "Engenharia de Computação". [Nota: O schema pode precisar de ajuste aqui, ou o Claude pode precisar de mais instrução. Por enquanto, a extração será literal]. Vou preencher com o nome da disciplina, pois é a informação mais proeminente.
-2.  **name**: O PDF diz "FISICA 2". Vou usar isso.
-3.  **code**: O PDF e o Excel concordam em "ECM206".
-4.  **period**: O Excel é a fonte da verdade. A "SEMESTRALIDADE" é "Semestral", então o valor é "S".
-5.  **examWeight**: O PDF diz "Peso de MP(kp): 7". Isso se traduz para 70.
-6.  **assignmentWeight**: O PDF diz "Peso de MT(kt): 3". Isso se traduz para 30.
-7.  **exams**: O critério "C1/2007" e a menção de "(2 provas)" indicam 2 provas. Com peso 0.5 cada.
-8.  **assignments**: Não há menção a trabalhos específicos, então vou deixar o array vazio.
-9.  **courses**: O Excel é a fonte da verdade. O código ECM206 está associado aos cursos ECM e EET, ambos no "2º Semestre", que corresponde ao ano 1. O objeto será {{"ECM": 1, "EET": 1}}.
+1. **course**: Extraído do PDF: "Administração" (ou inferido como nome do curso).
+2. **name**: Do PDF: "Cálculo Aplicado à Administração".
+3. **code**: Do PDF: "ADM112".
+4. **period**: Prioridade Excel. Para ADM112, SEMESTRALIDADE="S1" -> "S".
+5. **examWeight**: Do PDF: 70.
+6. **assignmentWeight**: Do PDF: 30.
+7. **exams**: Do PDF: P1(0.4), P2(0.3), P3(0.3).
+8. **assignments**: Do PDF: T1(0.5), T2(0.5).
+9. **courses**: Prioridade Excel. Apenas uma linha para ADM112: CURSO="ADM" (prefixo 'ADM'), SERIE="1ª Série" -> ano 1. Então {{"ADM": 1}}. (Nota: As outras linhas são para códigos diferentes, ignoradas para este código).
 </thinking>
 {{
-  "course": "Física II",
-  "name": "FISICA 2",
-  "code": "ECM206",
+  "course": "Administração",
+  "name": "Cálculo Aplicado à Administração",
+  "code": "ADM112",
   "period": "S",
   "examWeight": 70.0,
   "assignmentWeight": 30.0,
   "exams": [
-    {{
-      "name": "P1",
-      "weight": 0.5
-    }},
-    {{
-      "name": "P2",
-      "weight": 0.5
-    }}
+    {{"name": "P1", "weight": 0.4}},
+    {{"name": "P2", "weight": 0.3}},
+    {{"name": "P3", "weight": 0.3}}
   ],
-  "assignments": [],
-  "courses": {{
-    "ECM": 1,
-    "EET": 1
-  }}
+  "assignments": [
+    {{"name": "T1", "weight": 0.5}},
+    {{"name": "T2", "weight": 0.5}}
+  ],
+  "courses": {{"ADM": 1}}
 }}
 
 ---
