@@ -178,7 +178,7 @@ def lambda_handler(event, context):
     # REMOVIDO: O mapa de código para nome completo não é mais necessário.
 
     try:
-        first_record_bucket = event["Records"][0]['s3']['bucket']['name']
+        bucket_name = event["Records"][0]['s3']['bucket']['name']
         excel_key = "relacao_disciplinas.xlsx"
         
         all_subjects_key = "allSubjects.json"
@@ -192,8 +192,8 @@ def lambda_handler(event, context):
             print("Arquivo allSubjects.json não encontrado. Um novo será criado.")
             all_subjects_data = {}
         
-        print(f"Carregando a fonte da verdade de: s3://{first_record_bucket}/{excel_key}")
-        excel_response = s3.get_object(Bucket=first_record_bucket, Key=excel_key)
+        print(f"Carregando a fonte da verdade de: s3://{bucket_name}/{excel_key}")
+        excel_response = s3.get_object(Bucket=bucket_name, Key=excel_key)
         excel_bytes = excel_response["Body"].read()
         
         df_truth = pd.read_excel(BytesIO(excel_bytes), header=2)
@@ -207,7 +207,6 @@ def lambda_handler(event, context):
         print("Códigos de curso corrigidos com sucesso no DataFrame.")
 
         for record in event["Records"]:
-            bucket_name = record['s3']['bucket']['name']
             object_key = unquote_plus(record['s3']['object']['key'])
             
             if object_key.startswith("plans/"):

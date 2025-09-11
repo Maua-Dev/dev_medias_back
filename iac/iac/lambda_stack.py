@@ -59,6 +59,7 @@ class LambdaStack(Construct):
         # )
         
         bucket.grant_read(function)
+        bucket.grant_write(function)
         
         return function
         
