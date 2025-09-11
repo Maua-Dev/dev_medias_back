@@ -33,7 +33,8 @@ class LambdaStack(Construct):
     def create_lambda_s3_object_creation_deletion_trigger_integration(
         self,
         module_name: str,
-        bucket: s3.Bucket,
+        bucket_plans: s3.Bucket,
+        bucket_subjects: s3.Bucket,
         environment_variables: dict
     ) -> lambda_.Function:
         
@@ -48,7 +49,7 @@ class LambdaStack(Construct):
             timeout=Duration.seconds(90) # increased time for excel and bedrock
         )
         
-        bucket.add_event_notification(
+        bucket_plans.add_event_notification(
             s3.EventType.OBJECT_CREATED,
             s3n.LambdaDestination(function)
         )
@@ -58,8 +59,9 @@ class LambdaStack(Construct):
         #     s3n.LambdaDestination(function)
         # )
         
-        bucket.grant_read(function)
-        bucket.grant_write(function)
+        bucket_plans.grant_read(function) # read the plans
+        bucket_subjects.grant_read(function) # read all subjects
+        bucket_subjects.grant_write(function) # write all subjects
         
         return function
         
@@ -69,6 +71,7 @@ class LambdaStack(Construct):
         scope: Construct, 
         api_gateway_resource: Resource,
         plans_bucket: s3.Bucket,
+        subject_bucket: s3.Bucket,
         environment_variables: dict
     ) -> None:
         
@@ -91,6 +94,7 @@ class LambdaStack(Construct):
 
         self.plans_extractor_function = self.create_lambda_s3_object_creation_deletion_trigger_integration(
             module_name="plans_extractor",
-            bucket=plans_bucket,
+            bucket_plans=plans_bucket,
+            bucket_subjects=subject_bucket,
             environment_variables=environment_variables
         )

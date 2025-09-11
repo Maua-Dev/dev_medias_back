@@ -87,13 +87,15 @@ class IacStack(Stack):
         
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage,
-            "PLANS_BUCKET_NAME": self.plans_stack.bucket.bucket_name
+            "PLANS_BUCKET_NAME": self.plans_stack.bucket.bucket_name,
+            "SUBJECT_BUCKET_NAME": self.subject_stack.bucket.bucket_name
         }
 
         self.lambda_stack = LambdaStack(
             self, 
             api_gateway_resource=api_gateway_resource,
             plans_bucket=self.plans_stack.bucket,
+            subject_bucket=self.subject_stack.bucket,
             environment_variables=ENVIRONMENT_VARIABLES
         )
         

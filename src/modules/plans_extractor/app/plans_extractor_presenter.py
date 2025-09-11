@@ -175,16 +175,15 @@ def lambda_handler(event, context):
         'ICD': 'ICD'
     }
 
-    # REMOVIDO: O mapa de código para nome completo não é mais necessário.
-
     try:
         bucket_name = event["Records"][0]['s3']['bucket']['name']
-        excel_key = "relacao_disciplinas.xlsx"
+        excel_key = "relacao_disciplinas.xlsx"            
         
         all_subjects_key = "allSubjects.json"
+        subject_bucket_name = os.environ.get("SUBJECT_BUCKET_NAME")
         all_subjects_data = {}
         try:
-            print(f"Carregando arquivo de consolidação: s3://{bucket_name}/{all_subjects_key}")
+            print(f"Carregando arquivo de consolidação: s3://{subject_bucket_name}/{all_subjects_key}")
             json_object = s3.get_object(Bucket=bucket_name, Key=all_subjects_key)
             all_subjects_data = json.loads(json_object['Body'].read().decode('utf-8'))
             print("Arquivo allSubjects.json carregado com sucesso.")
@@ -202,7 +201,6 @@ def lambda_handler(event, context):
         df_truth.dropna(how='all', inplace=True)
         df_truth.dropna(subset=['CODIGO DISCIPLINA'], inplace=True)
 
-        # CORREÇÃO DE SIGLAS: Cria uma nova coluna 'CURSO_CORRIGIDO' aplicando o mapa.
         df_truth['CURSO_CORRIGIDO'] = df_truth['CURSO'].map(mapa_antigo_para_novo).fillna(df_truth['CURSO'])
         print("Códigos de curso corrigidos com sucesso no DataFrame.")
 
@@ -220,7 +218,6 @@ def lambda_handler(event, context):
             
                 context_from_excel = ""
                 if not all_matching_rows.empty:
-                    # Usa a coluna corrigida para gerar o contexto para o Claude
                     context_df = all_matching_rows[['CODIGO DISCIPLINA', 'DISCIPLINA', 'CURSO_CORRIGIDO', 'GRADE', 'PERIODO', 'SEMESTRALIDADE']].copy()
                     context_df.rename(columns={'CURSO_CORRIGIDO': 'CURSO'}, inplace=True)
                     
@@ -241,7 +238,6 @@ def lambda_handler(event, context):
                 optimized_text = clean_and_optimize_text(raw_text)
                 content_for_claude = {"type": "text", "content": optimized_text}
 
-                # Chama o Claude para extrair os dados. A resposta já virá com as siglas corretas.
                 dados_finais = extract_course_data_with_claude(
                     bedrock, 
                     content_for_claude, 
@@ -261,9 +257,9 @@ def lambda_handler(event, context):
             else:
                 print(f"Pulando arquivo, não é um plano de ensino: {object_key}")
                 
-        print(f"Salvando arquivo consolidado atualizado em s3://{bucket_name}/{all_subjects_key}")
+        print(f"Salvando arquivo consolidado atualizado em s3://{subject_bucket_name}/{all_subjects_key}")
         s3.put_object(
-            Bucket=bucket_name,
+            Bucket=subject_bucket_name,
             Key=all_subjects_key,
             Body=json.dumps(all_subjects_data, indent=2, ensure_ascii=False),
             ContentType='application/json'
