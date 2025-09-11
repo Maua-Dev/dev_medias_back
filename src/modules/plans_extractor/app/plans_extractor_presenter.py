@@ -181,6 +181,17 @@ def lambda_handler(event, context):
         first_record_bucket = event["Records"][0]['s3']['bucket']['name']
         excel_key = "relacao_disciplinas.xlsx"
         
+        all_subjects_key = "allSubjects.json"
+        all_subjects_data = {}
+        try:
+            print(f"Carregando arquivo de consolidação: s3://{bucket_name}/{all_subjects_key}")
+            json_object = s3.get_object(Bucket=bucket_name, Key=all_subjects_key)
+            all_subjects_data = json.loads(json_object['Body'].read().decode('utf-8'))
+            print("Arquivo allSubjects.json carregado com sucesso.")
+        except s3.exceptions.NoSuchKey:
+            print("Arquivo allSubjects.json não encontrado. Um novo será criado.")
+            all_subjects_data = {}
+        
         print(f"Carregando a fonte da verdade de: s3://{first_record_bucket}/{excel_key}")
         excel_response = s3.get_object(Bucket=first_record_bucket, Key=excel_key)
         excel_bytes = excel_response["Body"].read()
@@ -239,14 +250,26 @@ def lambda_handler(event, context):
                     context_from_excel  
                 )
                 
-                # REMOVIDA: A etapa de conversão para nome completo foi retirada.
-                # 'dados_finais' já está no formato correto.
+                if 'error' not in dados_finais:
+                    print(f"Atualizando dados para a disciplina {subject_code} no consolidado.")
+                    all_subjects_data[subject_code] = dados_finais
+                else:
+                    print(f"Erro ao processar {subject_code}. Não será adicionado ao consolidado.")                
                 
                 print("Dados Finais (com siglas de cursos padronizadas):")
                 print(json.dumps(dados_finais, indent=2, ensure_ascii=False))
             
             else:
                 print(f"Pulando arquivo, não é um plano de ensino: {object_key}")
+                
+        print(f"Salvando arquivo consolidado atualizado em s3://{bucket_name}/{all_subjects_key}")
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=all_subjects_key,
+            Body=json.dumps(all_subjects_data, indent=2, ensure_ascii=False),
+            ContentType='application/json'
+        )
+        print("Arquivo allSubjects.json salvo com sucesso.")
 
         return {'statusCode': 200, 'body': json.dumps({'message': 'Event processed successfully'})}
         
