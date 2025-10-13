@@ -53,17 +53,10 @@ jobs:
             cd iac
             pip install -r requirements.txt
 
-        - name: ReBootstrap
-          run: |
-            cd iac
-            cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION
-          env:
-            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-            AWS_REGION: ${{ vars.AWS_REGION }}
-
         - name: DeployWithCDK
           run: |
             cd iac
+            cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/${{ vars.AWS_REGION }}
             cdk synth
             cdk deploy --require-approval never
           env:
