@@ -6,6 +6,7 @@ from aws_cdk import (
 )
 from aws_cdk.aws_apigateway import Resource, CognitoUserPoolsAuthorizer, LambdaIntegration
 from aws_cdk.aws_lambda import LayerVersion
+import aws_cdk as cdk
 
 from constructs import Construct
 
@@ -33,6 +34,7 @@ class LambdaContactUsStack(Construct):
             memory_size=512,
             environment=environment_variables,
             timeout=Duration.seconds(15),
+            removal_policy=cdk.RemovalPolicy.RETAIN,
         )
         
 

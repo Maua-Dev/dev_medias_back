@@ -5,6 +5,7 @@ from aws_cdk import (
     aws_lambda_event_sources as lambda_event_sources,
     Duration
 )
+import aws_cdk as cdk
 from constructs import Construct
 from aws_cdk.aws_apigateway import Resource, LambdaIntegration
 
@@ -21,7 +22,8 @@ class LambdaStack(Construct):
             runtime=lambda_.Runtime.PYTHON_3_9,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(30)
+            timeout=Duration.seconds(30),
+            removal_policy=cdk.RemovalPolicy.RETAIN,
         )
 
         api_resource.add_resource(module_name.replace("_", "-")).add_method(method,
@@ -45,7 +47,8 @@ class LambdaStack(Construct):
             runtime=lambda_.Runtime.PYTHON_3_9,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(90) # increased time for excel and bedrock
+            timeout=Duration.seconds(90), # increased time for excel and bedrock
+            removal_policy=cdk.RemovalPolicy.RETAIN
         )
         
         bucket.add_event_notification(
