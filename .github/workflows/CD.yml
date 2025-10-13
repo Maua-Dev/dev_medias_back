@@ -44,7 +44,7 @@ jobs:
           uses: aws-actions/configure-aws-credentials@v4 # --> ATUALIZADO
           with:
             aws-region: ${{ vars.AWS_REGION }}
-            role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
+            role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
 
         - name: Installing Dependencies
@@ -59,7 +59,7 @@ jobs:
             cdk synth
             cdk deploy --require-approval never
           env:
-            AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
             AWS_REGION: ${{ vars.AWS_REGION }}
             STACK_NAME: ${{ env.STACK_NAME }}
             GITHUB_REF_NAME: ${{ github.ref_name }}
