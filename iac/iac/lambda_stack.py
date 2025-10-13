@@ -23,8 +23,9 @@ class LambdaStack(Construct):
             layers=[self.lambda_layer],
             environment=environment_variables,
             timeout=Duration.seconds(30),
-            removal_policy=cdk.RemovalPolicy.RETAIN,
         )
+        
+        function.apply_removal_policy(cdk.RemovalPolicy.RETAIN)        
 
         api_resource.add_resource(module_name.replace("_", "-")).add_method(method,
                                                                             integration=LambdaIntegration(
@@ -48,8 +49,9 @@ class LambdaStack(Construct):
             layers=[self.lambda_layer],
             environment=environment_variables,
             timeout=Duration.seconds(90), # increased time for excel and bedrock
-            removal_policy=cdk.RemovalPolicy.RETAIN
         )
+        
+        function.apply_removal_policy(cdk.RemovalPolicy.RETAIN)
         
         bucket.add_event_notification(
             s3.EventType.OBJECT_CREATED,

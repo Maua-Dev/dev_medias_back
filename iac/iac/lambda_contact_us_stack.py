@@ -34,9 +34,9 @@ class LambdaContactUsStack(Construct):
             memory_size=512,
             environment=environment_variables,
             timeout=Duration.seconds(15),
-            removal_policy=cdk.RemovalPolicy.RETAIN,
         )
         
+        function.apply_removal_policy(cdk.RemovalPolicy.RETAIN)
 
         api_gateway_resource.add_resource("public").add_resource(module_name.replace("_", "-")).add_method("POST",
                                                                                                            integration=LambdaIntegration(
