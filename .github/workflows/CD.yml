@@ -55,7 +55,11 @@ jobs:
 
         - name: ReBootstrap
           run: |
-            cdk bootstrap
+            cd iac
+            cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION
+          env:
+            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
 
         - name: DeployWithCDK
           run: |
