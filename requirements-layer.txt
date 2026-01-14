@@ -1,3 +1,4 @@
 pypdf
 pandas
 openpyxl
+numpy
