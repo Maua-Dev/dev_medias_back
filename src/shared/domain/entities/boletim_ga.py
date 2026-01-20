@@ -1,109 +1,143 @@
-from src.shared.helpers.errors.domain_errors import EntityError
+from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
 from typing import Optional
-class Boletim_ga:
+
+class Boletim_GA:
     current_tests: list[float] 
     current_assignments: list[float]
     num_remaining_tests: int 
     num_remaining_assignments: int
     test_weight: float
     assignment_weight: float
-    spec_test_weight: Optional[list[float]]
+    spec_test_weight: Optional[list[float]] 
     spec_assignment_weight: Optional[list[float]]
-    response : dict
+    response: dict
 
-
-    def __init__(self, current_tests: list[float], current_assignments: list[float],
-                 num_remaining_tests: int, num_remaining_assignments: int,
-                 test_weight: float, assignment_weight: float, spec_test_weight: Optional[list[float]], spec_assignment_weight: Optional[list[float]]):
-        
-        if type(current_tests) == list:
-            if not all(type(item) == float for item in current_tests):
-                raise EntityError("current_tests")
-            else:
-                self.current_tests = current_tests
-        else: 
-            raise EntityError("current_tests")
-        if type(current_assignments) == list:
-                    if not all(type(item) == float for item in current_assignments):
-                        raise EntityError("current_assignments")
-                    else:
-                        self.current_assignments = current_assignments
-        else: 
-            raise EntityError("current_assignments")
-
-
-        if type(spec_test_weight) == list:
-                    if not all(type(item) == float for item in spec_test_weight):
-                        raise EntityError("spec_test_weight")
-                    else:
-                        self.spec_test_weight = spec_test_weight
-        else: 
-            raise EntityError("spec_test_weight")
-
-
-        if type(spec_assignment_weight) == list:
-                    if not all(type(item) == float for item in spec_assignment_weight):
-                        raise EntityError("spec_assignment_weight")
-                    else:
-                        self.spec_assignment_weight = spec_assignment_weight
-        else: 
-            raise EntityError("spec_assignment_weight")
-        
-        if not self.validate_num_remaining_tests(num_remaining_tests):
+    def __init__(
+        self, 
+        current_tests: list[float], 
+        current_assignments: list[float],
+        num_remaining_tests: int, 
+        num_remaining_assignments: int,
+        test_weight: float, 
+        assignment_weight: float, 
+        spec_test_weight: Optional[list[float]] = None, 
+        spec_assignment_weight: Optional[list[float]] = None
+    ):
+        # Valida e atribui num_remaining
+        if not self.validate_num_remaining(num_remaining_tests):
             raise EntityError("num_remaining_tests")
         self.num_remaining_tests = num_remaining_tests
 
-
-        if not self.validate_num_remaining_assignments(num_remaining_assignments):
+        if not self.validate_num_remaining(num_remaining_assignments):
             raise EntityError("num_remaining_assignments")
         self.num_remaining_assignments = num_remaining_assignments
 
-
-        if not self.validate_test_weight(test_weight):
+        # Valida e atribui pesos gerais
+        if not self.validate_sum_weights(test_weight, assignment_weight):
+            raise EntityError("test_weight and/or assignment_weight (devem somar 1.0)")
+        
+        if not self.validate_weights(test_weight):
             raise EntityError("test_weight")
         self.test_weight = test_weight
 
-
-        if not self.validate_assignment_weight(assignment_weight):
+        if not self.validate_weights(assignment_weight):
             raise EntityError("assignment_weight")
         self.assignment_weight = assignment_weight
 
+        # Valida e atribui listas de notas
+        if not self.validate_tests(current_tests):
+            raise EntityError("current_tests")
+        self.current_tests = current_tests
+
+        if not self.validate_tests(current_assignments):
+            raise EntityError("current_assignments")
+        self.current_assignments = current_assignments
 
         
+        if spec_test_weight is not None:
+            if not self.validate_sum_spec_weights(spec_test_weight, current_tests, num_remaining_tests):
+                raise EntityError("spec_test_weight")
+            if not self.validate_spec_weights(spec_test_weight):
+                raise EntityError("spec_test_weight")
+        self.spec_test_weight = spec_test_weight
 
+        if spec_assignment_weight is not None:
+            if not self.validate_sum_spec_weights(spec_assignment_weight, current_assignments, num_remaining_assignments):
+                raise EntityError("spec_assignment_weight")
+            if not self.validate_spec_weights(spec_assignment_weight):
+                raise EntityError("spec_assignment_weight")
+        self.spec_assignment_weight = spec_assignment_weight
+
+       
+        self.response = self.to_dict()
 
     @staticmethod
-    def validate_num_remaining_tests(num_remaining_tests: int) -> bool:
-        if type(num_remaining_tests) is not int:
+    def validate_num_remaining(num_remaining: int) -> bool:
+        if not isinstance(num_remaining, int):
             return False
-        if num_remaining_tests < 0:
+        if num_remaining < 0:
             return False
         return True 
 
     @staticmethod
-    def validate_num_remaining_assignments(num_remaining_assignments: int) -> bool:
-            if type(num_remaining_assignments) is not int:
-                return False
-            if num_remaining_assignments < 0:
-                return False
-            return True 
+    def validate_weights(weight: float) -> bool:
+        if not isinstance(weight, (float, int)):
+            return False
+        if not (0 <= weight <= 1):
+            return False
+        return True
 
     @staticmethod
-    def validate_test_weight(test_weight: float) -> bool:
-        if type(test_weight) == float:
-                if test_weight >= 0:
-                    return True
-                else:
-                    return False
-        else:
+    def validate_tests(current_tests: list[float]) -> bool:
+        if not isinstance(current_tests, list):
+            return False
+        if not all(isinstance(item, (float, int)) for item in current_tests):
+            return False
+        for test in current_tests:
+            if test % 0.5 != 0:
                 return False
+            if not (0 <= test <= 10):
+                return False
+        return True
+        
+    @staticmethod
+    def validate_spec_weights(spec_weight: list[float]) -> bool:
+        if not isinstance(spec_weight, list):
+            return False
+        if not all(isinstance(item, (float, int)) for item in spec_weight):
+            return False
+        for weight in spec_weight:
+            if not (0 <= weight <= 1):
+                return False
+        return True
 
     @staticmethod
-    def validate_assignment_weight(assignment_weight: float) -> bool:
-        if type(assignment_weight) == float:
-                if assignment_weight >= 0:
-                        return True
-                else:
-                        return False
-        else:
-                return False
+    def validate_sum_weights(weight1: float, weight2: float) -> bool:
+        return abs((weight1 + weight2) - 1.0) < 0.01  # Tolerância para float
+
+    @staticmethod
+    def validate_sum_spec_weights(
+        spec_weight: list[float], 
+        current_tests: list[float], 
+        num_remaining_tests: int
+    ) -> bool:
+        if spec_weight is None:
+            return True
+        if len(spec_weight) != len(current_tests) + num_remaining_tests:
+            return False
+        if abs(sum(spec_weight) - 1.0) > 0.01:
+            return False
+        return True
+
+    def to_dict(self) -> dict:
+        """Converte o boletim para dicionário."""
+        return {
+            "current_tests": self.current_tests,
+            "current_assignments": self.current_assignments,
+            "num_remaining_tests": self.num_remaining_tests,
+            "num_remaining_assignments": self.num_remaining_assignments,
+            "test_weight": self.test_weight,
+            "assignment_weight": self.assignment_weight,
+            "spec_test_weight": self.spec_test_weight,
+            "spec_assignment_weight": self.spec_assignment_weight,
+        }

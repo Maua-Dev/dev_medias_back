@@ -1,3 +1,4 @@
+from src.shared.domain.entities.boletim_ga import Boletim_GA
 import random
 import numpy as np
 from typing import Optional
@@ -5,20 +6,24 @@ class GradeGeneticAlgorithm:
 
     def __init__(
         self,
-        current_tests: list[float],
-        current_assignments: list[float],
-        num_remaining_tests: int,
-        num_remaining_assignments: int,
-        test_weight: float,
-        assignment_weight: float,
+        boletim: Boletim_GA,
         target_average: float,
-        spec_test_weight: Optional[list[float]] = None,
-        spec_assignment_weight: Optional[list[float]] = None,
         max_grade: float = 10.0,
-        population_size: int = 100,
-        generations: int = 500
+        population_size: int = 150,
+        generations: int = 200
     ) -> None:
 
+         # Desempacota atributos do boletim
+        current_tests = boletim.current_tests
+        current_assignments = boletim.current_assignments
+        num_remaining_tests = boletim.num_remaining_tests
+        num_remaining_assignments = boletim.num_remaining_assignments
+        test_weight = boletim.test_weight
+        assignment_weight = boletim.assignment_weight
+        spec_test_weight = boletim.spec_test_weight
+        spec_assignment_weight = boletim.spec_assignment_weight
+
+        # Agora atribui aos self
         self.current_tests: list[float] = current_tests
         self.current_assignments: list[float] = current_assignments
         self.num_remaining_tests: int = num_remaining_tests
@@ -31,24 +36,6 @@ class GradeGeneticAlgorithm:
         self.max_grade: float = max_grade
         self.pop_size: int = population_size
         self.generations: int = generations
-
-        # Validação de pesos gerais
-        total_weight = test_weight + assignment_weight
-        if abs(total_weight - 1.0) > 0.01:
-            raise ValueError(f"Pesos devem somar 1.0 (atual: {total_weight})")
-
-        # Validação de pesos específicos (só se fornecidos)
-        if spec_test_weight is not None:
-            if len(spec_test_weight) != len(current_tests) + num_remaining_tests:
-                raise ValueError(f"Pesos específicos de provas: esperado {len(current_tests) + num_remaining_tests}, recebido {len(spec_test_weight)}")
-            if abs(sum(spec_test_weight) - 1.0) > 0.01:
-                raise ValueError(f"Pesos de provas devem somar 1.0 (atual: {sum(spec_test_weight)})")
-
-        if spec_assignment_weight is not None:
-            if len(spec_assignment_weight) != len(current_assignments) + num_remaining_assignments:
-                raise ValueError(f"Pesos específicos de trabalhos: esperado {len(current_assignments) + num_remaining_assignments}, recebido {len(spec_assignment_weight)}")
-            if abs(sum(spec_assignment_weight) - 1.0) > 0.01:
-                raise ValueError(f"Pesos de trabalhos devem somar 1.0 (atual: {sum(spec_assignment_weight)})")
 
     def create_individual(self):
         """Cria um indivíduo (notas futuras de testes e trabalhos)"""
@@ -193,7 +180,7 @@ class GradeGeneticAlgorithm:
         return mutated
 
     def run(self):
-        """Executa o algoritmo genético"""
+        """Executa o algoritmo genético. Retorna a melhor solução encontrada e seu respectivo fitness."""
         population = [self.create_individual() for _ in range(self.pop_size)]
 
         best_ever = None
