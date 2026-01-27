@@ -17,112 +17,230 @@ class GeneticAlgorithmController:
 
     def __call__(self, request: IRequest) -> IResponse:
         try:
-            if request.data.get('provas_que_tenho') is None:
-                raise MissingParameters('provas_que_tenho')
-            if type(request.data.get('provas_que_tenho')) != list:
+            if request.data.get('current_tests') is None:
+                raise MissingParameters('current_tests')
+            if type(request.data.get('current_tests')) != list:
                 raise WrongTypeParameter(
-                    fieldName="provas_que_tenho",
+                    fieldName="current_tests",
                     fieldTypeExpected="list",
-                    fieldTypeReceived=request.data.get('provas_que_tenho').__class__.__name__
+                    fieldTypeReceived=request.data.get('current_tests').__class__.__name__
                 )
-            for nota in request.data.get('provas_que_tenho'):
-                if(type(nota) != dict):
-                    raise EntityError("provas_que_tenho")
-                if(nota.get('valor') == None):
-                    raise EntityError("valor")
-                if(nota.get('peso') == None):
-                    raise EntityError("peso")
-            provas_que_tenho = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('provas_que_tenho')]
-                
-            if request.data.get('trabalhos_que_tenho') is None:
-                raise MissingParameters('trabalhos_que_tenho')
-            if type(request.data.get('trabalhos_que_tenho')) != list:
-                raise WrongTypeParameter(
-                    fieldName="trabalhos_que_tenho",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=request.data.get('trabalhos_que_tenho').__class__.__name__
-                )
-            for nota in request.data.get('trabalhos_que_tenho'):
-                if(type(nota) != dict):
-                    raise EntityError("trabalhos_que_tenho")
-                if(nota.get('valor') == None):
-                    raise EntityError("valor")
-                if(nota.get('peso') == None):
-                    raise EntityError("peso")
-            trabalhos_que_tenho = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('trabalhos_que_tenho')]
-                
-            if request.data.get('provas_que_quero') is None:
-                raise MissingParameters('provas_que_quero')
-            if type(request.data.get('provas_que_quero')) != list:
-                raise WrongTypeParameter(
-                    fieldName="provas_que_quero",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=request.data.get('provas_que_quero').__class__.__name__
-                )
-            for nota in request.data.get('provas_que_quero'):
-                if(type(nota) != dict):
-                    raise EntityError("provas_que_quero")
-                if(nota.get('peso') == None):
-                    raise EntityError("peso")
-                if(nota.get('valor') != None):
-                    raise EntityError("valor")
-            provas_que_quero = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('provas_que_quero')]    
-            
-            if request.data.get('trabalhos_que_quero') is None:
-                raise MissingParameters('trabalhos_que_quero')
-            if type(request.data.get('trabalhos_que_quero')) != list:
-                raise WrongTypeParameter(
-                    fieldName="trabalhos_que_quero",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=request.data.get('trabalhos_que_quero').__class__.__name__
-                )
-            for nota in request.data.get('trabalhos_que_quero'):
-                if(type(nota) != dict):
-                    raise EntityError("trabalhos_que_quero")
-                if(nota.get('peso') == None):
-                    raise EntityError("peso")
-                if(nota.get('valor') != None):
-                    raise EntityError("valor")
-            trabalhos_que_quero = [Nota(valor=nota.get('valor'), peso=nota.get('peso')) for nota in request.data.get('trabalhos_que_quero')]    
-            
-            if type(request.data.get('media_desejada')) not in [int, float]:
-                raise WrongTypeParameter(
-                    fieldName="media_desejada",
-                    fieldTypeExpected="float",
-                    fieldTypeReceived=request.data.get('media_desejada').__class__.__name__
-                )
-            
-            if request.data.get('peso_prova') is None:
-                raise MissingParameters('peso_prova')
+            for nota in request.data.get('current_tests'):
+                if not isinstance(nota, (int, float)):
+                    raise WrongTypeParameter(
+                        fieldName="current_tests item",
+                        fieldTypeExpected="float",
+                        fieldTypeReceived=nota.__class__.__name__
+                    )
+                if nota == None:
+                    raise WrongTypeParameter(
+                        fieldName="current_tests item",
+                        fieldTypeExpected="float",
+                        fieldTypeReceived=nota.__class__.__name__
+                    )
 
-            if type(request.data.get('peso_prova')) != float:
+            current_tests = [nota for nota in request.data.get('current_tests')]
+
+
+
+            if request.data.get('current_assignments') is None:
+                raise MissingParameters('current_assignments')
+            if type(request.data.get('current_assignments')) != list:
                 raise WrongTypeParameter(
-                    fieldName="peso_prova",
-                    fieldTypeExpected="float",
-                    fieldTypeReceived=request.data.get('peso_prova').__class__.__name__
+                    fieldName="current_assignments",
+                    fieldTypeExpected="list",
+                    fieldTypeReceived=request.data.get('current_assignments').__class__.__name__
                 )
-            
-            if request.data.get('peso_trabalho') is None:
-                raise MissingParameters('peso_trabalho')
-            
-            if type(request.data.get('peso_trabalho')) != float:
+            for nota in request.data.get('current_assignments'):
+                if not isinstance(nota, (int, float)):
+                    raise WrongTypeParameter(
+                        fieldName="current_tests item",
+                        fieldTypeExpected="float",
+                        fieldTypeReceived=nota.__class__.__name__
+                    )
+            current_assignments = [nota for nota in request.data.get('current_assignments')]
+
+
+                
+            if request.data.get('num_remaining_tests') is None:
+                raise MissingParameters('num_remaining_tests')
+            if type(request.data.get('num_remaining_tests')) != int:
                 raise WrongTypeParameter(
-                    fieldName="peso_trabalho",
-                    fieldTypeExpected="float",
-                    fieldTypeReceived=request.data.get('peso_trabalho').__class__.__name__
+                    fieldName="num_remaining_tests",
+                    fieldTypeExpected="int",
+                    fieldTypeReceived=request.data.get('num_remaining_tests').__class__.__name__
                 )
+            if request.data.get('num_remaining_tests') < 0:
+                raise InvalidInput("num_remaining_tests", "Must be non-negative")
+
+            num_remaining_tests = request.data.get('num_remaining_tests')
+
+
+            if request.data.get('num_remaining_assignments') is None:
+                raise MissingParameters('num_remaining_assignments')
+            if type(request.data.get('num_remaining_assignments')) != int:
+                raise WrongTypeParameter(
+                    fieldName="num_remaining_assignments",
+                    fieldTypeExpected="int",
+                    fieldTypeReceived=request.data.get('num_remaining_assignments').__class__.__name__
+                )
+            if request.data.get('num_remaining_assignments') < 0:
+                raise InvalidInput("num_remaining_assignments", "Must be non-negative")
+
+            num_remaining_assignments = request.data.get('num_remaining_assignments')
+
+
+
+            if request.data.get('test_weight') is None:
+                raise MissingParameters('test_weight')
+            if type(request.data.get('test_weight')) != float:
+                raise WrongTypeParameter(
+                    fieldName="test_weight",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('test_weight').__class__.__name__
+                )
+            if request.data.get('test_weight') < 0 or request.data.get('test_weight') > 1:
+                raise InvalidInput("test_weight", "Must be between 0 and 1")
             
+            test_weight = request.data.get('test_weight')
+
+
+
+
+            if request.data.get('assignment_weight') is None:
+                raise MissingParameters('assignment_weight')
+            if type(request.data.get('assignment_weight')) != float:
+                raise WrongTypeParameter(
+                    fieldName="assignment_weight",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('assignment_weight').__class__.__name__
+                )
+            if request.data.get('assignment_weight') < 0 or request.data.get('assignment_weight') > 1:
+                raise InvalidInput("assignment_weight", "Must be between 0 and 1")
+            
+            assignment_weight = request.data.get('assignment_weight')
+
+
+            if request.data.get('target_average') is None:
+                raise MissingParameters('target_average')
+            if type(request.data.get('target_average')) != float:
+                raise WrongTypeParameter(
+                    fieldName="target_average",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=request.data.get('target_average').__class__.__name__
+                )
+            if request.data.get('target_average') < 0 or request.data.get('target_average') > 10:
+                raise InvalidInput("target_average", "Must be between 0 and 10")
+
+            target_average = request.data.get('target_average')
+
+            if request.data.get('max_grade') is not None:
+                if type(request.data.get('max_grade')) != float:
+                    raise WrongTypeParameter(
+                        fieldName="max_grade",
+                        fieldTypeExpected="float",
+                        fieldTypeReceived=request.data.get('max_grade').__class__.__name__
+                    )
+                if request.data.get('max_grade') <= 0:
+                    raise InvalidInput("max_grade", "Must be greater than 0")
+                max_grade = request.data.get('max_grade')
+            else:
+                max_grade = 10.0
+            
+            if request.data.get('population_size') is not None:
+                if type(request.data.get('population_size')) != int:
+                    raise WrongTypeParameter(
+                        fieldName="population_size",
+                        fieldTypeExpected="int",
+                        fieldTypeReceived=request.data.get('population_size').__class__.__name__
+                    )
+                if request.data.get('population_size') <= 0:
+                    raise InvalidInput("population_size", "Must be greater than 0")
+                population_size = request.data.get('population_size')
+            else:
+                population_size = 100
+            
+            if request.data.get('generations') is not None:
+                if type(request.data.get('generations')) != int:
+                    raise WrongTypeParameter(
+                        fieldName="generations",
+                        fieldTypeExpected="int",
+                        fieldTypeReceived=request.data.get('generations').__class__.__name__
+                    )
+                if request.data.get('generations') <= 0:
+                    raise InvalidInput("generations", "Must be greater than 0")
+                generations = request.data.get('generations')
+            else:
+                generations = 200
+            
+            if request.data.get('spec_test_weight') is not None:
+                if type(request.data.get('spec_test_weight')) != list:
+                    raise WrongTypeParameter(
+                        fieldName="spec_test_weight",
+                        fieldTypeExpected="list",
+                        fieldTypeReceived=request.data.get('spec_test_weight').__class__.__name__
+                    )
+                
+                if len(request.data.get('spec_test_weight')) != len(current_tests) + num_remaining_tests:
+                    raise InvalidInput("spec_test_weight", "Must have the same length as the sum of current_tests and num_remaining_tests")
+                
+                for weight in request.data.get('spec_test_weight'):
+                    if not isinstance(weight, (int, float)):
+                        raise WrongTypeParameter(
+                            fieldName="spec_test_weight item",
+                            fieldTypeExpected="float",
+                            fieldTypeReceived=weight.__class__.__name__
+                        )
+                    if weight < 0 or weight > 1:
+                        raise InvalidInput("spec_test_weight", "All values must be between 0 and 1")
+                if abs(sum(request.data.get('spec_test_weight')) - 1.0) > 0.01:
+                    raise InvalidInput("spec_test_weight", "The sum must be equal to 1")
+                spec_test_weight = request.data.get('spec_test_weight')
+            else:
+                spec_test_weight = None
+            
+            if request.data.get('spec_assingment_weight') is not None:
+                if type(request.data.get('spec_assingment_weight')) != list:
+                    raise WrongTypeParameter(
+                        fieldName="spec_assingment_weight",
+                        fieldTypeExpected="list",
+                        fieldTypeReceived=request.data.get('spec_assingment_weight').__class__.__name__
+                    )
+
+                if len(request.data.get('spec_assingment_weight')) != len(current_tests) + num_remaining_tests:
+                    raise InvalidInput("spec_assingment_weight", "Must have the same length as the sum of current_tests and num_remaining_tests")
+
+                for weight in request.data.get('spec_assingment_weight'):
+                    if not isinstance(weight, (int, float)):
+                        raise WrongTypeParameter(
+                            fieldName="spec_assingment_weight item",
+                            fieldTypeExpected="float",
+                            fieldTypeReceived=weight.__class__.__name__
+                        )
+                    if weight < 0 or weight > 1:
+                        raise InvalidInput("spec_assingment_weight", "All values must be between 0 and 1")
+                if abs(sum(request.data.get('spec_assingment_weight')) - 1.0) > 0.01:
+                    raise InvalidInput("spec_assingment_weight", "The sum must be equal to 1")
+                spec_assingment_weight = request.data.get('spec_assingment_weight')
+            else:
+                spec_assingment_weight = None
+
             combinacao_de_notas = self.usecase(
-                provas_que_tenho=provas_que_tenho,
-                trabalhos_que_tenho=trabalhos_que_tenho,
-                provas_que_quero=provas_que_quero,
-                trabalhos_que_quero=trabalhos_que_quero,
-                peso_prova=request.data.get('peso_prova'),
-                peso_trabalho=request.data.get('peso_trabalho'),
-                media_desejada=request.data.get('media_desejada')
+                current_tests=current_tests,
+                current_assignments=current_assignments,
+                num_remaining_tests=num_remaining_tests,
+                num_remaining_assignments=num_remaining_assignments,
+                test_weight=test_weight,
+                assignment_weight=assignment_weight,
+                target_average=target_average,
+                max_grade=max_grade,
+                population_size=population_size,
+                generations=generations,
+                spec_test_weight=spec_test_weight,
+                spec_assingment_weight=spec_assingment_weight
             )
 
-            viewmodel = GradeOptmizerViewmodel(combinacao_de_notas)
+            viewmodel = GeneticAlgorithmViewmodel(combinacao_de_notas)
 
             return OK(viewmodel.to_dict())
 

@@ -11,6 +11,9 @@ class Boletim_GA:
     spec_test_weight: Optional[list[float]] 
     spec_assignment_weight: Optional[list[float]]
     response: dict
+    calculated_tests: list[float] 
+    calculated_assignments: list[float]
+    target_avg: float 
 
     def __init__(
         self, 
