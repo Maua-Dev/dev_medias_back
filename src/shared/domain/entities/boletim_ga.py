@@ -11,9 +11,8 @@ class Boletim_GA:
     spec_test_weight: Optional[list[float]] 
     spec_assignment_weight: Optional[list[float]]
     response: dict
-    calculated_tests: list[float] 
-    calculated_assignments: list[float]
     target_avg: float 
+    max_grade: float 
 
     def __init__(
         self, 
@@ -24,7 +23,8 @@ class Boletim_GA:
         test_weight: float, 
         assignment_weight: float, 
         spec_test_weight: Optional[list[float]] = None, 
-        spec_assignment_weight: Optional[list[float]] = None
+        spec_assignment_weight: Optional[list[float]] = None,
+        max_grade: float = 10.0
     ):
         # Valida e atribui num_remaining
         if not self.validate_num_remaining(num_remaining_tests):
@@ -48,11 +48,11 @@ class Boletim_GA:
         self.assignment_weight = assignment_weight
 
         # Valida e atribui listas de notas
-        if not self.validate_tests(current_tests):
+        if not self.validate_tests(current_tests, max_grade):
             raise EntityError("current_tests")
         self.current_tests = current_tests
 
-        if not self.validate_tests(current_assignments):
+        if not self.validate_tests(current_assignments, max_grade):
             raise EntityError("current_assignments")
         self.current_assignments = current_assignments
 
@@ -91,7 +91,7 @@ class Boletim_GA:
         return True
 
     @staticmethod
-    def validate_tests(current_tests: list[float]) -> bool:
+    def validate_tests(current_tests: list[float], max_grade: float) -> bool:
         if not isinstance(current_tests, list):
             return False
         if not all(isinstance(item, (float, int)) for item in current_tests):
@@ -99,7 +99,7 @@ class Boletim_GA:
         for test in current_tests:
             if test % 0.5 != 0:
                 return False
-            if not (0 <= test <= 10):
+            if test < 0 or test > max_grade:
                 return False
         return True
         
@@ -142,5 +142,5 @@ class Boletim_GA:
             "test_weight": self.test_weight,
             "assignment_weight": self.assignment_weight,
             "spec_test_weight": self.spec_test_weight,
-            "spec_assignment_weight": self.spec_assignment_weight,
+            "spec_assignment_weight": self.spec_assignment_weight
         }

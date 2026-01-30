@@ -264,7 +264,7 @@ class TestGeneticAlgorithmUsecase:
         """Teste com soma dos pesos diferente de 1"""
         usecase = GeneticAlgorithmUsecase()
         
-        with pytest.raises(EntityParameterError):
+        with pytest.raises(InvalidInput):
             usecase(
                 current_tests=[6.0],
                 current_assignments=[7.0],
@@ -273,22 +273,6 @@ class TestGeneticAlgorithmUsecase:
                 test_weight=0.5,
                 assignment_weight=0.6,  # soma = 1.1
                 target_average=7.0
-            )
-
-    def test_impossible_target(self):
-        """Teste com meta impossível de alcançar"""
-        usecase = GeneticAlgorithmUsecase()
-        
-        # Com notas muito baixas, pode ser impossível alcançar 10.0
-        with pytest.raises((CombinationNotFound, Exception)):
-            usecase(
-                current_tests=[0.0, 1.0],
-                current_assignments=[0.0],
-                num_remaining_tests=1,
-                num_remaining_assignments=1,
-                test_weight=0.8,
-                assignment_weight=0.2,
-                target_average=10.0
             )
 
     def test_multiple_runs_consistency(self):

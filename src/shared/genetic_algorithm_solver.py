@@ -10,7 +10,8 @@ class GradeGeneticAlgorithm:
         target_average: float,
         max_grade: float = 10.0,
         population_size: int = 150,
-        generations: int = 200
+        generations: int = 200,
+        final_avg: float = 0.0
     ) -> None:
 
          # Desempacota atributos do boletim
@@ -93,6 +94,7 @@ class GradeGeneticAlgorithm:
         if total_assignments == 0:
             return test_avg
 
+        
         # ===== MÉDIA PONDERADA ENTRE PROVAS E TRABALHOS =====
         return (test_avg * self.test_weight) + (assignment_avg * self.assignment_weight)
 
@@ -218,8 +220,6 @@ class GradeGeneticAlgorithm:
             if gen % 100 == 0:
                 print(f"Geração {gen}: Melhor fitness = {best_fitness_ever:.4f}")
 
-            
-            
 
         return best_ever, best_fitness_ever
 
@@ -323,6 +323,7 @@ class GradeGeneticAlgorithm:
                 "peso trabalhos": round(self.assignment_weight,2),
                 "trabalhos": trabalhos
             },
+            "final_average": round(final_avg,2),
             "message": message
         }
         return response

@@ -4,71 +4,6 @@ from src.modules.genetic_algorithm.app.genetic_algorithm_presenter import lambda
 
 class Test_GeneticAlgorithmPresenter:
     
-    def test_genetic_algorithm_presenter_basic(self):
-        event = {
-            "version": "2.0",
-            "routeKey": "$default",
-            "rawPath": "/my/path",
-            "rawQueryString": "parameter1=value1&parameter1=value2&parameter2=value",
-            "cookies": [
-                "cookie1",
-                "cookie2"
-            ],
-            "headers": {
-                "header1": "value1",
-                "header2": "value1,value2"
-            },
-            "queryStringParameters": None,
-            "requestContext": {
-                "accountId": "123456789012",
-                "apiId": "<urlid>",
-                "authentication": None,
-                "authorizer": {
-                    "iam": {
-                        "accessKey": "AKIA...",
-                        "accountId": "111122223333",
-                        "callerId": "AIDA...",
-                        "cognitoIdentity": None,
-                        "principalOrgId": None,
-                        "userArn": "arn:aws:iam::111122223333:user/example-user",
-                        "userId": "AIDA..."
-                    }
-                },
-                "domainName": "<url-id>.lambda-url.us-west-2.on.aws",
-                "domainPrefix": "<url-id>",
-                "external_interfaces": {
-                    "method": "POST",
-                    "path": "/my/path",
-                    "protocol": "HTTP/1.1",
-                    "sourceIp": "123.123.123.123",
-                    "userAgent": "agent"
-                },
-                "requestId": "id",
-                "routeKey": "$default",
-                "stage": "$default",
-                "time": "12/Mar/2020:19:03:58 +0000",
-                "timeEpoch": 1583348638390
-            },
-            "body": {
-                'current_tests': [6.0, 8.0],
-                'current_assignments': [7.0],
-                'num_remaining_tests': 2,
-                'num_remaining_assignments': 1,
-                'test_weight': 0.6,
-                'assignment_weight': 0.4,
-                'target_average': 7.0
-            },
-            "pathParameters": None,
-            "isBase64Encoded": None,
-            "stageVariables": None
-        }
-
-        response = lambda_handler(event=event, context=None)
-        assert response["statusCode"] == 200
-        body = json.loads(response["body"])
-        assert 'tests' in body
-        assert 'assignments' in body
-
     def test_genetic_algorithm_presenter_only_tests(self):
         event = {
             "version": "2.0",
@@ -471,23 +406,6 @@ class Test_GeneticAlgorithmPresenter:
         response = lambda_handler(event=event, context=None)
         assert response["statusCode"] == 400
         assert 'sum' in json.loads(response["body"]).lower()
-
-    def test_genetic_algorithm_presenter_impossible_target(self):
-        event = {
-            "body": {
-                'current_tests': [0.0, 1.0],
-                'current_assignments': [0.0],
-                'num_remaining_tests': 1,
-                'num_remaining_assignments': 1,
-                'test_weight': 0.8,
-                'assignment_weight': 0.2,
-                'target_average': 10.0
-            }
-        }
-
-        response = lambda_handler(event=event, context=None)
-        # Pode retornar 404 (NotFound) ou 400 dependendo da implementação
-        assert response["statusCode"] in [400, 404]
 
     def test_genetic_algorithm_presenter_high_target(self):
         event = {

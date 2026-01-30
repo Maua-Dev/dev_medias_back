@@ -27,7 +27,7 @@ class GeneticAlgorithmUsecase:
                 ) -> dict:
         
         #Validações das variáveis de entrada
-        if(len(current_tests) < 0 or len(current_assignments) < 0):
+        if len(current_tests) == 0 or len(current_assignments) == 0:
             raise InvalidInput("current_tests e current_assignments", "Não podem ser listas vazias")
         
         if type(max_grade) != float:
@@ -40,12 +40,27 @@ class GeneticAlgorithmUsecase:
         if target_average < 0 or target_average > max_grade:
             raise InvalidInput("target_average", f"Deve estar entre 0 e {max_grade}")
         
+        if test_weight + assignment_weight != 1.0:
+            raise InvalidInput("test_weight and/or assignment_weight", "Devem somar 1.0")
+        
         # validação dos pesos feita pelo próprio boletim
-        boletim = Boletim_GA(current_tests=current_tests, current_assignments=current_assignments, num_remaining_tests=num_remaining_tests, num_remaining_assignments=num_remaining_assignments, test_weight=test_weight, assignment_weight=assignment_weight, spec_test_weight=spec_test_weight, spec_assignment_weight=spec_assignment_weight)
+        boletim = Boletim_GA(current_tests=current_tests, current_assignments=current_assignments, num_remaining_tests=num_remaining_tests, num_remaining_assignments=num_remaining_assignments, test_weight=test_weight, assignment_weight=assignment_weight, spec_test_weight=spec_test_weight, spec_assignment_weight=spec_assignment_weight, max_grade=max_grade)
         
         ga = GradeGeneticAlgorithm(boletim=boletim, target_average=target_average, max_grade=max_grade, population_size=population_size, generations=generations)
         solution, fitness = ga.run()
-        response = ga.get_results_json(solution=solution)
+        response = {
+            "current_tests": current_tests,
+            "current_assignments": current_assignments,
+            "tests": solution['tests'],
+            "assignments": solution['assignments'],
+            "test_weight": test_weight,
+            "assignment_weight": assignment_weight,
+            "spec_test_weight": spec_test_weight,
+            "spec_assignment_weight": spec_assignment_weight,
+            "num_remaining_tests": num_remaining_tests,
+            "num_remaining_assignments": num_remaining_assignments,
+            "target_average": target_average
+        }
 
         boletim.calculated_tests = solution['tests']
         boletim.calculated_assignments = solution['assignments']

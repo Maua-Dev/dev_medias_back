@@ -199,31 +199,31 @@ class GeneticAlgorithmController:
             else:
                 spec_test_weight = None
             
-            if request.data.get('spec_assingment_weight') is not None:
-                if type(request.data.get('spec_assingment_weight')) != list:
+            if request.data.get('spec_assignment_weight') is not None:
+                if type(request.data.get('spec_assignment_weight')) != list:
                     raise WrongTypeParameter(
-                        fieldName="spec_assingment_weight",
+                        fieldName="spec_assignment_weight",
                         fieldTypeExpected="list",
-                        fieldTypeReceived=request.data.get('spec_assingment_weight').__class__.__name__
+                        fieldTypeReceived=request.data.get('spec_assignment_weight').__class__.__name__
                     )
 
-                if len(request.data.get('spec_assingment_weight')) != len(current_tests) + num_remaining_tests:
-                    raise InvalidInput("spec_assingment_weight", "Must have the same length as the sum of current_tests and num_remaining_tests")
+                if len(request.data.get('spec_assignment_weight')) != len(current_assignments) + num_remaining_assignments:
+                    raise InvalidInput("spec_assignment_weight", "Must have the same length as the sum of current_assignments and num_remaining_assignments")
 
-                for weight in request.data.get('spec_assingment_weight'):
+                for weight in request.data.get('spec_assignment_weight'):
                     if not isinstance(weight, (int, float)):
                         raise WrongTypeParameter(
-                            fieldName="spec_assingment_weight item",
+                            fieldName="spec_assignment_weight item",
                             fieldTypeExpected="float",
                             fieldTypeReceived=weight.__class__.__name__
                         )
                     if weight < 0 or weight > 1:
-                        raise InvalidInput("spec_assingment_weight", "All values must be between 0 and 1")
-                if abs(sum(request.data.get('spec_assingment_weight')) - 1.0) > 0.01:
-                    raise InvalidInput("spec_assingment_weight", "The sum must be equal to 1")
-                spec_assingment_weight = request.data.get('spec_assingment_weight')
+                        raise InvalidInput("spec_assignment_weight", "All values must be between 0 and 1")
+                if abs(sum(request.data.get('spec_assignment_weight')) - 1.0) > 0.01:
+                    raise InvalidInput("spec_assignment_weight", "The sum must be equal to 1")
+                spec_assignment_weight = request.data.get('spec_assignment_weight')
             else:
-                spec_assingment_weight = None
+                spec_assignment_weight = None
 
             combinacao_de_notas = self.usecase(
                 current_tests=current_tests,
@@ -237,7 +237,7 @@ class GeneticAlgorithmController:
                 population_size=population_size,
                 generations=generations,
                 spec_test_weight=spec_test_weight,
-                spec_assingment_weight=spec_assingment_weight
+                spec_assignment_weight=spec_assignment_weight
             )
 
             viewmodel = GeneticAlgorithmViewmodel(combinacao_de_notas)
