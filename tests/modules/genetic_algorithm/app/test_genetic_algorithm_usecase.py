@@ -7,7 +7,7 @@ from src.shared.helpers.errors.domain_errors import EntityParameterError
 class TestGeneticAlgorithmUsecase:
 
     def test_basic_scenario(self):
-        """Teste básico com notas já feitas e restantes a fazer"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -27,7 +27,7 @@ class TestGeneticAlgorithmUsecase:
         assert len(result['assignments']) == 1
 
     def test_only_tests_scenario(self):
-        """Cenário com apenas provas"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -45,7 +45,7 @@ class TestGeneticAlgorithmUsecase:
         assert len(result['assignments']) == 0
 
     def test_only_assignments_scenario(self):
-        """Cenário com apenas trabalhos"""
+       
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -63,7 +63,7 @@ class TestGeneticAlgorithmUsecase:
         assert len(result['assignments']) == 2
 
     def test_all_remaining_scenario(self):
-        """Cenário sem nenhuma nota feita ainda"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -81,7 +81,7 @@ class TestGeneticAlgorithmUsecase:
         assert len(result['assignments']) == 2
 
     def test_high_target_average(self):
-        """Teste com média desejada alta"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -97,7 +97,7 @@ class TestGeneticAlgorithmUsecase:
         assert result is not None
 
     def test_low_target_average(self):
-        """Teste com média desejada baixa"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -113,7 +113,7 @@ class TestGeneticAlgorithmUsecase:
         assert result is not None
 
     def test_with_specific_weights(self):
-        """Teste com pesos específicos para cada avaliação"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -131,7 +131,7 @@ class TestGeneticAlgorithmUsecase:
         assert result is not None
 
     def test_custom_max_grade(self):
-        """Teste com nota máxima customizada"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -148,7 +148,7 @@ class TestGeneticAlgorithmUsecase:
         assert result is not None
 
     def test_custom_ga_parameters(self):
-        """Teste com parâmetros customizados do algoritmo genético"""
+
         usecase = GeneticAlgorithmUsecase()
         
         result = usecase(
@@ -165,25 +165,9 @@ class TestGeneticAlgorithmUsecase:
         
         assert result is not None
 
-    def test_invalid_empty_lists(self):
-        """Teste com listas vazias quando não deveria"""
-        usecase = GeneticAlgorithmUsecase()
-        
-        # Este teste pode passar ou não dependendo da implementação
-        # Se num_remaining for 0 para ambos, deveria lançar erro
-        with pytest.raises((InvalidInput, EntityParameterError)):
-            usecase(
-                current_tests=[],
-                current_assignments=[],
-                num_remaining_tests=0,
-                num_remaining_assignments=0,
-                test_weight=0.5,
-                assignment_weight=0.5,
-                target_average=7.0
-            )
 
     def test_invalid_max_grade_type(self):
-        """Teste com tipo inválido para max_grade"""
+     
         usecase = GeneticAlgorithmUsecase()
         
         with pytest.raises(InvalidInput):
@@ -199,7 +183,7 @@ class TestGeneticAlgorithmUsecase:
             )
 
     def test_invalid_max_grade_negative(self):
-        """Teste com max_grade negativo"""
+       
         usecase = GeneticAlgorithmUsecase()
         
         with pytest.raises(InvalidInput):
@@ -215,7 +199,7 @@ class TestGeneticAlgorithmUsecase:
             )
 
     def test_invalid_target_average_type(self):
-        """Teste com tipo inválido para target_average"""
+     
         usecase = GeneticAlgorithmUsecase()
         
         with pytest.raises(InvalidInput):
@@ -230,7 +214,7 @@ class TestGeneticAlgorithmUsecase:
             )
 
     def test_invalid_target_average_negative(self):
-        """Teste com target_average negativo"""
+      
         usecase = GeneticAlgorithmUsecase()
         
         with pytest.raises(InvalidInput):
@@ -245,7 +229,7 @@ class TestGeneticAlgorithmUsecase:
             )
 
     def test_invalid_target_average_exceeds_max(self):
-        """Teste com target_average maior que max_grade"""
+       
         usecase = GeneticAlgorithmUsecase()
         
         with pytest.raises(InvalidInput):
@@ -261,7 +245,7 @@ class TestGeneticAlgorithmUsecase:
             )
 
     def test_invalid_weights_sum_not_one(self):
-        """Teste com soma dos pesos diferente de 1"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         with pytest.raises(InvalidInput):
@@ -276,7 +260,7 @@ class TestGeneticAlgorithmUsecase:
             )
 
     def test_multiple_runs_consistency(self):
-        """Teste executando múltiplas vezes para verificar consistência"""
+        
         usecase = GeneticAlgorithmUsecase()
         
         for _ in range(5):

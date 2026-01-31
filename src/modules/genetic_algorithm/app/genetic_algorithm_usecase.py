@@ -27,8 +27,6 @@ class GeneticAlgorithmUsecase:
                 ) -> dict:
         
         #Validações das variáveis de entrada
-        if len(current_tests) == 0 or len(current_assignments) == 0:
-            raise InvalidInput("current_tests e current_assignments", "Não podem ser listas vazias")
         
         if type(max_grade) != float:
             raise InvalidInput("max_grade", "Deve ser um valor do tipo float")
