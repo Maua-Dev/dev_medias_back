@@ -19,27 +19,12 @@ class GeneticAlgorithmUsecase:
                  test_weight: float, 
                  assignment_weight: float, 
                  target_average: float,
+                 spec_test_weight: list[float], 
+                 spec_assignment_weight: list[float],
                  max_grade: float = 10.0,
                  population_size: int = 150,
-                 generations: int = 200, 
-                 spec_test_weight: Optional[list[float]] = None, 
-                 spec_assignment_weight: Optional[list[float]] = None
+                 generations: int = 200
                 ) -> dict:
-        
-        #Validações das variáveis de entrada
-        
-        if type(max_grade) != float:
-            raise InvalidInput("max_grade", "Deve ser um valor do tipo float")
-        if max_grade <= 0:
-            raise InvalidInput("max_grade", "Deve ser um valor maior que 0")
-        
-        if type(target_average) != float:
-            raise InvalidInput("target_average", "Deve ser um valor do tipo float")
-        if target_average < 0 or target_average > max_grade:
-            raise InvalidInput("target_average", f"Deve estar entre 0 e {max_grade}")
-        
-        if test_weight + assignment_weight != 1.0:
-            raise InvalidInput("test_weight and/or assignment_weight", "Devem somar 1.0")
         
         # validação dos pesos feita pelo próprio boletim
         boletim = Boletim_GA(current_tests=current_tests, current_assignments=current_assignments, num_remaining_tests=num_remaining_tests, num_remaining_assignments=num_remaining_assignments, test_weight=test_weight, assignment_weight=assignment_weight, spec_test_weight=spec_test_weight, spec_assignment_weight=spec_assignment_weight, max_grade=max_grade)

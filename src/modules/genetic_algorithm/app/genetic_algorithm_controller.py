@@ -175,6 +175,9 @@ class GeneticAlgorithmController:
                 )
             if media_desejada < 0 or media_desejada > 10:
                 raise InvalidInput("media_desejada", "Must be between 0 and 10")
+            
+            if peso_prova + peso_trabalho != 1.0:
+                raise InvalidInput("peso_prova and/or peso_trabalho", "Must sum 1.0")
 
             # ==========================================
             # EXECUÇÃO DO USECASE
@@ -191,7 +194,7 @@ class GeneticAlgorithmController:
                 assignment_weight=peso_trabalho,
                 target_average=media_desejada,
                 max_grade=10.0,
-                population_size=100,
+                population_size=150,
                 generations=200,
                 spec_test_weight=spec_test_weight,
                 spec_assignment_weight=spec_assignment_weight
