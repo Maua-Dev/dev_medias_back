@@ -133,46 +133,8 @@ class GeneticAlgorithmController:
                 raise InvalidInput("target_average", "Must be between 0 and 10")
 
             target_average = request.data.get('target_average')
+            
 
-            if request.data.get('max_grade') is not None:
-                if type(request.data.get('max_grade')) != float:
-                    raise WrongTypeParameter(
-                        fieldName="max_grade",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=request.data.get('max_grade').__class__.__name__
-                    )
-                if request.data.get('max_grade') <= 0:
-                    raise InvalidInput("max_grade", "Must be greater than 0")
-                max_grade = request.data.get('max_grade')
-            else:
-                max_grade = 10.0
-            
-            if request.data.get('population_size') is not None:
-                if type(request.data.get('population_size')) != int:
-                    raise WrongTypeParameter(
-                        fieldName="population_size",
-                        fieldTypeExpected="int",
-                        fieldTypeReceived=request.data.get('population_size').__class__.__name__
-                    )
-                if request.data.get('population_size') <= 0:
-                    raise InvalidInput("population_size", "Must be greater than 0")
-                population_size = request.data.get('population_size')
-            else:
-                population_size = 100
-            
-            if request.data.get('generations') is not None:
-                if type(request.data.get('generations')) != int:
-                    raise WrongTypeParameter(
-                        fieldName="generations",
-                        fieldTypeExpected="int",
-                        fieldTypeReceived=request.data.get('generations').__class__.__name__
-                    )
-                if request.data.get('generations') <= 0:
-                    raise InvalidInput("generations", "Must be greater than 0")
-                generations = request.data.get('generations')
-            else:
-                generations = 200
-            
             if request.data.get('spec_test_weight') is not None:
                 if type(request.data.get('spec_test_weight')) != list:
                     raise WrongTypeParameter(
@@ -233,9 +195,9 @@ class GeneticAlgorithmController:
                 test_weight=test_weight,
                 assignment_weight=assignment_weight,
                 target_average=target_average,
-                max_grade=max_grade,
-                population_size=population_size,
-                generations=generations,
+                max_grade=10.0,
+                population_size=100,
+                generations=200,
                 spec_test_weight=spec_test_weight,
                 spec_assignment_weight=spec_assignment_weight
             )

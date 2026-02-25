@@ -26,6 +26,8 @@ class Boletim_GA:
         spec_assignment_weight: Optional[list[float]] = None,
         max_grade: float = 10.0
     ):
+        
+        
         # Valida e atribui num_remaining
         if not self.validate_num_remaining(num_remaining_tests):
             raise EntityError("num_remaining_tests")
