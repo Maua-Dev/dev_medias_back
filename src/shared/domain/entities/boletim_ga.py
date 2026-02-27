@@ -134,6 +134,23 @@ class Boletim_GA:
             return False
         return True
 
+    @staticmethod
+    def validate_max_grade(max_grade: float) -> bool:
+        if not isinstance(max_grade, (float, int)):
+            return False
+        if max_grade <= 0:
+            return False
+        return True
+
+    @staticmethod
+    def validate_target_avg(target_avg: float, max_grade: float) -> bool:
+        if not isinstance(target_avg, (float, int)):
+            return False
+        if target_avg < 0 or target_avg > max_grade:
+            return False
+        return True
+    
+    
     def to_dict(self) -> dict:
         """Converte o boletim para dicionário."""
         return {

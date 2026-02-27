@@ -30,25 +30,14 @@ class GeneticAlgorithmUsecase:
         boletim = Boletim_GA(current_tests=current_tests, current_assignments=current_assignments, num_remaining_tests=num_remaining_tests, num_remaining_assignments=num_remaining_assignments, test_weight=test_weight, assignment_weight=assignment_weight, spec_test_weight=spec_test_weight, spec_assignment_weight=spec_assignment_weight, max_grade=max_grade)
         
         ga = GradeGeneticAlgorithm(boletim=boletim, target_average=target_average, max_grade=max_grade, population_size=population_size, generations=generations)
-        solution, fitness = ga.run()
-        response = {
-            "current_tests": current_tests,
-            "current_assignments": current_assignments,
-            "tests": solution['tests'],
-            "assignments": solution['assignments'],
-            "test_weight": test_weight,
-            "assignment_weight": assignment_weight,
-            "spec_test_weight": spec_test_weight,
-            "spec_assignment_weight": spec_assignment_weight,
-            "num_remaining_tests": num_remaining_tests,
-            "num_remaining_assignments": num_remaining_assignments,
-            "target_average": target_average
-        }
+        solution, fitness, final_avg = ga.run()
+        
 
         boletim.calculated_tests = solution['tests']
         boletim.calculated_assignments = solution['assignments']
         boletim.target_avg = target_average
+        boletim.final_avg = final_avg
 
-        if(response == None):
+        if(solution == None):
             raise CombinationNotFound()
-        return response
+        return boletim

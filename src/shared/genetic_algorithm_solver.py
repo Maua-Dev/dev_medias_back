@@ -219,9 +219,16 @@ class GradeGeneticAlgorithm:
 
             if gen % 100 == 0:
                 print(f"Geração {gen}: Melhor fitness = {best_fitness_ever:.4f}")
+            
+            final_avg = self.calculate_weighted_average(
+            self.current_tests + best_ever['tests'],
+            self.current_assignments + best_ever['assignments'],
+            self.spec_test_weight,
+            self.spec_assignment_weight
+        )
 
 
-        return best_ever, best_fitness_ever
+        return best_ever, best_fitness_ever, final_avg
 
     def display_results(self, solution):
         """Exibe os resultados"""
