@@ -9,8 +9,7 @@ from src.shared.domain.entities.nota import Nota
 class GeneticAlgorithmViewmodel:
     
 
-    def __init__(self, body: dict, boletim: Boletim_GA):
-        self.body = body
+    def __init__(self, boletim: Boletim_GA):
         self.boletim = boletim
 
     def to_dict(self) -> dict:
