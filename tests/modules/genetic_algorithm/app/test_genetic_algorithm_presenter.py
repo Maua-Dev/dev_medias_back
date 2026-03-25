@@ -71,8 +71,19 @@ class TestGeneticAlgorithmPresenter:
     def test_success_response_has_expected_keys(self):
         response = lambda_handler(event=self._make_event(self._default_body()), context=None)
         body = json.loads(response["body"])
+        assert "notas" in body
+        assert "message" in body
+        assert "provas" in body["notas"]
+        assert "trabalhos" in body["notas"]
+        assert isinstance(body["notas"]["provas"], list)
+        assert isinstance(body["notas"]["trabalhos"], list)
+
+    def test_success_response_does_not_expose_legacy_keys(self):
+        response = lambda_handler(event=self._make_event(self._default_body()), context=None)
+        body = json.loads(response["body"])
+
         for key in ["tests", "assignments", "final_average", "target_average"]:
-            assert key in body
+            assert key not in body
 
     def test_success_multiple_calls(self):
         for _ in range(5):
