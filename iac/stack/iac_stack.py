@@ -7,6 +7,7 @@ from constructs import Construct
 from ..components.lambda_construct import LambdaConstruct
 from ..components.apigw_construct import ApigwConstruct
 from ..components.s3_construct import S3Construct
+from ..components.ssm_construct import SsmConstruct
 
 class IacStack(Stack):
     lambda_construct: LambdaConstruct
@@ -27,7 +28,7 @@ class IacStack(Stack):
         else:
             stage = 'DEV'
         
-        self.apigw_construct = ApigwConstruct(self, stage=stage, construct_id="DevMediasApiGateway")
+        self.apigw_construct = ApigwConstruct(self, construct_id="DevMediasApiGateway", stage=stage)
         
         self.s3_construct = S3Construct(self, construct_id="DevMediasS3", stage=stage)
         
@@ -48,3 +49,23 @@ class IacStack(Stack):
             environment_variables=ENVIRONMENT_VARIABLES
         )
         
+        # nova instância SSM manager para passar automaticamente variáveis a um hub de segredos
+        # da prórpia conta, evitando ter que manualmente passa-las para o github secrets
+        
+        # isso evita problemas de discrepância nos endpoints
+        
+        # atenção aqui, isso deve suprir ao que estamos precisando / pegando de variáveis de 
+        # ambiente no CD do front
+        
+        self.ssm_construct = SsmConstruct(
+            self, 
+            construct_id="DevMediasSsm", 
+            api=self.apigw_construct.rest_api,
+            api_gateway_resource=self.apigw_construct.api_gateway_resource,
+            buckets=None, # o que deve ser salvo são os CDNs, visto que os buckets bloqueiam acesso pela URL publica
+            extra_params={
+                "cdn/plans": self.s3_construct.cloudfront_distribution_plans.distribution_domain_name,
+                "cdn/subjects": self.s3_construct.cloudfront_distribution_subjects.distribution_domain_name
+            },
+            stage=stage
+        )
