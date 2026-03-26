@@ -1,4 +1,0 @@
-pypdf
-pandas
-openpyxl
-numpy
