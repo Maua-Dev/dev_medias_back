@@ -1,0 +1,41 @@
+from constructs import Construct
+from aws_cdk import Resource, aws_ssm as ssm
+from aws_cdk.aws_apigateway import RestApi
+from aws_cdk import aws_s3 as s3
+
+class SsmConstruct(Construct):
+
+    def __init__(
+        self,
+        scope: Construct,
+        construct_id: str,
+        stage: str,
+        api: RestApi = None,
+        api_gateway_resource: Resource = None,
+        buckets: dict[str, s3.Bucket] = None,
+        extra_params: dict[str, str] = None,
+        **kwargs
+    ):
+        super().__init__(scope, construct_id, **kwargs)
+
+        if api:
+            ssm.StringParameter(self,
+                id=f"ApiUrl_{stage}",
+                parameter_name=f"/devmedias/{stage}/api/url",
+                string_value=api_gateway_resource.url
+            )
+
+        for logical_name, bucket in (buckets or {}).items():
+            ssm.StringParameter(self,
+                id=f"Bucket_{logical_name}_{stage}",
+                parameter_name=f"/devmedias/{stage}/buckets/{logical_name}",
+                string_value=bucket.bucket_name
+            )
+
+        for key, value in (extra_params or {}).items():
+            safe_id = key.replace("/", "_")
+            ssm.StringParameter(self,
+                id=f"Extra_{safe_id}_{stage}",
+                parameter_name=f"/devmedias/{stage}/{key}",
+                string_value=value
+            )

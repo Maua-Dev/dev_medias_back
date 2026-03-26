@@ -22,10 +22,10 @@ jobs:
         - name: Checkout repository
           uses: actions/checkout@v4 
 
-        - name: Setup Python 3.9
+        - name: Setup Python 3.13
           uses: actions/setup-python@v5
           with:
-            python-version: '3.9'
+            python-version: '3.13'
 
         - name: Set AWS Account ID and other variables
           run: |
@@ -51,7 +51,7 @@ jobs:
           run: |
             npm install -g aws-cdk
             cd iac
-            pip install -r requirements.txt
+            pip install -r requirements-infra.txt
 
         - name: DeployWithCDK
           run: |
