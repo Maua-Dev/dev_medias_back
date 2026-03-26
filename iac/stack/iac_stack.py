@@ -64,7 +64,6 @@ class IacStack(Stack):
             api_gateway_resource=self.apigw_construct.api_gateway_resource,
             buckets=None, # o que deve ser salvo são os CDNs, visto que os buckets bloqueiam acesso pela URL publica
             extra_params={
-                "cdn/plans": self.s3_construct.cloudfront_distribution_plans.distribution_domain_name,
                 "cdn/subjects": self.s3_construct.cloudfront_distribution_subjects.distribution_domain_name
             },
             stage=stage
