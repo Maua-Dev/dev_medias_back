@@ -32,6 +32,6 @@ class ApigwConstruct(Construct):
         
 
         self.api_gateway_resource = self.rest_api.root.add_resource(
-            id="mss-medias", 
+            path_part="mss-medias",
             default_cors_preflight_options=cors_options
         )
