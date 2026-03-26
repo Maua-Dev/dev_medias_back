@@ -17,12 +17,14 @@ class SsmConstruct(Construct):
         **kwargs
     ):
         super().__init__(scope, construct_id, **kwargs)
+        
+        # é necessário a '/' após a url pois no CD do front estamos contando como se ela ja estivesse la
 
         if api:
             ssm.StringParameter(self,
                 id=f"ApiUrl_{stage}",
                 parameter_name=f"/devmedias/{stage}/api/url",
-                string_value=api_gateway_resource.url
+                string_value=f"{api.url}{api_gateway_resource.path.lstrip('/')}/"
             )
 
         for logical_name, bucket in (buckets or {}).items():
