@@ -4,10 +4,10 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from ..components.lambda_construct import LambdaConstruct
-from ..components.apigw_construct import ApigwConstruct
-from ..components.s3_construct import S3Construct
-from ..components.ssm_construct import SsmConstruct
+from components.lambda_construct import LambdaConstruct
+from components.apigw_construct import ApigwConstruct
+from components.s3_construct import S3Construct
+from components.ssm_construct import SsmConstruct
 
 class IacStack(Stack):
     lambda_construct: LambdaConstruct
