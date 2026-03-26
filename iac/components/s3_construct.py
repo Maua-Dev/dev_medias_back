@@ -2,7 +2,7 @@
 from constructs import Construct
 from aws_cdk import Duration, RemovalPolicy, Stack
 from aws_cdk import aws_cloudfront, aws_iam as iam, aws_s3
-
+import random
 
 class S3Construct(Construct):
     plans_bucket: aws_s3.Bucket
@@ -148,17 +148,19 @@ class S3Construct(Construct):
 
         self.stage = stage
         self.removal_policy = RemovalPolicy.RETAIN if stage == "PROD" else RemovalPolicy.DESTROY
+        
+        random_identifier = "".join(str(random.randint(0, 9)) for _ in range(5))
 
         self.plans_bucket, self.cloudfront_distribution_plans = self.create_bucket_with_distribution(
             resource_prefix="Plans",
-            bucket_name=f"devmedias-plans-{self.stage}",
+            bucket_name=f"devmedias-plans-{self.stage}-{random_identifier}",
             default_ttl=Duration.seconds(30),
             stage=stage,
         )
 
         self.subject_bucket, self.cloudfront_distribution_subjects = self.create_bucket_with_distribution(
             resource_prefix="Subjects",
-            bucket_name=f"devmedias-subjects-{self.stage}",
+            bucket_name=f"devmedias-subjects-{self.stage}-{random_identifier}",
             default_ttl=Duration.seconds(86400),
             stage=stage,
         )

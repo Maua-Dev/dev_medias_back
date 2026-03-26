@@ -33,8 +33,9 @@ class SsmConstruct(Construct):
             )
 
         for key, value in (extra_params or {}).items():
+            safe_id = key.replace("/", "_")
             ssm.StringParameter(self,
-                id=f"Extra_{key}_{stage}",
+                id=f"Extra_{safe_id}_{stage}",
                 parameter_name=f"/devmedias/{stage}/{key}",
                 string_value=value
             )
