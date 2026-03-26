@@ -20,6 +20,10 @@ class SsmConstruct(Construct):
         
         # é necessário a '/' após a url pois no CD do front estamos contando como se ela ja estivesse la
 
+        # stage lower é necessário aqui pois no actions do front, stage é recebido como lower
+        
+        stage = stage.lower()
+
         if api:
             ssm.StringParameter(self,
                 id=f"ApiUrl_{stage}",
