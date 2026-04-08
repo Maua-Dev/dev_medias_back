@@ -7,10 +7,12 @@ from aws_cdk import (
 from aws_cdk import aws_iam as iam
 from constructs import Construct
 from aws_cdk.aws_apigateway import Resource, LambdaIntegration
-import os
 
 
 class LambdaConstruct(Construct):
+    
+    stage: str
+    stack_name: str
 
     def create_lambda_api_gateway_integration(
         self, 
@@ -24,6 +26,7 @@ class LambdaConstruct(Construct):
             self, module_name.title(),
             code=lambda_.Code.from_asset(f"../src/modules/{module_name}"),
             handler=f"app.{module_name}_presenter.lambda_handler",
+            function_name=f"{module_name}-{self.stack_name}-{self.stage}"[:63],
             runtime=lambda_.Runtime.PYTHON_3_13,
             layers=[self.lambda_layer],
             environment=environment_variables,
@@ -56,6 +59,7 @@ class LambdaConstruct(Construct):
             module_name.title(),
             code=lambda_.Code.from_asset(f"../src/modules/{ module_name }"),
             handler=f"app.{module_name}_presenter.lambda_handler",
+            function_name=f"{module_name}-{self.stack_name}-{self.stage}"[:63],
             runtime=lambda_.Runtime.PYTHON_3_13,
             layers=[self.lambda_layer],
             environment=environment_variables,
@@ -81,20 +85,29 @@ class LambdaConstruct(Construct):
 
     def __init__(
         self, 
-        scope: Construct, 
+        scope: Construct,
+        construct_id: str,
+        stage: str,
+        stack_name: str,
         api_gateway_resource: Resource,
         plans_bucket: s3.Bucket,
         subject_bucket: s3.Bucket,
-        environment_variables: dict
+        environment_variables: dict,
+        **kargs
     ) -> None:
         
-        super().__init__(scope, "DevMediasLambda")
+        super().__init__(scope, construct_id, **kargs)
+        
+        self.stage = stage
+        self.stack_name = stack_name
 
         self.lambda_layer = lambda_.LayerVersion(
             self, 
-            id="DevMedias_Layer",
+            id=f"{stack_name}_LambdaLayer_{stage}",
+            layer_version_name=f"{stack_name}-LambdaLayer-{self.stage}",
+            # a pasta .build foi obtida do adjust layer directory, certifique-se de que a configuração da pasta layer gerada la esta igual
             code=lambda_.Code.from_asset("./build"),
-            compatible_runtimes=[lambda_.Runtime.PYTHON_3_13]
+            compatible_runtimes=[lambda_.Runtime("python3.13")]
         )
         
         self.contact_us = self.create_lambda_api_gateway_integration(

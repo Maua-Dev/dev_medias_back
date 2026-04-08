@@ -10,8 +10,9 @@ class SsmConstruct(Construct):
         scope: Construct,
         construct_id: str,
         stage: str,
-        api: RestApi = None,
-        api_gateway_resource: Resource = None,
+        mss_name_identification_for_path: str,
+        api: RestApi,
+        api_gateway_resource: Resource,
         buckets: dict[str, s3.Bucket] = None,
         extra_params: dict[str, str] = None,
         **kwargs
@@ -23,18 +24,20 @@ class SsmConstruct(Construct):
         # stage lower é necessário aqui pois no actions do front, stage é recebido como lower
         
         stage = stage.lower()
+        
+        mss_name_identification_for_path = mss_name_identification_for_path.lower().replace("-", "_")
 
         if api:
             ssm.StringParameter(self,
                 id=f"ApiUrl_{stage}",
-                parameter_name=f"/devmedias/{stage}/api/url",
+                parameter_name=f"/{mss_name_identification_for_path}/{stage}/api/url",
                 string_value=f"{api.url}{api_gateway_resource.path.lstrip('/')}/"
             )
 
         for logical_name, bucket in (buckets or {}).items():
             ssm.StringParameter(self,
                 id=f"Bucket_{logical_name}_{stage}",
-                parameter_name=f"/devmedias/{stage}/buckets/{logical_name}",
+                parameter_name=f"/{mss_name_identification_for_path}/{stage}/buckets/{logical_name}",
                 string_value=bucket.bucket_name
             )
 
@@ -42,6 +45,6 @@ class SsmConstruct(Construct):
             safe_id = key.replace("/", "_")
             ssm.StringParameter(self,
                 id=f"Extra_{safe_id}_{stage}",
-                parameter_name=f"/devmedias/{stage}/{key}",
+                parameter_name=f"/{mss_name_identification_for_path}/{stage}/{key}",
                 string_value=value
             )
