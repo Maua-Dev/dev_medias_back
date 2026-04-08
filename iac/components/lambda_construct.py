@@ -107,7 +107,7 @@ class LambdaConstruct(Construct):
             layer_version_name=f"{stack_name}-LambdaLayer-{self.stage}",
             # a pasta .build foi obtida do adjust layer directory, certifique-se de que a configuração da pasta layer gerada la esta igual
             code=lambda_.Code.from_asset("./build"),
-            compatible_runtimes=[lambda_.Runtime("python3.13")]
+            compatible_runtimes=[lambda_.Runtime.PYTHON_3_13]
         )
         
         self.contact_us = self.create_lambda_api_gateway_integration(
