@@ -1,5 +1,5 @@
 from constructs import Construct
-from aws_cdk import Duration, RemovalPolicy, Stack
+from aws_cdk import Duration, RemovalPolicy, Aws
 from aws_cdk import aws_cloudfront as cloudfront, aws_cloudfront_origins as origins, aws_s3
 
 
@@ -89,7 +89,7 @@ class S3Construct(Construct):
         self.stage = stage.lower()
         self.removal_policy = RemovalPolicy.RETAIN if stage.upper() == "PROD" else RemovalPolicy.DESTROY
 
-        identifier = "2026-after-refactoring"
+        identifier = f"2026-{Aws.ACCOUNT_ID}-{Aws.REGION}"
 
         self.plans_bucket, self.cloudfront_distribution_plans = self.create_bucket_with_distribution(
             resource_prefix="Plans",
