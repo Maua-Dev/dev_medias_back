@@ -15,7 +15,7 @@ def _configure_test_env() -> None:
     os.environ["STAGE"] = "TEST"
     port = os.environ.get("DYNAMO_HOST_PORT", "8000")
     os.environ.setdefault("ENDPOINT_URL", f"http://127.0.0.1:{port}")
-    os.environ.setdefault("ENTITY_TABLE_NAME", "devmedias_academic_catalog_table")
+    os.environ.setdefault("ACADEMIC_CATALOG_TABLE_NAME", "DevMediasAcademicCatalogTable-test")
 
 
 def _unique_code(prefix: str = "DYN") -> str:

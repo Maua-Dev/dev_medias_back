@@ -22,7 +22,9 @@ Se o container falhar com **`Unrecognized option: -sharedDb`**, o Java estava re
 3. URL do endpoint: `http://localhost:8000` (ou `http://127.0.0.1:8000`).
 4. Região: por exemplo `sa-east-1` (deve bater com `Environments` / credenciais fictícias `test`).
 
-## Tabela única (`ENTITY_TABLE_NAME`, default `devmedias_academic_catalog_table`)
+## Tabela única (`ACADEMIC_CATALOG_TABLE_NAME`)
+
+O nome físico segue o **CDK** (`iac/components/dynamo_construct.py`): `DevMediasAcademicCatalogTable-{stage}` em minúsculas no sufixo (ex.: `DevMediasAcademicCatalogTable-test` com `STAGE=TEST`). No app, se `ACADEMIC_CATALOG_TABLE_NAME` não estiver definido, `Environments` usa o mesmo padrão (`src/.../academic_catalog_naming.py`).
 
 - **Partition key** (string): `pk`
 - **Sort key** (string): `sk`
@@ -35,7 +37,7 @@ Itens de curso e disciplina compartilham a tabela:
 
 `GLOBAL` = catálogo padrão (usuário não logado). Com usuário logado, instancie o repositório com `user_id` para ler/gravar só o escopo daquele dono.
 
-Variável de ambiente: **`ENTITY_TABLE_NAME`** (ou, por compatibilidade, `DISCIPLINA_TABLE_NAME` / `CURSO_TABLE_NAME`).
+Variável principal: **`ACADEMIC_CATALOG_TABLE_NAME`**. Ainda são aceitos, por compatibilidade: `ENTITY_TABLE_NAME`, `DISCIPLINA_TABLE_NAME`, `CURSO_TABLE_NAME`.
 
 ## Criar tabela e popular dados
 
@@ -50,4 +52,4 @@ STAGE=TEST python iac/local/docker/dynamo/load_disciplina_mock_to_dynamo.py
 
 Cada loader chama o setup e grava no escopo **GLOBAL** a partir dos mocks em `src/shared/infra/repositories/*_mock.py`.
 
-Se `ENDPOINT_URL` ou `ENTITY_TABLE_NAME` forem diferentes do default, exporte antes de rodar.
+Se `ENDPOINT_URL` ou `ACADEMIC_CATALOG_TABLE_NAME` forem diferentes do default, exporte antes de rodar.

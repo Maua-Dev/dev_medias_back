@@ -44,7 +44,7 @@ class DisciplinaRepositoryDynamo(IDisciplinaRepository):
         envs = Environments.get_envs()
         self.dynamo = DynamoDatasource(
             endpoint_url=envs.endpoint_url,
-            dynamo_table_name=envs.entity_table_name,
+            dynamo_table_name=envs.academic_catalog_table_name,
             region=envs.region,
             partition_key=self.PARTITION_ATTR,
             sort_key=self.SORT_ATTR,

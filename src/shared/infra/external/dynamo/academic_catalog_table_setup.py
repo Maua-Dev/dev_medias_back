@@ -3,7 +3,7 @@ Cria a tabela single-table do catálogo acadêmico (pk + sk), se ainda não exis
 
 Usado pelo DynamoDB local (Docker) e pode ser importado pelos loaders em `iac/local/docker/dynamo/`.
 
-Requer `Environments` configurado (ex.: `STAGE=TEST`, `ENDPOINT_URL`, opcionalmente `ENTITY_TABLE_NAME`).
+Requer `Environments` configurado (ex.: `STAGE=TEST`, `ENDPOINT_URL`, opcionalmente `ACADEMIC_CATALOG_TABLE_NAME`).
 """
 
 from __future__ import annotations
@@ -17,12 +17,12 @@ from src.shared.environments import Environments
 
 def ensure_academic_catalog_table() -> str:
     """
-    Garante que a tabela em `Environments.entity_table_name` exista
+    Garante que a tabela em `Environments.academic_catalog_table_name` exista
     (partition key `pk`, sort key `sk`).
     Retorna o nome da tabela.
     """
     envs = Environments.get_envs()
-    table_name = envs.entity_table_name
+    table_name = envs.academic_catalog_table_name
     endpoint = envs.endpoint_url
     if not endpoint:
         raise RuntimeError("endpoint_url não configurado (ex.: ENDPOINT_URL=http://localhost:8000).")

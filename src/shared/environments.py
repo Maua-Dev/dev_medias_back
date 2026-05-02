@@ -2,6 +2,8 @@ import enum
 from enum import Enum
 import os
 
+from src.shared.infra.external.dynamo.academic_catalog_naming import physical_table_name
+
 
 class STAGE(Enum):
     DOTENV = "DOTENV"
@@ -44,14 +46,15 @@ class Environments:
             self.endpoint_url = os.environ.get("ENDPOINT_URL")
             self.cloud_front_distribution_domain = os.environ.get("CLOUD_FRONT_DISTRIBUTION_DOMAIN")
 
-        self.entity_table_name = (
-            os.environ.get("ENTITY_TABLE_NAME")
+        self.academic_catalog_table_name = (
+            os.environ.get("ACADEMIC_CATALOG_TABLE_NAME")
+            or os.environ.get("ENTITY_TABLE_NAME")
             or os.environ.get("DISCIPLINA_TABLE_NAME")
             or os.environ.get("CURSO_TABLE_NAME")
-            or "devmedias_academic_catalog_table"
+            or physical_table_name(self.stage.value)
         )
-        self.disciplina_table_name = self.entity_table_name
-        self.curso_table_name = self.entity_table_name
+        self.disciplina_table_name = self.academic_catalog_table_name
+        self.curso_table_name = self.academic_catalog_table_name
 
     # @staticmethod
     # def get_product_repo() -> IProductRepository:

@@ -4,8 +4,9 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-from components.lambda_construct import LambdaConstruct
 from components.apigw_construct import ApigwConstruct
+from components.dynamo_construct import DynamoConstruct
+from components.lambda_construct import LambdaConstruct
 from components.s3_construct import S3Construct
 from components.ssm_construct import SsmConstruct
 
@@ -37,11 +38,19 @@ class IacStack(Stack):
             construct_id=f"{stack_name}S3", 
             stage=stage
         )
-        
+
+        self.dynamo_construct = DynamoConstruct(
+            self,
+            construct_id=f"{stack_name}Dynamo",
+            stack_name=stack_name,
+            stage=stage,
+        )
+
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage.upper(),
             "PLANS_BUCKET_NAME": self.s3_construct.plans_bucket.bucket_name,
             "SUBJECT_BUCKET_NAME": self.s3_construct.subject_bucket.bucket_name,
+            "ACADEMIC_CATALOG_TABLE_NAME": self.dynamo_construct.academic_catalog_table.table_name,
             "FROM_EMAIL": os.environ.get("FROM_EMAIL"),
             "REPLY_TO_EMAIL": os.environ.get("REPLY_TO_EMAIL"),
             "HIDDEN_COPY": os.environ.get("HIDDEN_COPY"),

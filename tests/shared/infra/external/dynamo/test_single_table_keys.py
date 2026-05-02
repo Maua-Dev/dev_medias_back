@@ -1,3 +1,4 @@
+from src.shared.infra.external.dynamo.academic_catalog_naming import physical_table_name
 from src.shared.infra.external.dynamo.single_table_keys import (
     GLOBAL_OWNER,
     SK_ENTITY_RECORD,
@@ -37,3 +38,8 @@ def test_strip_dynamo_metadata():
     assert strip_dynamo_metadata(
         {"pk": "x", "sk": "y", "entity_type": "CURSO", "nome": "N"}
     ) == {"nome": "N"}
+
+
+def test_physical_table_name_alinha_cdk():
+    assert physical_table_name("TEST") == "DevMediasAcademicCatalogTable-test"
+    assert physical_table_name("Dev") == "DevMediasAcademicCatalogTable-dev"
