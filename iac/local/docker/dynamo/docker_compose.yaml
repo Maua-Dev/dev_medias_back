@@ -1,0 +1,20 @@
+# DynamoDB Local — single-table (pk/sk). Copie .env.example → .env e ajuste STACK_NAME por repositório/projeto.
+#
+# Entrypoint explícito: flags como -sharedDb têm de ir APÓS "-jar DynamoDBLocal.jar"; se só passar
+# command: ["-sharedDb"] o Java trata como opção da JVM ("Unrecognized option: -sharedDb").
+#
+# STACK_NAME prefixa o nome do container. DYNAMO_HOST_PORT: porta no host para vários stacks.
+
+services:
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: ${STACK_NAME:-devmedias}-dynamodb-local
+    working_dir: /home/dynamodblocal
+    entrypoint:
+      - java
+      - -Djava.library.path=./DynamoDBLocal_lib
+      - -jar
+      - DynamoDBLocal.jar
+    command: ["-sharedDb", "-inMemory"]
+    ports:
+      - "127.0.0.1:${DYNAMO_HOST_PORT:-8000}:8000"

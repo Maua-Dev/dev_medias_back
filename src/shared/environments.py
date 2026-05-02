@@ -36,13 +36,22 @@ class Environments:
 
         if self.stage == STAGE.TEST:
             self.region = "sa-east-1"
-            self.endpoint_url = "http://localhost:8000"
+            self.endpoint_url = os.environ.get("ENDPOINT_URL") or "http://localhost:8000"
             self.cloud_front_distribution_domain = "https://d3q9q9q9q9q9q9.cloudfront.net"
 
         else:
             self.region = os.environ.get("AWS_REGION")
             self.endpoint_url = os.environ.get("ENDPOINT_URL")
             self.cloud_front_distribution_domain = os.environ.get("CLOUD_FRONT_DISTRIBUTION_DOMAIN")
+
+        self.entity_table_name = (
+            os.environ.get("ENTITY_TABLE_NAME")
+            or os.environ.get("DISCIPLINA_TABLE_NAME")
+            or os.environ.get("CURSO_TABLE_NAME")
+            or "devmedias_academic_catalog_table"
+        )
+        self.disciplina_table_name = self.entity_table_name
+        self.curso_table_name = self.entity_table_name
 
     # @staticmethod
     # def get_product_repo() -> IProductRepository:
