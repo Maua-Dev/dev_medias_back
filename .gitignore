@@ -134,3 +134,6 @@ dmypy.json
 /.vscode/
 /.idea/
 /iac/lambda_layer_out_temp/
+
+.DS_Store
+**/.DS_Store
