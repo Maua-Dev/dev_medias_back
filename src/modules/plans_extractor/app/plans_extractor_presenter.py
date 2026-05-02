@@ -1,4 +1,6 @@
 import logging
+import re
+import unicodedata
 from pathlib import PurePosixPath
 from typing import Any
 from urllib.parse import unquote_plus
@@ -16,6 +18,49 @@ from .parser import build_disciplina
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+COURSE_CODE_BY_FOLDER = {
+    "administracao": "ADM",
+    "analise e desenvolvimento de sistemas": "ADS",
+    "arquitetura e urbanismo": "ARQ",
+    "ciencia da computacao": "CIC",
+    "design": "DSG",
+    "economia": "UNK",
+    "engenharia civil": "ECV",
+    "engenharia de alimentos": "EAL",
+    "engenharia de computacao": "ECM",
+    "engenharia de controle e automacao": "ECA",
+    "engenharia de producao": "EPM",
+    "engenharia eletrica": "EET",
+    "engenharia eletronica": "EEN",
+    "engenharia mecanica": "EMC",
+    "engenharia quimica": "EQM",
+    "relacoes internacionais": "RI",
+    "sistemas da informacao": "SIN",
+    "sistemas de informacao": "SIN",
+}
+
+
+def _normalize_folder_name(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    without_accents = "".join(char for char in normalized if not unicodedata.combining(char))
+    return " ".join(without_accents.casefold().split())
+
+
+def _course_code_from_folder(folder_name: str) -> str:
+    normalized = _normalize_folder_name(folder_name)
+    course_code = COURSE_CODE_BY_FOLDER.get(normalized)
+    if course_code is None:
+        logger.warning("Could not map course folder '%s' to a known code; using UNK", folder_name)
+        return "UNK"
+    return course_code
+
+
+def _series_number_from_folder(folder_name: str) -> int:
+    match = re.search(r"\d+", folder_name)
+    if not match:
+        raise ValueError(f"Could not extract series number from folder: {folder_name}")
+    return int(match.group())
+
 
 def _s3_client():
     envs = Environments.get_envs()
@@ -27,25 +72,32 @@ def _repository() -> DisciplinaRepositoryDynamo:
 
 
 def _parse_s3_key(key: str) -> tuple[str, str, int]:
-    filename = PurePosixPath(unquote_plus(key)).name
+    path = PurePosixPath(unquote_plus(key))
+    filename = path.name
     if not filename.lower().endswith(".pdf"):
         raise ValueError(f"S3 object is not a PDF: {key}")
 
     stem = filename[:-4]
-    try:
-        code, curso, ano_text = stem.rsplit("_", 2)
-    except ValueError as exc:
-        raise ValueError("S3 key must follow {CODE}_{CURSO}_{ANO}.pdf") from exc
+    if "_" in stem:
+        # Backward-compatible path for the previous {CODE}_{CURSO}_{ANO}.pdf convention.
+        try:
+            code, curso, ano_text = stem.rsplit("_", 2)
+            ano = int(ano_text)
+        except ValueError as exc:
+            raise ValueError("S3 key must follow {CODE}_{CURSO}_{ANO}.pdf") from exc
+        if not code or not curso:
+            raise ValueError("S3 key must include non-empty CODE and CURSO")
+        return code, curso, ano
 
-    if not code or not curso:
-        raise ValueError("S3 key must include non-empty CODE and CURSO")
+    parts = path.parts
+    if len(parts) < 3:
+        raise ValueError(
+            "S3 key must follow {CURSO}/{SERIE}/{CODE}.pdf or {CODE}_{CURSO}_{ANO}.pdf"
+        )
 
-    try:
-        ano = int(ano_text)
-    except ValueError as exc:
-        raise ValueError(f"ANO must be an integer in S3 key: {key}") from exc
-
-    return code, curso, ano
+    curso_folder = parts[-3]
+    serie_folder = parts[-2]
+    return stem, _course_code_from_folder(curso_folder), _series_number_from_folder(serie_folder)
 
 
 def _download_pdf(bucket: str, key: str) -> bytes:
