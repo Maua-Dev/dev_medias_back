@@ -68,6 +68,12 @@ class Environments:
     #         raise Exception("No repository found for this stage")
 
     @staticmethod
+    def get_disciplina_repo():
+        from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
+
+        return DisciplinaRepositoryDynamo()
+
+    @staticmethod
     def get_envs() -> "Environments":
         """
         Returns the Environments object. This method should be used to get the Environments object instead of instantiating it directly.

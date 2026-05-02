@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import PurePosixPath
 from typing import Any
 from urllib.parse import unquote_plus
@@ -8,6 +7,7 @@ import boto3
 
 from src.shared.infra.external.dynamo.single_table_keys import SK_ENTITY_RECORD
 from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
+from src.shared.environments import Environments
 
 from .bedrock_client import extract_structured_data
 from .extractor import extract_text_from_pdf
@@ -17,27 +17,13 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def _required_env(name: str) -> str:
-    value = os.environ.get(name)
-    if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
-    return value
-
-
-def _configure_repository_environment() -> None:
-    table_name = _required_env("DYNAMO_TABLE_NAME")
-    # The shared repository currently reads the academic catalog table env var.
-    os.environ.setdefault("ACADEMIC_CATALOG_TABLE_NAME", table_name)
-
-
 def _s3_client():
-    region = os.environ.get("AWS_REGION")
-    return boto3.client("s3", region_name=region)
+    envs = Environments.get_envs()
+    return boto3.client("s3", region_name=envs.region)
 
 
 def _repository() -> DisciplinaRepositoryDynamo:
-    _configure_repository_environment()
-    return DisciplinaRepositoryDynamo()
+    return Environments.get_disciplina_repo()
 
 
 def _parse_s3_key(key: str) -> tuple[str, str, int]:
