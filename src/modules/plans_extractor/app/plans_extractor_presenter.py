@@ -100,10 +100,35 @@ def _parse_s3_key(key: str) -> tuple[str, str, int]:
     return stem, _course_code_from_folder(curso_folder), _series_number_from_folder(serie_folder)
 
 
-def _download_pdf(bucket: str, key: str) -> bytes:
-    logger.info("Downloading PDF from s3://%s/%s", bucket, key)
-    response = _s3_client().get_object(Bucket=bucket, Key=key)
-    return response["Body"].read()
+def _key_candidates(raw_key: str) -> list[str]:
+    # The S3 event sends URL-encoded keys (spaces as `+`), but macOS-uploaded
+    # files often store accents in NFD form while most clients display them in
+    # NFC. We try every plausible encoding so the GetObject lookup matches the
+    # actual stored bytes.
+    decoded = unquote_plus(raw_key)
+    seen: list[str] = []
+    for value in (decoded, raw_key, unicodedata.normalize("NFC", decoded), unicodedata.normalize("NFD", decoded)):
+        if value and value not in seen:
+            seen.append(value)
+    return seen
+
+
+def _download_pdf(bucket: str, raw_key: str) -> tuple[str, bytes]:
+    s3 = _s3_client()
+    candidates = _key_candidates(raw_key)
+    last_error: Exception | None = None
+    for key in candidates:
+        logger.info("Downloading PDF from s3://%s/%s", bucket, key)
+        try:
+            response = s3.get_object(Bucket=bucket, Key=key)
+            return key, response["Body"].read()
+        except s3.exceptions.NoSuchKey as exc:
+            logger.warning("Object not found at s3://%s/%s, trying next candidate", bucket, key)
+            last_error = exc
+
+    raise FileNotFoundError(
+        f"S3 object not found in bucket {bucket} (tried keys: {candidates})"
+    ) from last_error
 
 
 def _update_disciplina_courses(repository: DisciplinaRepositoryDynamo, code: str, curso: str, ano: int) -> None:
@@ -127,9 +152,8 @@ def _process_record(record: dict[str, Any], repository: DisciplinaRepositoryDyna
     bucket = record["s3"]["bucket"]["name"]
     raw_key = record["s3"]["object"]["key"]
     code, curso, ano = _parse_s3_key(raw_key)
-    key = unquote_plus(raw_key)
 
-    pdf_bytes = _download_pdf(bucket, key)
+    key, pdf_bytes = _download_pdf(bucket, raw_key)
     extracted_text = extract_text_from_pdf(pdf_bytes)
     if not extracted_text.strip():
         logger.warning("Skipping s3://%s/%s because no text could be extracted", bucket, key)
