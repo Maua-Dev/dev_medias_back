@@ -1,14 +1,7 @@
+# Lambda layer + runtime deps. Keep this lean: AWS unzipped layer limit is 250 MB.
+# boto3/botocore come from the Lambda Python runtime — do not bundle them here.
+
 pydantic==2.11.7
-pytest==8.4.1
-pytest-cov==6.2.1
 python-dotenv==1.1.1
-boto3==1.40.9
-
-# needed for plans extractor
-PyMuPDF==1.26.4
-openpyxl==3.1.5
-pypdf==5.3.1
-
-# needed for GA testing
-pandas==2.2.3
+pdfplumber
 numpy==2.2.3

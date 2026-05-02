@@ -1,0 +1,3 @@
+# CI / local tests only — not bundled into the Lambda layer (see requirements-app.txt).
+pytest==8.4.1
+pytest-cov==6.2.1
