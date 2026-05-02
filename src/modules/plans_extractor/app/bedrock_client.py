@@ -7,7 +7,7 @@ import boto3
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
+DEFAULT_MODEL_ID = "anthropic.claude-haiku-4-5-20251001-v1:0"
 
 EXTRACTION_PROMPT = """Você receberá o texto extraído de um Plano de Ensino do Instituto Mauá de Tecnologia.
 Sua tarefa é extrair informações estruturadas e retornar EXCLUSIVAMENTE um objeto JSON
