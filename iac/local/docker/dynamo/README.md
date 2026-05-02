@@ -36,3 +36,18 @@ Itens de curso e disciplina compartilham a tabela:
 `GLOBAL` = catálogo padrão (usuário não logado). Com usuário logado, instancie o repositório com `user_id` para ler/gravar só o escopo daquele dono.
 
 Variável de ambiente: **`ENTITY_TABLE_NAME`** (ou, por compatibilidade, `DISCIPLINA_TABLE_NAME` / `CURSO_TABLE_NAME`).
+
+## Criar tabela e popular dados
+
+- **`src/shared/infra/external/dynamo/academic_catalog_table_setup.py`** — função `ensure_academic_catalog_table()` (cria a tabela com `pk` / `sk` se não existir). Fica junto do código de infra Dynamo.
+
+Na **raiz do repositório** (com o Dynamo Local no ar):
+
+```bash
+STAGE=TEST python iac/local/docker/dynamo/load_curso_mock_to_dynamo.py
+STAGE=TEST python iac/local/docker/dynamo/load_disciplina_mock_to_dynamo.py
+```
+
+Cada loader chama o setup e grava no escopo **GLOBAL** a partir dos mocks em `src/shared/infra/repositories/*_mock.py`.
+
+Se `ENDPOINT_URL` ou `ENTITY_TABLE_NAME` forem diferentes do default, exporte antes de rodar.
