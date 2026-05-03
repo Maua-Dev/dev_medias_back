@@ -71,7 +71,15 @@ def _repository() -> DisciplinaRepositoryDynamo:
     return Environments.get_disciplina_repo()
 
 
-def _parse_s3_key(key: str) -> tuple[str, str, int]:
+def _parse_s3_key(key: str) -> tuple[str, str | None, int | None]:
+    """Extract `(code, curso, ano)` from an S3 key.
+
+    Accepts both the structured path layout (`{Curso}/{Série}/{CODE}.pdf`) and
+    the legacy flat naming (`{CODE}_{CURSO}_{ANO}.pdf`). When neither layout
+    matches, only the disciplina code is returned and curso/ano are left as
+    `None` so the caller can persist the disciplina without polluting
+    `courses` with bogus data.
+    """
     path = PurePosixPath(unquote_plus(key))
     filename = path.name
     if not filename.lower().endswith(".pdf"):
@@ -79,25 +87,29 @@ def _parse_s3_key(key: str) -> tuple[str, str, int]:
 
     stem = filename[:-4]
     if "_" in stem:
-        # Backward-compatible path for the previous {CODE}_{CURSO}_{ANO}.pdf convention.
         try:
             code, curso, ano_text = stem.rsplit("_", 2)
             ano = int(ano_text)
-        except ValueError as exc:
-            raise ValueError("S3 key must follow {CODE}_{CURSO}_{ANO}.pdf") from exc
-        if not code or not curso:
-            raise ValueError("S3 key must include non-empty CODE and CURSO")
-        return code, curso, ano
+            if code and curso:
+                return code, curso, ano
+        except ValueError:
+            pass
 
     parts = path.parts
-    if len(parts) < 3:
-        raise ValueError(
-            "S3 key must follow {CURSO}/{SERIE}/{CODE}.pdf or {CODE}_{CURSO}_{ANO}.pdf"
-        )
+    if len(parts) >= 3:
+        curso_folder = parts[-3]
+        serie_folder = parts[-2]
+        try:
+            return stem, _course_code_from_folder(curso_folder), _series_number_from_folder(serie_folder)
+        except ValueError as exc:
+            logger.warning("Could not parse curso/serie from %r: %s", key, exc)
 
-    curso_folder = parts[-3]
-    serie_folder = parts[-2]
-    return stem, _course_code_from_folder(curso_folder), _series_number_from_folder(serie_folder)
+    logger.warning(
+        "S3 key %r does not match {CURSO}/{SERIE}/{CODE}.pdf or {CODE}_{CURSO}_{ANO}.pdf; "
+        "saving disciplina without course occurrence",
+        key,
+    )
+    return stem, None, None
 
 
 def _key_candidates(raw_key: str) -> list[str]:
@@ -160,15 +172,21 @@ def _process_record(record: dict[str, Any], repository: DisciplinaRepositoryDyna
         return False
 
     extracted_data = extract_structured_data(extracted_text)
-    disciplina = build_disciplina(extracted_data, courses={curso: ano})
+    course_occurrence: dict[str, int] = {curso: ano} if curso and ano is not None else {}
+    disciplina = build_disciplina(extracted_data, courses=course_occurrence)
 
     existing = repository.get_disciplina(code)
     if existing is None:
-        logger.info("Creating disciplina %s with course occurrence %s=%s", code, curso, ano)
+        logger.info("Creating disciplina %s with courses=%s", code, course_occurrence)
         repository.create_disciplina(disciplina)
-    else:
+    elif curso and ano is not None:
         logger.info("Updating course occurrence for existing disciplina %s: %s=%s", code, curso, ano)
         _update_disciplina_courses(repository, code, curso, ano)
+    else:
+        logger.info(
+            "Disciplina %s already exists and S3 key has no curso/serie; leaving courses untouched",
+            code,
+        )
 
     return True
 
