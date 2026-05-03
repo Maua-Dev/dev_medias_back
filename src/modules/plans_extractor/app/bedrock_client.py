@@ -28,7 +28,8 @@ Schema esperado:
 
 Regras:
 - code: valor do campo "Código da Disciplina" (ex: "TNG1005")
-- name: valor do campo "Disciplina" em português, em caixa alta
+- name: valor do campo "Disciplina" em português, em formato de título.
+  Exemplo: "ENGENHARIA DE SOFTWARE" -> "Engenharia de Software"
 - course: valor do campo "Materia" em português. Se vazio, use "Disciplina".
   Nunca use o campo "Course" (inglês) nem "TEMÁRIO" (espanhol)
 - period: retorne SOMENTE um destes valores:
@@ -42,6 +43,19 @@ Regras:
   Exemplo: 30.0 (NÃO retorne 3.0)
 - exams: lista de provas (P1, P2, PS...) com peso relativo entre 0 e 1
   (ex.: 0.5, 0.25). Se exam_weight for 0, retorne []
+- Se o texto NÃO informar explicitamente a distribuição dos pesos das provas,
+  use esta regra padrão por período:
+  - Se period = "S": distribuição uniforme entre as provas (média simples)
+    Ex.: 1 prova -> [1.0], 2 provas -> [0.5, 0.5]
+  - Se period = "A" ou "T": 40% para as primeiras provas e 60% para as últimas,
+    distribuindo igualmente dentro de cada grupo
+  Exemplos:
+  - 2 provas: [0.4, 0.6]
+  - 3 provas: [0.2, 0.2, 0.6]
+  - 4 provas: [0.2, 0.2, 0.3, 0.3]
+- Dê preferência aos pesos explícitos do Plano de Ensino quando eles existirem.
+- A prova substitutiva (PS) só deve receber peso próprio quando o Plano de Ensino
+  trouxer distribuição explícita para ela.
 - assignments: lista de trabalhos (K1, K2...) com peso relativo entre 0 e 1.
   Se assignment_weight for 0, retorne []
 - TODOS os campos numéricos devem ser números JSON (sem aspas)
