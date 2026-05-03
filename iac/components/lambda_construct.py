@@ -161,9 +161,11 @@ class LambdaConstruct(Construct):
         bedrock_policy = iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
             actions=[
-                "bedrock:InvokeModel"
+                "bedrock:InvokeModel",
+                "aws-marketplace:ViewSubscriptions",
+                "aws-marketplace:Subscribe"
             ],
-            resources=["*"]  # Simplified to avoid ARN parsing issues
+            resources=["*"]
         )
         
         self.plans_extractor_function.add_to_role_policy(
