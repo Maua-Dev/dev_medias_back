@@ -39,6 +39,27 @@ COURSE_CODE_BY_FOLDER = {
     "sistemas de informacao": "SIN",
 }
 
+COURSE_NAME_BY_FOLDER = {
+    "administracao": "Administração",
+    "analise e desenvolvimento de sistemas": "Análise e Desenvolvimento de Sistemas",
+    "arquitetura e urbanismo": "Arquitetura e Urbanismo",
+    "ciencia da computacao": "Ciência da Computação",
+    "design": "Design",
+    "economia": "Economia",
+    "engenharia civil": "Engenharia Civil",
+    "engenharia de alimentos": "Engenharia de Alimentos",
+    "engenharia de computacao": "Engenharia de Computação",
+    "engenharia de controle e automacao": "Engenharia de Controle e Automação",
+    "engenharia de producao": "Engenharia de Produção",
+    "engenharia eletrica": "Engenharia Elétrica",
+    "engenharia eletronica": "Engenharia Eletrônica",
+    "engenharia mecanica": "Engenharia Mecânica",
+    "engenharia quimica": "Engenharia Química",
+    "relacoes internacionais": "Relações Internacionais",
+    "sistemas da informacao": "Sistemas da Informação",
+    "sistemas de informacao": "Sistemas de Informação",
+}
+
 
 def _normalize_folder_name(value: str) -> str:
     normalized = unicodedata.normalize("NFKD", value)
@@ -53,6 +74,28 @@ def _course_code_from_folder(folder_name: str) -> str:
         logger.warning("Could not map course folder '%s' to a known code; using UNK", folder_name)
         return "UNK"
     return course_code
+
+
+def _course_name_from_folder(folder_name: str) -> str:
+    normalized = _normalize_folder_name(folder_name)
+    canonical = COURSE_NAME_BY_FOLDER.get(normalized)
+    if canonical is not None:
+        return canonical
+    return " ".join(folder_name.strip().split())
+
+
+def _course_code_from_legacy_token(course_token: str) -> str:
+    # Legacy flat filenames may include either the course code (ADM) or the
+    # course name (e.g. "Administracao"). Normalize both to the canonical code.
+    token = " ".join(course_token.strip().split())
+    if not token:
+        return "UNK"
+
+    upper_token = token.upper()
+    if upper_token in set(COURSE_CODE_BY_FOLDER.values()):
+        return upper_token
+
+    return _course_code_from_folder(token)
 
 
 def _series_number_from_folder(folder_name: str) -> int:
@@ -71,14 +114,15 @@ def _repository() -> DisciplinaRepositoryDynamo:
     return Environments.get_disciplina_repo()
 
 
-def _parse_s3_key(key: str) -> tuple[str, str | None, int | None]:
-    """Extract `(code, curso, ano)` from an S3 key.
+def _parse_s3_key(key: str) -> tuple[str, str | None, int | None, str | None]:
+    """Extract `(code, curso_code, ano, course_name)` from an S3 key.
 
     Accepts both the structured path layout (`{Curso}/{Série}/{CODE}.pdf`) and
     the legacy flat naming (`{CODE}_{CURSO}_{ANO}.pdf`). When neither layout
     matches, only the disciplina code is returned and curso/ano are left as
     `None` so the caller can persist the disciplina without polluting
-    `courses` with bogus data.
+    `courses` with bogus data. The folder name is also normalized to a
+    canonical course display name when available.
     """
     path = PurePosixPath(unquote_plus(key))
     filename = path.name
@@ -91,7 +135,7 @@ def _parse_s3_key(key: str) -> tuple[str, str | None, int | None]:
             code, curso, ano_text = stem.rsplit("_", 2)
             ano = int(ano_text)
             if code and curso:
-                return code, curso, ano
+                return code, _course_code_from_legacy_token(curso), ano, None
         except ValueError:
             pass
 
@@ -100,7 +144,12 @@ def _parse_s3_key(key: str) -> tuple[str, str | None, int | None]:
         curso_folder = parts[-3]
         serie_folder = parts[-2]
         try:
-            return stem, _course_code_from_folder(curso_folder), _series_number_from_folder(serie_folder)
+            return (
+                stem,
+                _course_code_from_folder(curso_folder),
+                _series_number_from_folder(serie_folder),
+                _course_name_from_folder(curso_folder),
+            )
         except ValueError as exc:
             logger.warning("Could not parse curso/serie from %r: %s", key, exc)
 
@@ -109,7 +158,7 @@ def _parse_s3_key(key: str) -> tuple[str, str | None, int | None]:
         "saving disciplina without course occurrence",
         key,
     )
-    return stem, None, None
+    return stem, None, None, None
 
 
 def _key_candidates(raw_key: str) -> list[str]:
@@ -163,7 +212,7 @@ def _update_disciplina_courses(repository: DisciplinaRepositoryDynamo, code: str
 def _process_record(record: dict[str, Any], repository: DisciplinaRepositoryDynamo) -> bool:
     bucket = record["s3"]["bucket"]["name"]
     raw_key = record["s3"]["object"]["key"]
-    code, curso, ano = _parse_s3_key(raw_key)
+    code, curso, ano, course_name = _parse_s3_key(raw_key)
 
     key, pdf_bytes = _download_pdf(bucket, raw_key)
     extracted_text = extract_text_from_pdf(pdf_bytes)
@@ -172,6 +221,8 @@ def _process_record(record: dict[str, Any], repository: DisciplinaRepositoryDyna
         return False
 
     extracted_data = extract_structured_data(extracted_text)
+    if course_name:
+        extracted_data["course"] = course_name
     course_occurrence: dict[str, int] = {curso: ano} if curso and ano is not None else {}
     disciplina = build_disciplina(extracted_data, courses=course_occurrence)
 

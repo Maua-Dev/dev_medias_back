@@ -31,13 +31,21 @@ Regras:
 - name: valor do campo "Disciplina" em português, em caixa alta
 - course: valor do campo "Materia" em português. Se vazio, use "Disciplina".
   Nunca use o campo "Course" (inglês) nem "TEMÁRIO" (espanhol)
-- period: procure "semestral", "anual", "trimestral" nas seções de Avaliação
-  e Outras Informações. Se não encontrar, retorne "anual"
-- exam_weight: campo "Peso de MP (kp)". Se ausente, retorne 0
-- assignment_weight: campo "Peso de MT (kt)". Se ausente, retorne 0
-- exams: provas P1, P2, PS com peso 1.0 cada. Se exam_weight for 0, retorne []
-- assignments: trabalhos K1, K2... com seus valores numéricos como peso.
+- period: retorne SOMENTE um destes valores:
+  - "S" para semestral
+  - "A" para anual
+  - "T" para trimestral
+  Se não encontrar, retorne "A"
+- exam_weight: campo "Peso de MP (kp)" como percentual de 0 a 100.
+  Exemplo: 70.0 (NÃO retorne 7.0)
+- assignment_weight: campo "Peso de MT (kt)" como percentual de 0 a 100.
+  Exemplo: 30.0 (NÃO retorne 3.0)
+- exams: lista de provas (P1, P2, PS...) com peso relativo entre 0 e 1
+  (ex.: 0.5, 0.25). Se exam_weight for 0, retorne []
+- assignments: lista de trabalhos (K1, K2...) com peso relativo entre 0 e 1.
   Se assignment_weight for 0, retorne []
+- TODOS os campos numéricos devem ser números JSON (sem aspas)
+- Não use chaves camelCase: use exatamente exam_weight e assignment_weight
 - Se um campo obrigatório não for encontrado, retorne null
 - NUNCA invente informações que não estejam no texto
 - Retorne APENAS o JSON, sem nenhum texto antes ou depois"""
