@@ -67,6 +67,9 @@ class IacStack(Stack):
             environment_variables=ENVIRONMENT_VARIABLES
         )
         
+        for function in self.lambda_construct.funtions_that_need_dynamo_db_access:
+            self.dynamo_construct.academic_catalog_table.grant_read_write_data(function)
+        
         # nova instância SSM manager para passar automaticamente variáveis a um hub de segredos
         # da prórpia conta, evitando ter que manualmente passa-las para o github secrets
         

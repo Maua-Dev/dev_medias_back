@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from typing import Any
 
 import boto3
@@ -57,6 +58,43 @@ def _extract_content_text(response_body: dict[str, Any]) -> str:
     return "".join(text_blocks).strip()
 
 
+def _parse_model_json(raw_model_text: str) -> dict[str, Any]:
+    """Parse model output, tolerating markdown wrappers around JSON."""
+    candidates: list[str] = []
+
+    stripped = raw_model_text.strip()
+    if stripped:
+        candidates.append(stripped)
+
+    fenced_blocks = re.findall(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_model_text, flags=re.IGNORECASE)
+    for block in fenced_blocks:
+        block = block.strip()
+        if block and block not in candidates:
+            candidates.append(block)
+
+    start = raw_model_text.find("{")
+    end = raw_model_text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        maybe_json = raw_model_text[start : end + 1].strip()
+        if maybe_json and maybe_json not in candidates:
+            candidates.append(maybe_json)
+
+    last_error: json.JSONDecodeError | None = None
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+        except json.JSONDecodeError as exc:
+            last_error = exc
+            continue
+        if isinstance(parsed, dict):
+            return parsed
+        raise ValueError("Bedrock extraction response must be a JSON object")
+
+    if last_error is not None:
+        raise last_error
+    raise json.JSONDecodeError("No JSON object found in model response", raw_model_text, 0)
+
+
 def extract_structured_data(text: str) -> dict[str, Any]:
     """Send extracted PDF text to Bedrock and parse the model JSON response."""
     model_id = os.environ.get("BEDROCK_MODEL_ID", DEFAULT_MODEL_ID)
@@ -86,13 +124,9 @@ def extract_structured_data(text: str) -> dict[str, Any]:
     raw_model_text = _extract_content_text(response_body)
 
     try:
-        parsed = json.loads(raw_model_text)
-    except json.JSONDecodeError as exc:
+        parsed = _parse_model_json(raw_model_text)
+    except (json.JSONDecodeError, ValueError) as exc:
         logger.error("Bedrock returned invalid JSON. Raw response: %s", raw_model_text)
         raise ValueError("Bedrock returned invalid JSON for plano de ensino extraction") from exc
-
-    if not isinstance(parsed, dict):
-        logger.error("Bedrock returned a non-object JSON payload: %s", raw_model_text)
-        raise ValueError("Bedrock extraction response must be a JSON object")
 
     return parsed

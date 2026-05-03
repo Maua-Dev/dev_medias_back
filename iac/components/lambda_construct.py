@@ -13,6 +13,7 @@ class LambdaConstruct(Construct):
     
     stage: str
     stack_name: str
+    funtions_that_need_dynamo_db_access: list[lambda_.Function] = []
 
     def create_lambda_api_gateway_integration(
         self, 
@@ -171,4 +172,6 @@ class LambdaConstruct(Construct):
         self.plans_extractor_function.add_to_role_policy(
             bedrock_policy
         )
+        
+        self.funtions_that_need_dynamo_db_access.append(self.plans_extractor_function)
         
