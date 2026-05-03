@@ -192,23 +192,6 @@ def _download_pdf(bucket: str, raw_key: str) -> tuple[str, bytes]:
     ) from last_error
 
 
-def _update_disciplina_courses(repository: DisciplinaRepositoryDynamo, code: str, curso: str, ano: int) -> None:
-    repository.dynamo.dynamo_table.update_item(
-        Key={
-            repository.PARTITION_ATTR: repository._pk(code),
-            repository.SORT_ATTR: SK_ENTITY_RECORD,
-        },
-        UpdateExpression="SET #courses.#curso = :ano",
-        ExpressionAttributeNames={
-            "#courses": "courses",
-            "#curso": curso,
-        },
-        ExpressionAttributeValues={
-            ":ano": ano,
-        },
-    )
-
-
 def _process_record(record: dict[str, Any], repository: DisciplinaRepositoryDynamo) -> bool:
     bucket = record["s3"]["bucket"]["name"]
     raw_key = record["s3"]["object"]["key"]
@@ -223,21 +206,22 @@ def _process_record(record: dict[str, Any], repository: DisciplinaRepositoryDyna
     extracted_data = extract_structured_data(extracted_text)
     if course_name:
         extracted_data["course"] = course_name
-    course_occurrence: dict[str, int] = {curso: ano} if curso and ano is not None else {}
-    disciplina = build_disciplina(extracted_data, courses=course_occurrence)
-
     existing = repository.get_disciplina(code)
+    course_occurrence: dict[str, int] = {curso: ano} if curso and ano is not None else {}
     if existing is None:
-        logger.info("Creating disciplina %s with courses=%s", code, course_occurrence)
-        repository.create_disciplina(disciplina)
-    elif curso and ano is not None:
-        logger.info("Updating course occurrence for existing disciplina %s: %s=%s", code, curso, ano)
-        _update_disciplina_courses(repository, code, curso, ano)
+        courses_to_persist = course_occurrence
     else:
-        logger.info(
-            "Disciplina %s already exists and S3 key has no curso/serie; leaving courses untouched",
-            code,
-        )
+        courses_to_persist = dict(existing.courses)
+        courses_to_persist.update(course_occurrence)
+
+    disciplina = build_disciplina(extracted_data, courses=courses_to_persist)
+
+    if existing is None:
+        logger.info("Creating disciplina %s with courses=%s", code, courses_to_persist)
+        repository.create_disciplina(disciplina)
+    else:
+        logger.info("Updating existing disciplina %s with normalized extraction data", code)
+        repository.update_disciplina(disciplina)
 
     return True
 
