@@ -13,6 +13,12 @@ class Boletim_GA:
     response: dict
     target_avg: float 
     max_grade: float 
+    
+    # --- NOVOS ATRIBUTOS ---
+    provas: list[dict]
+    trabalhos: list[dict]
+    final_avg: Optional[float]
+    message: Optional[str]
 
     def __init__(
         self, 
@@ -26,7 +32,6 @@ class Boletim_GA:
         spec_assignment_weight: Optional[list[float]] = None,
         max_grade: float = 10.0
     ):
-        
         
         # Valida e atribui num_remaining
         if not self.validate_num_remaining(num_remaining_tests):
@@ -73,6 +78,12 @@ class Boletim_GA:
                 raise EntityError("spec_assignment_weight")
         self.spec_assignment_weight = spec_assignment_weight if spec_assignment_weight else None
        
+        # --- INICIALIZAÇÃO DOS NOVOS ATRIBUTOS ---
+        self.provas = []
+        self.trabalhos = []
+        self.final_avg = None
+        self.message = None
+
         self.response = self.to_dict()
 
     @staticmethod
@@ -164,5 +175,10 @@ class Boletim_GA:
             "test_weight": self.test_weight,
             "assignment_weight": self.assignment_weight,
             "spec_test_weight": self.spec_test_weight,
-            "spec_assignment_weight": self.spec_assignment_weight
+            "spec_assignment_weight": self.spec_assignment_weight,
+            # --- NOVOS CAMPOS ADICIONADOS ---
+            "provas": self.provas,
+            "trabalhos": self.trabalhos,
+            "final_avg": self.final_avg,
+            "message": self.message
         }

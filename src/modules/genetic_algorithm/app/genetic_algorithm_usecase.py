@@ -48,18 +48,22 @@ class GeneticAlgorithmUsecase:
         if solution is None:
             raise CombinationNotFound()
 
-        all_tests = current_tests + solution["tests"]
-        all_assignments = current_assignments + solution["assignments"]
-
         boletim.target_avg = target_average
         boletim.final_avg = final_avg
+        
+        # 1. Isolando apenas os pesos das provas e trabalhos que o usuário QUER (fatiamento)
+        pesos_provas_que_quero = boletim.spec_test_weight[len(current_tests):]
+        pesos_trabalhos_que_quero = boletim.spec_assignment_weight[len(current_assignments):]
+
+        # 2. Montando a resposta unindo as notas calculadas com seus respectivos pesos
         boletim.provas = [
-            {"valor": round(nota, 2), "peso": round(boletim.spec_test_weight[i], 2)}
-            for i, nota in enumerate(all_tests)
+            {"valor": round(nota, 2), "peso": round(peso, 2)}
+            for nota, peso in zip(solution["tests"], pesos_provas_que_quero)
         ]
+        
         boletim.trabalhos = [
-            {"valor": round(nota, 2), "peso": round(boletim.spec_assignment_weight[i], 2)}
-            for i, nota in enumerate(all_assignments)
+            {"valor": round(nota, 2), "peso": round(peso, 2)}
+            for nota, peso in zip(solution["assignments"], pesos_trabalhos_que_quero)
         ]
 
         diff = abs(final_avg - target_average)
@@ -71,4 +75,3 @@ class GeneticAlgorithmUsecase:
             boletim.message = f"O algoritmo não conseguiu encontrar uma solução próxima (diferença: {diff:.2f})"
 
         return boletim
-        

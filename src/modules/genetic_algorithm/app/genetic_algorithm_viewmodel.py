@@ -1,6 +1,5 @@
 from src.shared.domain.entities.boletim_ga import Boletim_GA
 
-
 class GeneticAlgorithmViewmodel:
     def __init__(self, boletim: Boletim_GA):
         self.boletim = boletim
@@ -13,6 +12,3 @@ class GeneticAlgorithmViewmodel:
             },
             "message": self.boletim.message,
         }
-    
-        
-    
