@@ -51,11 +51,10 @@ class GeneticAlgorithmUsecase:
         boletim.target_avg = target_average
         boletim.final_avg = final_avg
         
-        # 1. Isolando apenas os pesos das provas e trabalhos que o usuário QUER (fatiamento)
-        pesos_provas_que_quero = boletim.spec_test_weight[len(current_tests):]
-        pesos_trabalhos_que_quero = boletim.spec_assignment_weight[len(current_assignments):]
+        # Correção Crítica: Proteção contra fatiamento de tipos NoneType (quando o array é vazio)
+        pesos_provas_que_quero = boletim.spec_test_weight[len(current_tests):] if boletim.spec_test_weight else []
+        pesos_trabalhos_que_quero = boletim.spec_assignment_weight[len(current_assignments):] if boletim.spec_assignment_weight else []
 
-        # 2. Montando a resposta unindo as notas calculadas com seus respectivos pesos
         boletim.provas = [
             {"valor": round(nota, 2), "peso": round(peso, 2)}
             for nota, peso in zip(solution["tests"], pesos_provas_que_quero)
@@ -66,7 +65,6 @@ class GeneticAlgorithmUsecase:
             for nota, peso in zip(solution["assignments"], pesos_trabalhos_que_quero)
         ]
 
-        #3. Montando a mensagem final 
         diff = abs(final_avg - target_average)
         if diff <= 0.05:
             boletim.message = "O algoritmo retornou uma combinação válida de notas"

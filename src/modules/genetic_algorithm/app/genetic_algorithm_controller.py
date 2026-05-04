@@ -8,7 +8,6 @@ from src.shared.helpers.errors.usecase_errors import CombinationNotFound, Invali
 from src.shared.helpers.external_interfaces.external_interface import IRequest, IResponse
 from src.shared.helpers.external_interfaces.http_codes import OK, BadRequest, InternalServerError, NotFound
 
-
 class GeneticAlgorithmController:
 
     def __init__(self, usecase: GeneticAlgorithmUsecase):
@@ -33,8 +32,18 @@ class GeneticAlgorithmController:
         pesos = []
 
         for item in items:
-            # Validação do peso (comum a todas as listas)
+            # Valida se o item na lista é um dicionário antes de extrair
+            if not isinstance(item, dict):
+                raise WrongTypeParameter(
+                    fieldName=f"{field_name} item",
+                    fieldTypeExpected="dict",
+                    fieldTypeReceived=type(item).__name__
+                )
+
+            # Validação do peso
             peso = item.get('peso')
+            if peso is None:
+                 raise MissingParameters(f"{field_name} peso item")
             if not isinstance(peso, (int, float)):
                 raise WrongTypeParameter(
                     fieldName=f"{field_name} peso item",
@@ -44,26 +53,28 @@ class GeneticAlgorithmController:
             if peso < 0 or peso > 1:
                 raise InvalidInput(f"{field_name} peso item", "Must be between 0 and 1")
             
-            pesos.append(peso)
+            pesos.append(float(peso))
 
-            # Validação do valor (apenas para as notas que já tenho)
+            # Validação do valor
             if check_valor:
                 valor = item.get('valor')
+                if valor is None:
+                    raise MissingParameters(f"{field_name} valor item")
                 if not isinstance(valor, (int, float)):
                     raise WrongTypeParameter(
                         fieldName=f"{field_name} item",
                         fieldTypeExpected="float",
                         fieldTypeReceived=type(valor).__name__
                     )
-                valores.append(valor)
+                valores.append(float(valor))
 
         return valores, pesos
 
     def __call__(self, request: IRequest) -> IResponse:
         try:
-            # ==========================================
-            # VALIDAÇÃO: Extração limpa usando o método auxiliar
-            # ==========================================
+            if request.data is None:
+                raise MissingParameters('body')
+
             current_tests, spec_current_test_weight = self._validate_and_extract_list(
                 request.data, 'provas_que_tenho', check_valor=True
             )
@@ -82,9 +93,6 @@ class GeneticAlgorithmController:
             )
             num_remaining_assignments = len(spec_remaining_assignment_weight)
 
-            # ==========================================
-            # VALIDAÇÃO: pesos gerais e média
-            # ==========================================
             peso_prova = request.data.get('peso_prova')
             if peso_prova is None:
                 raise MissingParameters('peso_prova')
@@ -121,12 +129,9 @@ class GeneticAlgorithmController:
             if media_desejada < 0 or media_desejada > 10:
                 raise InvalidInput("media_desejada", "Must be between 0 and 10")
             
-            if abs((peso_prova + peso_trabalho) - 1.0) > 0.01: # Uso de tolerância de float
+            if abs((peso_prova + peso_trabalho) - 1.0) > 0.01:
                 raise InvalidInput("peso_prova and/or peso_trabalho", "Must sum 1.0")
 
-            # ==========================================
-            # EXECUÇÃO DO USECASE
-            # ==========================================
             spec_assignment_weight = spec_current_assignment_weight + spec_remaining_assignment_weight
             spec_test_weight = spec_current_test_weight + spec_remaining_test_weight
 
@@ -148,7 +153,20 @@ class GeneticAlgorithmController:
             viewmodel = GeneticAlgorithmViewmodel(combinacao_de_notas)
             return OK(viewmodel.to_dict())
 
-        # ... (seus blocos except continuam exatamente os mesmos) ...
         except InvalidInput as err:
             return BadRequest(body=err.message)
-        # ...
+        except CombinationNotFound as err:
+            return NotFound(body=err.message)
+        except EntityParameterError as err:
+            return BadRequest(body=err.message)
+        except FunctionInputError as err:
+            return BadRequest(body=err.message)
+        except WrongTypeParameter as err:
+            return BadRequest(body=err.message)
+        except MissingParameters as err:
+            return BadRequest(body=err.message)
+        except EntityError as err:
+            return BadRequest(body=err.message)
+        except Exception as err:
+            traceback.print_exc()
+            return InternalServerError(body=str(err.args[0]) if err.args else "Internal Server Error")
