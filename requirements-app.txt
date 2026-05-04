@@ -1,6 +1,7 @@
 pytest==8.4.1
 pytest-cov==6.2.1
 python-dotenv==1.1.1
+pydantic==2.13.3
 boto3==1.40.9
 
 # needed for plans extractor
