@@ -66,6 +66,7 @@ class GeneticAlgorithmUsecase:
             for nota, peso in zip(solution["assignments"], pesos_trabalhos_que_quero)
         ]
 
+        #3. Montando a mensagem final 
         diff = abs(final_avg - target_average)
         if diff <= 0.05:
             boletim.message = "O algoritmo retornou uma combinação válida de notas"

@@ -52,13 +52,13 @@ class TestGeneticAlgorithmUsecase:
 
     def test_provas_total_length(self):
         boletim = self._run(num_remaining_tests=2)
-        # current(2) + remaining(2)
-        assert len(boletim.provas) == 4
+        # Graças ao fatiamento, o Usecase retorna APENAS as notas geradas (remaining)
+        assert len(boletim.provas) == 2
 
     def test_trabalhos_total_length(self):
         boletim = self._run(num_remaining_assignments=2)
-        # current(2) + remaining(2)
-        assert len(boletim.trabalhos) == 4
+        # Retorna apenas as notas geradas (remaining)
+        assert len(boletim.trabalhos) == 2
 
     def test_provas_have_valor_and_peso(self):
         boletim = self._run()

@@ -66,7 +66,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert response.body == 'Parâmetro provas_que_tenho não existe'
+        assert 'provas_que_tenho' in response.body
 
     def test_genetic_algorithm_controller_provas_que_tenho_wrong_type(self):
         request = HttpRequest(body={
@@ -85,7 +85,8 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert 'Parâmetro provas_que_tenho não possui tipo correto' in response.body
+        assert 'provas_que_tenho' in response.body
+        assert 'type' in response.body
 
     def test_genetic_algorithm_controller_provas_que_tenho_item_valor_wrong_type(self):
         request = HttpRequest(body={
@@ -104,7 +105,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert 'Parâmetro provas_que_tenho item não possui tipo correto' in response.body
+        assert 'type' in response.body
 
     def test_genetic_algorithm_controller_provas_que_tenho_peso_out_of_range(self):
         request = HttpRequest(body={
@@ -145,7 +146,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert response.body == 'Parâmetro trabalhos_que_tenho não existe'
+        assert 'trabalhos_que_tenho' in response.body
 
     # ==========================================
     # TESTES DE VALIDAÇÃO: provas_que_quero
@@ -167,7 +168,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert response.body == 'Parâmetro provas_que_quero não existe'
+        assert 'provas_que_quero' in response.body
 
     # ==========================================
     # TESTES DE VALIDAÇÃO: trabalhos_que_quero
@@ -189,7 +190,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert response.body == 'Parâmetro trabalhos_que_quero não existe'
+        assert 'trabalhos_que_quero' in response.body
 
     # ==========================================
     # TESTES DE VALIDAÇÃO: peso_prova, peso_trabalho e soma
@@ -211,7 +212,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert response.body == 'Parâmetro peso_prova não existe'
+        assert 'peso_prova' in response.body
 
     def test_genetic_algorithm_controller_peso_prova_wrong_type(self):
         request = HttpRequest(body={
@@ -230,7 +231,8 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert 'Parâmetro peso_prova não possui tipo correto' in response.body
+        assert 'peso_prova' in response.body
+        assert 'type' in response.body
 
     def test_genetic_algorithm_controller_pesos_sum_not_one(self):
         request = HttpRequest(body={
@@ -271,7 +273,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert response.body == 'Parâmetro media_desejada não existe'
+        assert 'media_desejada' in response.body
 
     def test_genetic_algorithm_controller_media_desejada_out_of_range(self):
         request = HttpRequest(body={

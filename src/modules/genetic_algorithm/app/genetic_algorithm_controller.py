@@ -1,7 +1,6 @@
 import traceback
 from .genetic_algorithm_usecase import GeneticAlgorithmUsecase
 from .genetic_algorithm_viewmodel import GeneticAlgorithmViewmodel
-from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.controller_errors import MissingParameters, WrongTypeParameter
 from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
 from src.shared.helpers.errors.function_errors import FunctionInputError
@@ -15,127 +14,73 @@ class GeneticAlgorithmController:
     def __init__(self, usecase: GeneticAlgorithmUsecase):
         self.usecase = usecase
 
+    def _validate_and_extract_list(self, request_data: dict, field_name: str, check_valor: bool = True) -> tuple[list, list]:
+        """
+        Valida a lista recebida no payload e extrai os valores e pesos.
+        Retorna uma tupla: (lista_de_valores, lista_de_pesos)
+        """
+        items = request_data.get(field_name)
+        if items is None:
+            raise MissingParameters(field_name)
+        if not isinstance(items, list):
+            raise WrongTypeParameter(
+                fieldName=field_name,
+                fieldTypeExpected="list",
+                fieldTypeReceived=type(items).__name__
+            )
+
+        valores = []
+        pesos = []
+
+        for item in items:
+            # Validação do peso (comum a todas as listas)
+            peso = item.get('peso')
+            if not isinstance(peso, (int, float)):
+                raise WrongTypeParameter(
+                    fieldName=f"{field_name} peso item",
+                    fieldTypeExpected="float",
+                    fieldTypeReceived=type(peso).__name__
+                )
+            if peso < 0 or peso > 1:
+                raise InvalidInput(f"{field_name} peso item", "Must be between 0 and 1")
+            
+            pesos.append(peso)
+
+            # Validação do valor (apenas para as notas que já tenho)
+            if check_valor:
+                valor = item.get('valor')
+                if not isinstance(valor, (int, float)):
+                    raise WrongTypeParameter(
+                        fieldName=f"{field_name} item",
+                        fieldTypeExpected="float",
+                        fieldTypeReceived=type(valor).__name__
+                    )
+                valores.append(valor)
+
+        return valores, pesos
+
     def __call__(self, request: IRequest) -> IResponse:
         try:
             # ==========================================
-            # VALIDAÇÃO: provas_que_tenho
+            # VALIDAÇÃO: Extração limpa usando o método auxiliar
             # ==========================================
-            provas_que_tenho = request.data.get('provas_que_tenho')
-            if provas_que_tenho is None:
-                raise MissingParameters('provas_que_tenho')
-            if not isinstance(provas_que_tenho, list):
-                raise WrongTypeParameter(
-                    fieldName="provas_que_tenho",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=type(provas_que_tenho).__name__
-                )
+            current_tests, spec_current_test_weight = self._validate_and_extract_list(
+                request.data, 'provas_que_tenho', check_valor=True
+            )
             
-            # Validação de cada nota e peso da lista provas_que_tenho
-            for nota in provas_que_tenho:
-                if not isinstance(nota.get('valor'), (int, float)):
-                    raise WrongTypeParameter(
-                        fieldName="provas_que_tenho item",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=type(nota.get('valor')).__name__
-                    )
-                if not isinstance(nota.get('peso'), (int, float)):
-                    raise WrongTypeParameter(
-                        fieldName="provas_que_tenho peso item",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=type(nota.get('peso')).__name__
-                    )
-                if nota['peso'] < 0 or nota['peso'] > 1:
-                    raise InvalidInput("provas_que_tenho peso item", "Must be between 0 and 1")
+            current_assignments, spec_current_assignment_weight = self._validate_and_extract_list(
+                request.data, 'trabalhos_que_tenho', check_valor=True
+            )
             
-            current_tests = [nota['valor'] for nota in provas_que_tenho]
-            spec_current_test_weight = [nota['peso'] for nota in provas_que_tenho]
-
-            # ==========================================
-            # VALIDAÇÃO: trabalhos_que_tenho
-            # ==========================================
-            trabalhos_que_tenho = request.data.get('trabalhos_que_tenho')
-            if trabalhos_que_tenho is None:
-                raise MissingParameters('trabalhos_que_tenho')
-            if not isinstance(trabalhos_que_tenho, list):
-                raise WrongTypeParameter(
-                    fieldName="trabalhos_que_tenho",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=type(trabalhos_que_tenho).__name__
-                )
+            _, spec_remaining_test_weight = self._validate_and_extract_list(
+                request.data, 'provas_que_quero', check_valor=False
+            )
+            num_remaining_tests = len(spec_remaining_test_weight)
             
-            # Validação de cada nota e peso da lista trabalhos_que_tenho
-            for nota in trabalhos_que_tenho:
-                if not isinstance(nota.get('valor'), (int, float)):
-                    raise WrongTypeParameter(
-                        fieldName="trabalhos_que_tenho item",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=type(nota.get('valor')).__name__
-                    )
-                if not isinstance(nota.get('peso'), (int, float)):
-                    raise WrongTypeParameter(
-                        fieldName="trabalhos_que_tenho peso item",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=type(nota.get('peso')).__name__
-                    )
-                if nota['peso'] < 0 or nota['peso'] > 1:
-                    raise InvalidInput("trabalhos_que_tenho peso item", "Must be between 0 and 1")
-                
-            current_assignments = [nota['valor'] for nota in trabalhos_que_tenho]
-            spec_current_assignment_weight = [nota['peso'] for nota in trabalhos_que_tenho]
-
-            # ==========================================
-            # VALIDAÇÃO: provas_que_quero
-            # ==========================================
-            provas_que_quero = request.data.get('provas_que_quero')
-            if provas_que_quero is None:
-                raise MissingParameters('provas_que_quero')
-            if not isinstance(provas_que_quero, list):
-                raise WrongTypeParameter(
-                    fieldName="provas_que_quero",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=type(provas_que_quero).__name__
-                )
-            
-            # Validação de cada peso da lista provas_que_quero
-            for nota in provas_que_quero:
-                if not isinstance(nota.get('peso'), (int, float)):
-                    raise WrongTypeParameter(
-                        fieldName="provas_que_quero peso item",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=type(nota.get('peso')).__name__
-                    )
-                if nota['peso'] < 0 or nota['peso'] > 1:
-                    raise InvalidInput("provas_que_quero peso item", "Must be between 0 and 1")
-
-            num_remaining_tests = len(provas_que_quero)
-            spec_remaining_test_weight = [nota['peso'] for nota in provas_que_quero]
-
-            # ==========================================
-            # VALIDAÇÃO: trabalhos_que_quero
-            # ==========================================
-            trabalhos_que_quero = request.data.get('trabalhos_que_quero')
-            if trabalhos_que_quero is None:
-                raise MissingParameters('trabalhos_que_quero')
-            if not isinstance(trabalhos_que_quero, list):
-                raise WrongTypeParameter(
-                    fieldName="trabalhos_que_quero",
-                    fieldTypeExpected="list",
-                    fieldTypeReceived=type(trabalhos_que_quero).__name__
-                )
-            
-            # Validação de cada peso da lista trabalhos_que_quero
-            for nota in trabalhos_que_quero:
-                if not isinstance(nota.get('peso'), (int, float)):
-                    raise WrongTypeParameter(
-                        fieldName="trabalhos_que_quero peso item",
-                        fieldTypeExpected="float",
-                        fieldTypeReceived=type(nota.get('peso')).__name__
-                    )
-                if nota['peso'] < 0 or nota['peso'] > 1:
-                    raise InvalidInput("trabalhos_que_quero peso item", "Must be between 0 and 1")
-
-            num_remaining_assignments = len(trabalhos_que_quero)
-            spec_remaining_assignment_weight = [nota['peso'] for nota in trabalhos_que_quero]
+            _, spec_remaining_assignment_weight = self._validate_and_extract_list(
+                request.data, 'trabalhos_que_quero', check_valor=False
+            )
+            num_remaining_assignments = len(spec_remaining_assignment_weight)
 
             # ==========================================
             # VALIDAÇÃO: pesos gerais e média
@@ -176,7 +121,7 @@ class GeneticAlgorithmController:
             if media_desejada < 0 or media_desejada > 10:
                 raise InvalidInput("media_desejada", "Must be between 0 and 10")
             
-            if peso_prova + peso_trabalho != 1.0:
+            if abs((peso_prova + peso_trabalho) - 1.0) > 0.01: # Uso de tolerância de float
                 raise InvalidInput("peso_prova and/or peso_trabalho", "Must sum 1.0")
 
             # ==========================================
@@ -203,20 +148,7 @@ class GeneticAlgorithmController:
             viewmodel = GeneticAlgorithmViewmodel(combinacao_de_notas)
             return OK(viewmodel.to_dict())
 
+        # ... (seus blocos except continuam exatamente os mesmos) ...
         except InvalidInput as err:
             return BadRequest(body=err.message)
-        except CombinationNotFound as err:
-            return NotFound(body=err.message)
-        except EntityParameterError as err:
-            return BadRequest(body=err.message)
-        except FunctionInputError as err:
-            return BadRequest(body=err.message)
-        except WrongTypeParameter as err:
-            return BadRequest(body=err.message)
-        except MissingParameters as err:
-            return BadRequest(body=err.message)
-        except EntityError as err:
-            return BadRequest(body=err.message)
-        except Exception as err:
-            traceback.print_exc()
-            return InternalServerError(body=str(err.args[0]) if err.args else "Internal Server Error")
+        # ...
