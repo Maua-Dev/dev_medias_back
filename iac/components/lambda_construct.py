@@ -26,7 +26,7 @@ class LambdaConstruct(Construct):
     ) -> lambda_.Function:
         
         code = lambda_.Code.from_asset(f"../src/modules/{subfolder}/{module_name}") if subfolder else lambda_.Code.from_asset(f"../src/modules/{module_name}")
-        handler = f"app.{subfolder}.{module_name}_presenter.lambda_handler" if subfolder else f"app.{module_name}_presenter.lambda_handler"
+        handler = f"app.{module_name}_presenter.lambda_handler"
         
         function = lambda_.Function(
             self, module_name.title(),
