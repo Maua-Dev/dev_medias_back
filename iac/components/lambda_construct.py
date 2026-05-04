@@ -17,16 +17,21 @@ class LambdaConstruct(Construct):
 
     def create_lambda_api_gateway_integration(
         self, 
-        module_name: str, 
+        module_name: str,
         method: str, 
         api_resource: Resource, 
         environment_variables: dict = {"STAGE": "TEST"},
-        public: bool = False
+        public: bool = False,
+        subfolder: str = "",
     ) -> lambda_.Function:
+        
+        code = lambda_.Code.from_asset(f"../src/modules/{subfolder}/{module_name}") if subfolder else lambda_.Code.from_asset(f"../src/modules/{module_name}")
+        handler = f"app.{subfolder}.{module_name}_presenter.lambda_handler" if subfolder else f"app.{module_name}_presenter.lambda_handler"
+        
         function = lambda_.Function(
             self, module_name.title(),
-            code=lambda_.Code.from_asset(f"../src/modules/{module_name}"),
-            handler=f"app.{module_name}_presenter.lambda_handler",
+            code=code,
+            handler=handler,
             function_name=f"{module_name}-{self.stack_name}-{self.stage}"[:63],
             runtime=lambda_.Runtime.PYTHON_3_13,
             layers=[self.lambda_layer],
@@ -159,6 +164,14 @@ class LambdaConstruct(Construct):
             environment_variables=environment_variables
         )
         
+        self.get_all_disciplinas_function = self.create_lambda_api_gateway_integration(
+            module_name="get_all_disciplinas",
+            method="GET",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables,
+            subfolder="disciplina"
+        )
+        
         bedrock_policy = iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
             actions=[
@@ -174,4 +187,5 @@ class LambdaConstruct(Construct):
         )
         
         self.funtions_that_need_dynamo_db_access.append(self.plans_extractor_function)
+        self.funtions_that_need_dynamo_db_access.append(self.get_all_disciplinas_function)
         
