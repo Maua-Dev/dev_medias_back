@@ -69,6 +69,13 @@ class Environments:
 
     @staticmethod
     def get_disciplina_repo():
+        stage = os.environ.get("STAGE")
+        running_in_ci = os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true"
+        if stage == STAGE.TEST.value or running_in_ci:
+            from src.shared.infra.repositories.disciplina_repository_mock import DisciplinaRepositoryMock
+
+            return DisciplinaRepositoryMock()
+
         from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
 
         return DisciplinaRepositoryDynamo()

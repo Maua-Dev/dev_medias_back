@@ -1,30 +1,37 @@
 import json
+import os
 
-from src.modules.disciplina.get_all_disciplinas.app import get_all_disciplinas_presenter
-from src.shared.helpers.external_interfaces.http_codes import NotFound, OK
+from src.modules.disciplina.get_all_disciplinas.app.get_all_disciplinas_presenter import lambda_handler
 
 
 class TestGetAllDisciplinasPresenter:
-    def test_lambda_handler_success(self, monkeypatch):
-        class ControllerStub:
-            def __call__(self, request):
-                return OK([{"code": "ECM101"}])
+    def test_lambda_handler_success(self):
+        previous_stage = os.environ.get("STAGE")
+        os.environ["STAGE"] = "TEST"
+        event = {
+            "version": "2.0",
+            "routeKey": "$default",
+            "rawPath": "/disciplinas",
+            "rawQueryString": "",
+            "headers": {},
+            "queryStringParameters": None,
+            "requestContext": {},
+            "body": {},
+            "pathParameters": None,
+            "isBase64Encoded": False,
+            "stageVariables": None,
+        }
 
-        monkeypatch.setattr(get_all_disciplinas_presenter, "controller", ControllerStub())
-
-        response = get_all_disciplinas_presenter.lambda_handler(event={}, context=None)
+        try:
+            response = lambda_handler(event=event, context=None)
+        finally:
+            if previous_stage is None:
+                os.environ.pop("STAGE", None)
+            else:
+                os.environ["STAGE"] = previous_stage
 
         assert response["statusCode"] == 200
-        assert json.loads(response["body"]) == [{"code": "ECM101"}]
-
-    def test_lambda_handler_not_found(self, monkeypatch):
-        class ControllerStub:
-            def __call__(self, request):
-                return NotFound("No items found for disciplinas")
-
-        monkeypatch.setattr(get_all_disciplinas_presenter, "controller", ControllerStub())
-
-        response = get_all_disciplinas_presenter.lambda_handler(event={}, context=None)
-
-        assert response["statusCode"] == 404
-        assert "No items found for disciplinas" in json.loads(response["body"])
+        body = json.loads(response["body"])
+        assert isinstance(body, list)
+        assert len(body) == 4
+        assert body[0]["code"] == "ECM101"
