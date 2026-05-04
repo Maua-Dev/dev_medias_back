@@ -86,7 +86,7 @@ class TestGeneticAlgorithmController:
 
         assert response.status_code == 400
         assert 'provas_que_tenho' in response.body
-        assert 'type' in response.body
+        assert 'tipo correto' in response.body  # <- CORREÇÃO AQUI
 
     def test_genetic_algorithm_controller_provas_que_tenho_item_valor_wrong_type(self):
         request = HttpRequest(body={
@@ -105,7 +105,7 @@ class TestGeneticAlgorithmController:
         response = controller(request=request)
 
         assert response.status_code == 400
-        assert 'type' in response.body
+        assert 'tipo correto' in response.body  # <- CORREÇÃO AQUI
 
     def test_genetic_algorithm_controller_provas_que_tenho_peso_out_of_range(self):
         request = HttpRequest(body={
@@ -232,7 +232,7 @@ class TestGeneticAlgorithmController:
 
         assert response.status_code == 400
         assert 'peso_prova' in response.body
-        assert 'type' in response.body
+        assert 'tipo correto' in response.body  # <- CORREÇÃO AQUI
 
     def test_genetic_algorithm_controller_pesos_sum_not_one(self):
         request = HttpRequest(body={

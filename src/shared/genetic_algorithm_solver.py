@@ -40,8 +40,16 @@ class GradeGeneticAlgorithm:
 
     def create_individual(self):
         """Cria um indivíduo (notas futuras de testes e trabalhos)"""
-        tests = [random.uniform(0, self.max_grade) for _ in range(self.num_remaining_tests)]
-        assignments = [random.uniform(0, self.max_grade) for _ in range(self.num_remaining_assignments)]
+        # Em 20% das vezes, força a criação de um indivíduo com todas as notas IGUAIS
+        if random.random() < 0.2:
+            base_grade = random.uniform(0, self.max_grade)
+            tests = [base_grade for _ in range(self.num_remaining_tests)]
+            assignments = [base_grade for _ in range(self.num_remaining_assignments)]
+        else:
+            # 80% das vezes segue o padrão aleatório normal
+            tests = [random.uniform(0, self.max_grade) for _ in range(self.num_remaining_tests)]
+            assignments = [random.uniform(0, self.max_grade) for _ in range(self.num_remaining_assignments)]
+            
         return {'tests': tests, 'assignments': assignments}
 
     def calculate_weighted_average(self, tests, assignments, spec_test_weight=None, spec_assignment_weight=None):
@@ -125,7 +133,9 @@ class GradeGeneticAlgorithm:
         # Penalidade por notas impossíveis
         impossible_penalty = sum(max(0, g - self.max_grade) for g in future_grades)
 
-        return avg_diff * 10 + variance_penalty * 2 + impossible_penalty * 20
+        # Aumentamos o peso da média para garantir a precisão matemática
+        # E aumentamos MUITO a penalidade de variância para forçar notas iguais
+        return (avg_diff * 100) + (variance_penalty * 30) + (impossible_penalty * 50)
 
     def selection(self, population, fitnesses):
         """Seleção por torneio"""
