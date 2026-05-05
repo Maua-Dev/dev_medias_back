@@ -15,4 +15,14 @@ class Test_Notice:
         assert notice.description == "Descrição"
         assert notice.severity == SEVERITY.HIGH
         
-    
+    def test_title_have_more_than_80_characters(self):
+        with pytest.raises(ValidationError) as err:
+            notice = Notice(title="Tituloooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo", 
+            description="Descrição",
+            severity=SEVERITY.HIGH
+            )
+            
+            error = err.value.errors()
+            
+            assert error[0]["loc"] == "title"
+            assert error[0]["type"] == "string_too_long" 
