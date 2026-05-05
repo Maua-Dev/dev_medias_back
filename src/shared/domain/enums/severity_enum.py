@@ -1,6 +1,6 @@
 from enum import Enum
 
-class severity(Enum):
+class SEVERITY(Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
