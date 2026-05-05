@@ -6,7 +6,8 @@ class Notice(BaseModel):
     title: str = Field(
         ...,
         description="Titulo do anúncio",
-        max_length=10
+        max_length=80,
+        min_length=1
     )
     description: str = Field (
         ...,
