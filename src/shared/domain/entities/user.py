@@ -4,9 +4,8 @@ import uuid
 
 class User:
     id:str= Field(
-        ...,
-        description="Id unico do usuário",
-        default_factory=lambda: str(uuid.uuid4())
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Id unico do usuário"
     )
     
     name:str = Field(
@@ -15,7 +14,6 @@ class User:
     )
     
     role:ROLE = Field(
-        ...,
-        description="Role do usuario",
-        default=ROLE.STUDENT
+        default=ROLE.STUDENT,
+        description="Role do usuario"
     )
