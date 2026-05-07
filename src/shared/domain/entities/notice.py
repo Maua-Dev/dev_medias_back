@@ -1,4 +1,3 @@
-from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
 from pydantic import *
 from ..enums.severity_enum import SEVERITY
 
