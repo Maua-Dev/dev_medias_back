@@ -9,7 +9,6 @@ class Notice(BaseModel):
         min_length=1
     )
     description: str = Field (
-        ...,
         description="Descrição do anúncio",
     )
     severity: SEVERITY = Field(
