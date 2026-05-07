@@ -2,7 +2,7 @@ from pydantic import *
 from ..enums.role_enum import ROLE
 import uuid
 
-class user:
+class User:
     id:str= Field(
         ...,
         description="Id unico do usuário",
