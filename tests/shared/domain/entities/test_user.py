@@ -20,7 +20,18 @@ class Test_User:
         assert user.role == ROLE.STUDENT
     
     def test_id_not_uuid(self):
-        pass
+        with pytest.raises(ValidationError) as err:
+            user = User(
+            id = 1,
+            name = "João",
+            role = ROLE.STUDENT    
+            )
+        
+        error = err.value.errors()
+        
+        assert error[0]["loc"] == ("id",)
+        assert error[0]["type"] == "string_type"
+        
     
     def test_id_missing(self):
         pass
