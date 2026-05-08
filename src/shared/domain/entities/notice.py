@@ -1,4 +1,4 @@
-from pydantic import *
+from pydantic import BaseModel, Field
 from ..enums.severity_enum import SEVERITY
 
 class Notice(BaseModel):
