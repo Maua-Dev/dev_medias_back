@@ -2,7 +2,7 @@ import enum
 from enum import Enum
 import os
 
-from src.shared.infra.external.dynamo.academic_catalog_naming import physical_table_name
+from src.shared.infra.external.dynamo.academic_catalog.academic_catalog_naming import physical_table_name
 
 
 class STAGE(Enum):

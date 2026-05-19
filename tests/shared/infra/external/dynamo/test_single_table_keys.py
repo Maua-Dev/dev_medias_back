@@ -1,5 +1,5 @@
-from src.shared.infra.external.dynamo.academic_catalog_naming import physical_table_name
-from src.shared.infra.external.dynamo.single_table_keys import (
+from src.shared.infra.external.dynamo.academic_catalog.academic_catalog_naming import physical_table_name
+from src.shared.infra.external.dynamo.academic_catalog.single_table_keys import (
     GLOBAL_OWNER,
     SK_ENTITY_RECORD,
     EntityKind,

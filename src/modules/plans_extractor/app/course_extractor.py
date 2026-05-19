@@ -1,11 +1,64 @@
-import urllib
-import pymupdf
-import boto3
 import json
+import logging
 import re
+import unicodedata
+from pathlib import PurePosixPath
+from typing import Any
+from urllib.parse import unquote_plus
 
+import boto3
+import pymupdf
 from botocore.exceptions import ClientError
+
 from helper.course.course import Course
+from src.modules.plans_extractor.app.parser import build_disciplina
+from src.shared.environments import Environments
+from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+COURSE_CODE_BY_FOLDER = {
+    "administracao": "ADM",
+    "analise e desenvolvimento de sistemas": "ADS",
+    "arquitetura e urbanismo": "ARQ",
+    "ciencia da computacao": "CIC",
+    "design": "DSG",
+    "economia": "UNK",
+    "engenharia civil": "ECV",
+    "engenharia de alimentos": "EAL",
+    "engenharia de computacao": "ECM",
+    "engenharia de controle e automacao": "ECA",
+    "engenharia de producao": "EPM",
+    "engenharia eletrica": "EET",
+    "engenharia eletronica": "EEN",
+    "engenharia mecanica": "EMC",
+    "engenharia quimica": "EQM",
+    "relacoes internacionais": "RI",
+    "sistemas da informacao": "SIN",
+    "sistemas de informacao": "SIN",
+}
+
+COURSE_NAME_BY_FOLDER = {
+    "administracao": "Administração",
+    "analise e desenvolvimento de sistemas": "Análise e Desenvolvimento de Sistemas",
+    "arquitetura e urbanismo": "Arquitetura e Urbanismo",
+    "ciencia da computacao": "Ciência da Computação",
+    "design": "Design",
+    "economia": "Economia",
+    "engenharia civil": "Engenharia Civil",
+    "engenharia de alimentos": "Engenharia de Alimentos",
+    "engenharia de computacao": "Engenharia de Computação",
+    "engenharia de controle e automacao": "Engenharia de Controle e Automação",
+    "engenharia de producao": "Engenharia de Produção",
+    "engenharia eletrica": "Engenharia Elétrica",
+    "engenharia eletronica": "Engenharia Eletrônica",
+    "engenharia mecanica": "Engenharia Mecânica",
+    "engenharia quimica": "Engenharia Química",
+    "relacoes internacionais": "Relações Internacionais",
+    "sistemas da informacao": "Sistemas da Informação",
+    "sistemas de informacao": "Sistemas de Informação",
+}
 
 HEADER_CROP_COORDS = pymupdf.Rect(0, 0, 595, 620)
 
@@ -18,6 +71,71 @@ COURSE_CRITERIA_HEADER_REGEX = re.compile(r"AVALIAÇÃO (.*) e CRITÉRIOS DE APR
 COURSE_EXAMS_AND_PROJECTS_HEADER_REGEX = re.compile(r"INFORMAÇÕES SOBRE PROVAS E TRABALHOS", re.IGNORECASE)
 
 END_EXTRACTION_REGEX = re.compile(r"PLANO DE ENSINO PARA O ANO LETIVO DE \d{4}", re.IGNORECASE)
+
+
+def _normalize_folder_name(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    without_accents = "".join(char for char in normalized if not unicodedata.combining(char))
+    return " ".join(without_accents.casefold().split())
+
+
+def _course_code_from_folder(folder_name: str) -> str:
+    normalized = _normalize_folder_name(folder_name)
+    course_code = COURSE_CODE_BY_FOLDER.get(normalized)
+    if course_code is None:
+        logger.warning("Could not map course folder '%s' to a known code; using UNK", folder_name)
+        return "UNK"
+    return course_code
+
+
+def _course_name_from_folder(folder_name: str) -> str:
+    normalized = _normalize_folder_name(folder_name)
+    canonical = COURSE_NAME_BY_FOLDER.get(normalized)
+    if canonical is not None:
+        return canonical
+    return " ".join(folder_name.strip().split())
+
+
+def _series_number_from_folder(folder_name: str) -> int:
+    match = re.search(r"\d+", folder_name)
+    if not match:
+        raise ValueError(f"Could not extract series number from folder: {folder_name}")
+    return int(match.group())
+
+
+def _parse_s3_key(key: str) -> tuple[str, str | None, int | None, str | None]:
+    """Extract `(code, curso_code, ano, course_name)` from an S3 key.
+    
+    Expects path format: {Curso}/{Série}/{CODE}.pdf
+    Example: Ciência da Computação/1o semestre/Banco de dados.pdf
+    """
+    path = PurePosixPath(unquote_plus(key))
+    filename = path.name
+    if not filename.lower().endswith(".pdf"):
+        raise ValueError(f"S3 object is not a PDF: {key}")
+
+    stem = filename[:-4]
+    
+    parts = path.parts
+    if len(parts) >= 3:
+        curso_folder = parts[-3]
+        serie_folder = parts[-2]
+        try:
+            return (
+                stem,
+                _course_code_from_folder(curso_folder),
+                _series_number_from_folder(serie_folder),
+                _course_name_from_folder(curso_folder),
+            )
+        except ValueError as exc:
+            logger.warning("Could not parse curso/serie from %r: %s", key, exc)
+
+    logger.warning(
+        "S3 key %r does not match {CURSO}/{SERIE}/{CODE}.pdf format; "
+        "saving disciplina without course occurrence",
+        key,
+    )
+    return stem, None, None, None
 
 def extract_course_info_from_header(page: pymupdf.Page) -> dict[str, str]:
     ptm = page.transformation_matrix
@@ -76,7 +194,7 @@ def extract_course_exams_and_projects_info(doc: pymupdf.Document) -> str:
     
     return exams_and_projects_text
 
-def generate_json_with_bedrock(course_info: Course) -> str:
+def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
     PROMPT_TEMPLATE = """Você é um extrator de dados acadêmicos. A partir do dicionário Python abaixo (gerado por um script de scraping), extraia e estruture as informações no formato JSON especificado.
 
     ## Entrada
@@ -96,20 +214,17 @@ def generate_json_with_bedrock(course_info: Course) -> str:
       "assignmentWeight": <peso dos trabalhos como número entre 0 e 1, ex: 0.5>,
       "exams": [
         {{
-          "id": "<identificador da prova, ex: P1>",
           "name": "<nome descritivo, ex: Primeira Prova Bimestral>",
-          "weight": <peso relativo desta prova dentro das provas, entre 0 e 1>,
-          "isSubstitute": <true se for prova substitutiva, false caso contrário>
+          "weight": <peso relativo desta prova dentro das provas, entre 0 e 1>
         }}
       ],
       "assignments": [
         {{
-          "id": "<identificador do trabalho, ex: T1>",
           "name": "<nome descritivo, ex: Trabalho do Primeiro Bimestre>",
           "weight": <peso relativo deste trabalho dentro dos trabalhos, entre 0 e 1>
         }}
       ],
-      "courses": []
+      "courses": {{}}
     }}
 
     ## Regras de extração
@@ -117,21 +232,16 @@ def generate_json_with_bedrock(course_info: Course) -> str:
     - "assignmentWeight" vem do campo "Peso de MT(kt)" dividido pela soma de kp+kt
     - "exams" deve listar todas as provas mencionadas (P1, P2, PS1, etc.)
     - Para provas bimestrais com pesos iguais, cada uma recebe weight = 1 / (número de provas regulares)
-    - A prova substitutiva (PS, PS1, etc.) tem isSubstitute: true e weight: null
     - "assignments" deve listar todos os trabalhos mencionados (T1, T2, etc.) com pesos iguais entre si
     - "period" deve ser extraído se mencionado (ex: "1º semestre de 2024"), senão null
-    - "courses" deve ser sempre um array vazio []
+    - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
 
-    # Create a Bedrock Runtime client in the AWS Region of your choice.
     client = boto3.client("bedrock-runtime", region_name="us-east-1")
-
-    # Set the model ID, e.g., Claude 3 Haiku.
     model_id = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
 
     PROMPT = PROMPT_TEMPLATE.format(INPUT_DATA=json.dumps(course_info.__dict__, ensure_ascii=False))
 
-    # Format the request payload using the model's native structure.
     native_request = {
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 1000,
@@ -144,52 +254,56 @@ def generate_json_with_bedrock(course_info: Course) -> str:
         ],
     }
 
-    # Convert the native request to JSON.
     request = json.dumps(native_request)
 
     try:
-        # Invoke the model with the request.
         response = client.invoke_model(modelId=model_id, body=request)
-
     except (ClientError, Exception) as e:
-        print(f"ERROR: Can't invoke '{model_id}'. Reason: {e}")
-        exit(1)
+        logger.error("ERROR: Can't invoke '%s'. Reason: %s", model_id, e)
+        raise
 
-    # Decode the response body.
     model_response = json.loads(response["body"].read())
-
-    # Extract and print the response text.
     response_text = model_response["content"][0]["text"]
+    
     if response_text.startswith("```"):
         response_text = response_text.split("```")[1]
         if response_text.startswith("json"):
             response_text = response_text[4:]
         response_text = response_text.strip()
 
-    print(response_text)
-    return response_text
+    logger.info("Bedrock response: %s", response_text)
+    return json.loads(response_text)
 
-def load_pdf_from_s3(event: dict) -> pymupdf.Document:
+def load_pdf_from_s3(bucket: str, key: str) -> pymupdf.Document:
+    """Download PDF from S3 and return as pymupdf Document."""
     s3 = boto3.client("s3")
-
-    bucket = event['Records'][0]['s3']['bucket']['name']
-    key = urllib.parse.unquote_plus(
-        event['Records'][0]['s3']['object']['key'], encoding='utf-8'
-    )
-
-    print(f"Loading s3://{bucket}/{key}")
+    
+    logger.info("Loading s3://%s/%s", bucket, key)
 
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
         pdf_bytes = response['Body'].read()
         return pymupdf.open(stream=pdf_bytes, filetype="pdf")
     except Exception as e:
-        print(f"Error getting object {key} from bucket {bucket}: {e}")
+        logger.error("Error getting object %s from bucket %s: %s", key, bucket, e)
         raise
 
-def lambda_handler(event, context):
+
+def _repository() -> DisciplinaRepositoryDynamo:
+    """Get DynamoDB repository instance."""
+    return Environments.get_disciplina_repo()
+
+
+def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryDynamo) -> bool:
+    """Process a single S3 event record and persist extracted disciplina to DynamoDB."""
     try:
-        doc = load_pdf_from_s3(event)
+        bucket = record["s3"]["bucket"]["name"]
+        raw_key = record["s3"]["object"]["key"]
+        
+        code, curso, ano, course_name = _parse_s3_key(raw_key)
+        logger.info("Parsed S3 key: code=%s, curso=%s, ano=%s, course_name=%s", code, curso, ano, course_name)
+        
+        doc = load_pdf_from_s3(bucket, raw_key)
 
         header_info = extract_course_info_from_header(doc[0])
 
@@ -204,6 +318,46 @@ def lambda_handler(event, context):
             exams_and_projects_info=exams_and_projects_info
         )
 
-        generate_json_with_bedrock(course)
+        extracted_data = generate_json_with_bedrock(course)
+        
+        if course_name:
+            extracted_data["course"] = course_name
+        
+        existing = repository.get_disciplina(code)
+        course_occurrence: dict[str, int] = {curso: ano} if curso and ano is not None else {}
+        if existing is None:
+            courses_to_persist = course_occurrence
+        else:
+            courses_to_persist = dict(existing.courses)
+            courses_to_persist.update(course_occurrence)
+
+        disciplina = build_disciplina(extracted_data, courses=courses_to_persist)
+
+        if existing is None:
+            logger.info("Creating disciplina %s with courses=%s", code, courses_to_persist)
+            repository.create_disciplina(disciplina)
+        else:
+            logger.info("Updating existing disciplina %s", code)
+            repository.update_disciplina(disciplina)
+
+        return True
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error("Error processing S3 record: %s", e)
+        return False
+
+
+def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
+    """AWS Lambda handler for processing syllabus PDFs from S3."""
+    records = event.get("Records", [])
+    repository = _repository()
+
+    processed = 0
+    skipped = 0
+    for record in records:
+        if _process_s3_record(record, repository):
+            processed += 1
+        else:
+            skipped += 1
+
+    logger.info("Lambda execution complete: processed=%d, skipped=%d", processed, skipped)
+    return {"processed": processed, "skipped": skipped}

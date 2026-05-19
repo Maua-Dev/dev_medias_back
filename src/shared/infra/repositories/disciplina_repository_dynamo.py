@@ -9,7 +9,7 @@ from src.shared.domain.repositories.disciplina_repository_interface import IDisc
 from src.shared.environments import Environments
 from src.shared.infra.external.dynamo.dynamo_datasource import DynamoDatasource
 from src.shared.infra.external.dynamo.dynamo_scan_utils import scan_all_pages
-from src.shared.infra.external.dynamo.single_table_keys import (
+from src.shared.infra.external.dynamo.academic_catalog.single_table_keys import (
     EntityKind,
     SK_ENTITY_RECORD,
     build_partition_key,
