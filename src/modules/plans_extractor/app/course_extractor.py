@@ -238,20 +238,21 @@ def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
     - Todos os campos numéricos de peso devem ser números (não strings)"""
 
     client = boto3.client("bedrock-runtime", region_name="us-east-1")
-    model_id = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    model_id = "amazon.nova-micro-v1:0"
 
     PROMPT = PROMPT_TEMPLATE.format(INPUT_DATA=json.dumps(course_info.__dict__, ensure_ascii=False))
 
     native_request = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1000,
-        "temperature": 0.5,
         "messages": [
             {
                 "role": "user",
-                "content": [{"type": "text", "text": PROMPT}],
+                "content": [{"text": PROMPT}],
             }
         ],
+        "inferenceConfig": {
+            "max_new_tokens": 1000,
+            "temperature": 0,
+        },
     }
 
     request = json.dumps(native_request)
@@ -263,7 +264,7 @@ def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
         raise
 
     model_response = json.loads(response["body"].read())
-    response_text = model_response["content"][0]["text"]
+    response_text = model_response["output"]["message"]["content"][0]["text"]
     
     if response_text.startswith("```"):
         response_text = response_text.split("```")[1]

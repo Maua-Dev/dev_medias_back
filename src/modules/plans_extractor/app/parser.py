@@ -132,8 +132,11 @@ def build_disciplina(extracted_data: dict[str, Any], courses: dict[str, int]) ->
 
     payload["name"] = _normalize_name(payload.get("name"))
     payload["period"] = _normalize_period(payload.get("period"))
-    payload["exam_weight"] = _normalize_percentage(payload.get("exam_weight"), "exam_weight")
-    payload["assignment_weight"] = _normalize_percentage(payload.get("assignment_weight"), "assignment_weight")
+    payload["exam_weight"] = _normalize_percentage(payload.get("exam_weight", payload.get("examWeight")), "exam_weight")
+    payload["assignment_weight"] = _normalize_percentage(
+        payload.get("assignment_weight", payload.get("assignmentWeight")),
+        "assignment_weight",
+    )
     payload["exams"] = _normalize_exams(payload.get("exams"), payload["period"])
     payload["assignments"] = _normalize_items(payload.get("assignments"), "assignments")
 
