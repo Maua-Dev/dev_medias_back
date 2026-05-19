@@ -1,7 +1,13 @@
 # Lambda layer + runtime deps. Keep this lean: AWS unzipped layer limit is 250 MB.
 # boto3/botocore come from the Lambda Python runtime — do not bundle them here.
 
+# Shared (domain, GA, Dynamo entities)
 pydantic==2.11.7
 python-dotenv==1.1.1
-pdfplumber
 numpy==2.2.3
+
+# plans_extractor — course_extractor (PyMuPDF coordinate/regex extraction)
+pymupdf==1.26.7
+
+# plans_extractor — legacy full-text path (extractor.py / bedrock_client.py)
+pdfplumber==0.11.9
