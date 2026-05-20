@@ -6,7 +6,6 @@ from pathlib import PurePosixPath
 from typing import Any
 from urllib.parse import unquote_plus
 
-import boto3
 import pymupdf
 from botocore.exceptions import ClientError
 
@@ -261,7 +260,12 @@ def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None =
     - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
 
-    client = bedrock_client or boto3.client("bedrock-runtime", region_name="us-east-1")
+    if bedrock_client is None:
+        import boto3
+
+        client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    else:
+        client = bedrock_client
     model_id = "amazon.nova-lite-v1:0"
 
     PROMPT = PROMPT_TEMPLATE.format(INPUT_DATA=json.dumps(course_info.__dict__, ensure_ascii=False))
@@ -310,6 +314,8 @@ def _key_candidates(raw_key: str) -> list[str]:
 
 def load_pdf_from_s3(bucket: str, key: str) -> pymupdf.Document:
     """Download PDF from S3 and return as pymupdf Document."""
+    import boto3
+
     s3 = boto3.client("s3")
 
     last_error: Exception | None = None
