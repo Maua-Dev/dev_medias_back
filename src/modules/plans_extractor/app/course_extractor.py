@@ -67,10 +67,26 @@ INFO_COORDS: dict[str, pymupdf.Rect] = {
 }
 
 COURSE_CRITERIA_HEADER_REGEX = re.compile(r"AVALIAÇÃO (.*) e CRITÉRIOS DE APROVAÇÃO", re.IGNORECASE)
-COURSE_EXAMS_AND_PROJECTS_HEADER_REGEX = re.compile(r"INFORMAÇÕES SOBRE PROVAS E TRABALHOS", re.IGNORECASE)
+COURSE_EXAMS_AND_PROJECTS_HEADER_REGEX = re.compile(
+    r"INFORMA[ÇC][ÕO]ES?\s+SOBRE\s+PROVAS?\s+E\s+TRABALHOS?",
+    re.IGNORECASE,
+)
 COURSE_PROGRAM_HEADER_REGEX = re.compile(r"PROGRAMA DA DISCIPLINA", re.IGNORECASE)
 
 END_EXTRACTION_REGEX = re.compile(r"PLANO DE ENSINO PARA O ANO LETIVO DE \d{4}", re.IGNORECASE)
+EVALUATION_SIGNAL_REGEXES = (
+    re.compile(r"PESO\s+DE\s+MP\s*\(?(?:kp|k p)\)?", re.IGNORECASE),
+    re.compile(r"PESO\s+DE\s+MT\s*\(?(?:kt|k t)\)?", re.IGNORECASE),
+    re.compile(r"\b(?:T\d+[A-Z]?|P\d+|PSUB)\b", re.IGNORECASE),
+    re.compile(r"CRIT[ÉE]RIO\s+DE\s+AVALIA", re.IGNORECASE),
+    re.compile(r"INFORMA[ÇC][ÕO]ES?\s+SOBRE\s+PROVAS?\s+E\s+TRABALHOS?", re.IGNORECASE),
+    re.compile(r"PROVA\s+SUB(?:STITUTIVA|STITUTA)?", re.IGNORECASE),
+    re.compile(r"M[ÉE]DIA\s+DE\s+(?:PROVAS|TRABALHOS)", re.IGNORECASE),
+)
+EVALUATION_RELEVANT_LINE_REGEX = re.compile(
+    r"(PESO|PROVA|TRABALH|CRIT[ÉE]RIO\s+DE\s+AVALIA|(?:\bT\d+[A-Z]?\b)|(?:\bP\d+\b)|PSUB|MP|MT|k\d+)",
+    re.IGNORECASE,
+)
 
 
 def _normalize_folder_name(value: str) -> str:
@@ -189,10 +205,51 @@ def extract_course_exams_and_projects_info(doc: pymupdf.Document) -> str:
             if extracting:
                 exams_and_projects_text += line + "\n"
 
-    if exams_and_projects_text == "":
+    if exams_and_projects_text.strip() and _has_evaluation_signal(exams_and_projects_text):
+        return exams_and_projects_text
+
+    if exams_and_projects_text.strip():
+        logger.warning("Primary exams/projects extraction looked uninformative; trying fallback")
+
+    if exams_and_projects_text == "" or not _has_evaluation_signal(exams_and_projects_text):
+        fallback_text = _extract_exams_and_projects_fallback_text(doc)
+        if fallback_text:
+            logger.warning("Using fallback extraction for exams and projects section")
+            return fallback_text
         raise ValueError("Could not extract exams and projects info from the PDF.")
     
     return exams_and_projects_text
+
+
+def _has_evaluation_signal(text: str) -> bool:
+    return any(regex.search(text) for regex in EVALUATION_SIGNAL_REGEXES)
+
+
+def _extract_exams_and_projects_fallback_text(doc: pymupdf.Document) -> str:
+    lines: list[str] = []
+    for page in doc:
+        lines.extend(page.get_text().splitlines())
+
+    useful_lines: list[str] = []
+    seen: set[str] = set()
+    for index, line in enumerate(lines):
+        if not any(regex.search(line) for regex in EVALUATION_SIGNAL_REGEXES):
+            continue
+
+        start = max(0, index - 1)
+        end = min(len(lines), index + 2)
+        for candidate in lines[start:end]:
+            normalized = candidate.strip()
+            if not normalized:
+                continue
+            if not EVALUATION_RELEVANT_LINE_REGEX.search(normalized):
+                continue
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            useful_lines.append(normalized)
+
+    return "\n".join(useful_lines)
 
 
 def extract_course_program(doc: pymupdf.Document) -> str:
@@ -366,6 +423,10 @@ def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryD
         )
 
         extracted_data = generate_json_with_bedrock(course)
+        # Source of truth for disciplina code is the S3 object key.
+        # This avoids model hallucinations/variations (e.g., EEN281 -> EEE281)
+        # that would persist under the wrong primary key in Dynamo.
+        extracted_data["code"] = code
         
         if course_name:
             extracted_data["course"] = course_name
