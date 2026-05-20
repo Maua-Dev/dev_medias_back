@@ -10,8 +10,8 @@ import boto3
 import pymupdf
 from botocore.exceptions import ClientError
 
-from helper.course.course import Course
-from src.modules.plans_extractor.app.parser import build_disciplina
+from .helper.course.course import Course
+from .parser import build_disciplina
 from src.shared.environments import Environments
 from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
 
@@ -69,6 +69,7 @@ INFO_COORDS: dict[str, pymupdf.Rect] = {
 
 COURSE_CRITERIA_HEADER_REGEX = re.compile(r"AVALIAÇÃO (.*) e CRITÉRIOS DE APROVAÇÃO", re.IGNORECASE)
 COURSE_EXAMS_AND_PROJECTS_HEADER_REGEX = re.compile(r"INFORMAÇÕES SOBRE PROVAS E TRABALHOS", re.IGNORECASE)
+COURSE_PROGRAM_HEADER_REGEX = re.compile(r"PROGRAMA DA DISCIPLINA", re.IGNORECASE)
 
 END_EXTRACTION_REGEX = re.compile(r"PLANO DE ENSINO PARA O ANO LETIVO DE \d{4}", re.IGNORECASE)
 
@@ -194,6 +195,23 @@ def extract_course_exams_and_projects_info(doc: pymupdf.Document) -> str:
     
     return exams_and_projects_text
 
+
+def extract_course_program(doc: pymupdf.Document) -> str:
+    extracting = False
+    program_text = ""
+
+    for page in doc:
+        text = page.get_text()
+        for line in text.splitlines():
+            if COURSE_PROGRAM_HEADER_REGEX.search(line):
+                extracting = True
+                continue
+
+            if extracting:
+                program_text += line + "\n"
+
+    return program_text
+
 def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
     PROMPT_TEMPLATE = """Você é um extrator de dados acadêmicos. A partir do dicionário Python abaixo (gerado por um script de scraping), extraia e estruture as informações no formato JSON especificado.
 
@@ -228,17 +246,23 @@ def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
     }}
 
     ## Regras de extração
+    - "course" deve ser o nome da disciplina presente no PDF; o backend sobrescreve esse campo com o nome do curso vindo da pasta do S3 antes de persistir.
     - "examWeight" vem do campo "Peso de MP(kp)" dividido pela soma de kp+kt (ex: kp=5, kt=5 → examWeight=0.5)
     - "assignmentWeight" vem do campo "Peso de MT(kt)" dividido pela soma de kp+kt
-    - "exams" deve listar todas as provas mencionadas (P1, P2, PS1, etc.)
+    - Ao extrair "exams" e "assignments", use prioritariamente o trecho "INFORMAÇÕES SOBRE PROVAS E TRABALHOS" quando ele existir.
+    - Se houver pontuação explícita para componentes avaliativos (ex.: "X vale 2", "Y vale 6"), calcule os pesos relativos dividindo cada valor pela soma total dos valores do grupo.
+    - Só use distribuição de pesos iguais quando não houver qualquer informação explícita de pontuação ou peso no texto.
+    - Para disciplina anual com duas provas semestrais, aplicar pesos 2/5 e 3/5 (RN CEPE 16/2014), preferindo primeiro semestre=0.4 e segundo semestre=0.6 quando identificados
+    - Para disciplina semestral, distribuir pesos das provas por média simples quando não houver pesos explícitos
+    - "exams" deve listar todas as provas mencionadas (P1, P2, PS1, etc.), inclusive quando elas aparecem no programa da disciplina.
     - Para provas bimestrais com pesos iguais, cada uma recebe weight = 1 / (número de provas regulares)
-    - "assignments" deve listar todos os trabalhos mencionados (T1, T2, etc.) com pesos iguais entre si
+    - "assignments" deve listar todos os trabalhos mencionados (T1, T2, T3, projeto, relatório, etc.) com pesos coerentes com os valores explícitos; na ausência deles, usar pesos iguais.
     - "period" deve ser extraído se mencionado (ex: "1º semestre de 2024"), senão null
     - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
 
     client = boto3.client("bedrock-runtime", region_name="us-east-1")
-    model_id = "amazon.nova-micro-v1:0"
+    model_id = "amazon.nova-lite-v1:0"
 
     PROMPT = PROMPT_TEMPLATE.format(INPUT_DATA=json.dumps(course_info.__dict__, ensure_ascii=False))
 
@@ -275,19 +299,34 @@ def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
     logger.info("Bedrock response: %s", response_text)
     return json.loads(response_text)
 
+def _key_candidates(raw_key: str) -> list[str]:
+    decoded = unquote_plus(raw_key)
+    seen: list[str] = []
+    for value in (decoded, raw_key, unicodedata.normalize("NFC", decoded), unicodedata.normalize("NFD", decoded)):
+        if value and value not in seen:
+            seen.append(value)
+    return seen
+
+
 def load_pdf_from_s3(bucket: str, key: str) -> pymupdf.Document:
     """Download PDF from S3 and return as pymupdf Document."""
     s3 = boto3.client("s3")
-    
-    logger.info("Loading s3://%s/%s", bucket, key)
 
-    try:
-        response = s3.get_object(Bucket=bucket, Key=key)
-        pdf_bytes = response['Body'].read()
-        return pymupdf.open(stream=pdf_bytes, filetype="pdf")
-    except Exception as e:
-        logger.error("Error getting object %s from bucket %s: %s", key, bucket, e)
-        raise
+    last_error: Exception | None = None
+    for candidate_key in _key_candidates(key):
+        logger.info("Loading s3://%s/%s", bucket, candidate_key)
+        try:
+            response = s3.get_object(Bucket=bucket, Key=candidate_key)
+            pdf_bytes = response["Body"].read()
+            return pymupdf.open(stream=pdf_bytes, filetype="pdf")
+        except s3.exceptions.NoSuchKey as exc:
+            logger.warning("Object not found at s3://%s/%s, trying next candidate", bucket, candidate_key)
+            last_error = exc
+        except Exception as exc:
+            logger.error("Error getting object %s from bucket %s: %s", candidate_key, bucket, exc)
+            raise
+
+    raise FileNotFoundError(f"S3 object not found in bucket {bucket} (tried keys: {_key_candidates(key)})") from last_error
 
 
 def _repository() -> DisciplinaRepositoryDynamo:
@@ -311,12 +350,13 @@ def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryD
         course_criteria = extract_course_criteria(doc)
 
         exams_and_projects_info = extract_course_exams_and_projects_info(doc)
+        course_program = extract_course_program(doc)
 
         course = Course(
             name=header_info["course_name"],
             code=header_info["course_code"],
             criteria=course_criteria,
-            exams_and_projects_info=exams_and_projects_info
+            exams_and_projects_info=f"{exams_and_projects_info}\nPROGRAMA DA DISCIPLINA\n{course_program}",
         )
 
         extracted_data = generate_json_with_bedrock(course)
