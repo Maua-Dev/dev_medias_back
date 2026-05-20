@@ -212,7 +212,7 @@ def extract_course_program(doc: pymupdf.Document) -> str:
 
     return program_text
 
-def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
+def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None = None) -> dict[str, Any]:
     PROMPT_TEMPLATE = """Você é um extrator de dados acadêmicos. A partir do dicionário Python abaixo (gerado por um script de scraping), extraia e estruture as informações no formato JSON especificado.
 
     ## Entrada
@@ -261,7 +261,7 @@ def generate_json_with_bedrock(course_info: Course) -> dict[str, Any]:
     - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
 
-    client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    client = bedrock_client or boto3.client("bedrock-runtime", region_name="us-east-1")
     model_id = "amazon.nova-lite-v1:0"
 
     PROMPT = PROMPT_TEMPLATE.format(INPUT_DATA=json.dumps(course_info.__dict__, ensure_ascii=False))
