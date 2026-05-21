@@ -94,3 +94,49 @@ def test_resposta_bedrock_incompleta_faz_fallback_para_zero():
     assert disciplina.assignment_weight == 0
     assert disciplina.exams == []
     assert disciplina.assignments == []
+
+
+def test_remove_provas_e_trabalhos_substitutivos():
+    disciplina = build_disciplina(
+        _payload(
+            exams=[
+                {"name": "P1", "weight": 0.4},
+                {"name": "Prova Substitutiva", "weight": 0.6},
+            ],
+            assignments=[
+                {"name": "T1", "weight": 0.5},
+                {"name": "Trabalho Substitutivo", "weight": 0.5},
+            ],
+        ),
+        courses={"ADS": 1},
+    )
+
+    assert [exam.name for exam in disciplina.exams] == ["P1"]
+    assert [exam.weight for exam in disciplina.exams] == pytest.approx([1.0])
+    assert [assignment.name for assignment in disciplina.assignments] == ["T1"]
+    assert [assignment.weight for assignment in disciplina.assignments] == pytest.approx([1.0])
+
+
+def test_trunca_pesos_para_tres_casas_sem_arredondar_para_cima():
+    disciplina = build_disciplina(
+        _payload(
+            exams=[
+                {"name": "P1", "weight": 1},
+                {"name": "P2", "weight": 1},
+                {"name": "P3", "weight": 1},
+            ],
+            assignments=[
+                {"name": "T1", "weight": 1},
+                {"name": "T2", "weight": 1},
+                {"name": "T3", "weight": 1},
+            ],
+            examWeight=33.34,
+            assignmentWeight=66.66,
+        ),
+        courses={"ADS": 1},
+    )
+
+    assert disciplina.exam_weight == pytest.approx(0.333)
+    assert disciplina.assignment_weight == pytest.approx(0.666)
+    assert [exam.weight for exam in disciplina.exams] == pytest.approx([0.333, 0.333, 0.333])
+    assert [assignment.weight for assignment in disciplina.assignments] == pytest.approx([0.333, 0.333, 0.333])

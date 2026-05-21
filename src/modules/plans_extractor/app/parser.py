@@ -1,4 +1,5 @@
 import logging
+import math
 import unicodedata
 from typing import Any
 
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 LOWERCASE_WORDS = {"a", "as", "da", "das", "de", "do", "dos", "e", "em", "na", "nas", "no", "nos"}
 FIRST_SEMESTER_HINTS = ("1 semestre", "1 sem", "primeiro semestre", "semestre 1")
 SECOND_SEMESTER_HINTS = ("2 semestre", "2 sem", "segundo semestre", "semestre 2")
+SUBSTITUTIVE_HINTS = ("substitutiva", "substitutivo", "substituta", "substituto", "psub", "p sub")
 
 
 def _to_float(value: Any, default: float = 0.0) -> float:
@@ -93,6 +95,26 @@ def _normalize_items(items: Any, field_name: str) -> list[dict[str, Any]]:
             }
         )
     return normalized_items
+
+
+def _truncate_weight(value: float) -> float:
+    # Business rule: weights with at most 3 decimal places, without rounding up.
+    return math.floor(value * 1000) / 1000
+
+
+def _truncate_items_weights(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    for item in items:
+        item["weight"] = _truncate_weight(item["weight"])
+    return items
+
+
+def _is_substitutive_item(name: Any) -> bool:
+    normalized = _normalize_text(name)
+    return any(hint in normalized for hint in SUBSTITUTIVE_HINTS)
+
+
+def _remove_substitutive_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [item for item in items if not _is_substitutive_item(item.get("name"))]
 
 
 def _normalize_items_distribution(
@@ -180,20 +202,23 @@ def _reconcile_annual_semester_split(exams: list[dict[str, Any]], period: str) -
 
 def _normalize_exams(items: Any, period: str) -> list[dict[str, Any]]:
     normalized_items = _normalize_items(items, "exams")
+    normalized_items = _remove_substitutive_items(normalized_items)
     if not normalized_items:
         return []
 
     fallback = _fallback_exam_weights(len(normalized_items), period)
     normalized_items = _normalize_items_distribution(normalized_items, fallback_weights=fallback)
     _reconcile_annual_semester_split(normalized_items, period)
-    return normalized_items
+    return _truncate_items_weights(normalized_items)
 
 
 def _normalize_assignments(items: Any) -> list[dict[str, Any]]:
     normalized_items = _normalize_items(items, "assignments")
+    normalized_items = _remove_substitutive_items(normalized_items)
     if not normalized_items:
         return []
-    return _normalize_items_distribution(normalized_items)
+    normalized_items = _normalize_items_distribution(normalized_items)
+    return _truncate_items_weights(normalized_items)
 
 
 def _normalize_assessment_weights(exam_weight: Any, assignment_weight: Any) -> tuple[float, float]:
@@ -205,7 +230,7 @@ def _normalize_assessment_weights(exam_weight: Any, assignment_weight: Any) -> t
         normalized_exam_weight /= total
         normalized_assignment_weight /= total
 
-    return normalized_exam_weight, normalized_assignment_weight
+    return _truncate_weight(normalized_exam_weight), _truncate_weight(normalized_assignment_weight)
 
 
 def build_disciplina(extracted_data: dict[str, Any], courses: dict[str, int]) -> Disciplina:
