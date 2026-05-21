@@ -173,6 +173,22 @@ class LambdaConstruct(Construct):
             environment_variables=environment_variables,
             subfolder="disciplina"
         )
+
+        self.get_all_cursos_function = self.create_lambda_api_gateway_integration(
+            module_name="get_all_cursos",
+            method="GET",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables,
+            subfolder="curso"
+        )
+
+        self.create_curso_function = self.create_lambda_api_gateway_integration(
+            module_name="create_curso",
+            method="POST",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables,
+            subfolder="curso"
+        )
         
         bedrock_policy = iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
@@ -190,4 +206,6 @@ class LambdaConstruct(Construct):
         
         self.funtions_that_need_dynamo_db_access.append(self.plans_extractor_function)
         self.funtions_that_need_dynamo_db_access.append(self.get_all_disciplinas_function)
+        self.funtions_that_need_dynamo_db_access.append(self.get_all_cursos_function)
+        self.funtions_that_need_dynamo_db_access.append(self.create_curso_function)
         

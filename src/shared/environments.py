@@ -81,6 +81,19 @@ class Environments:
         return DisciplinaRepositoryDynamo()
 
     @staticmethod
+    def get_curso_repo():
+        stage = os.environ.get("STAGE")
+        running_in_ci = os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true"
+        if stage == STAGE.TEST.value or running_in_ci:
+            from src.shared.infra.repositories.curso_repository_mock import CursoRepositoryMock
+
+            return CursoRepositoryMock()
+
+        from src.shared.infra.repositories.curso_repository_dynamo import CursoRepositoryDynamo
+
+        return CursoRepositoryDynamo()
+
+    @staticmethod
     def get_envs() -> "Environments":
         """
         Returns the Environments object. This method should be used to get the Environments object instead of instantiating it directly.
