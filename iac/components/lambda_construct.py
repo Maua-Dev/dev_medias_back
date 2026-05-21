@@ -36,7 +36,8 @@ class LambdaConstruct(Construct):
             runtime=lambda_.Runtime.PYTHON_3_13,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(30)
+            timeout=Duration.seconds(30),
+            memory_size=512
         )
 
         if public:

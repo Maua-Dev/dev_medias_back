@@ -1,6 +1,10 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from src.modules.genetic_algorithm.app.genetic_algorithm_usecase import GeneticAlgorithmUsecase
+from src.modules.genetic_algorithm.app.genetic_algorithm_usecase import (
+    GeneticAlgorithmUsecase,
+    _round_grade_for_front,
+    _round_weight_for_front,
+)
 from src.shared.helpers.errors.usecase_errors import CombinationNotFound
 
 
@@ -80,11 +84,20 @@ class TestGeneticAlgorithmUsecase:
         boletim = self._run(target_average=8.0)
         assert boletim.target_avg == 8.0
 
-    def test_grades_rounded_to_2_decimals(self):
+    def test_grades_displayed_in_half_point_steps(self):
         boletim = self._run()
         for prova in boletim.provas:
-            assert prova['valor'] == round(prova['valor'], 2)
-            assert prova['peso'] == round(prova['peso'], 2)
+            assert (prova['valor'] * 2).is_integer()
+            assert prova['peso'] == round(prova['peso'], 1)
+
+    def test_maua_grade_step_rounding_rule(self):
+        assert _round_grade_for_front(5.6) == 5.5
+        assert _round_grade_for_front(5.7) == 5.5
+        assert _round_grade_for_front(5.8) == 6.0
+
+    def test_maua_weight_rounding_rule(self):
+        assert _round_weight_for_front(0.25) == 0.2
+        assert _round_weight_for_front(0.26) == 0.3
 
     def test_message_exact_when_diff_lte_005(self):
         boletim = self._run(target_average=7.0, current_tests=[7.0, 7.0], current_assignments=[7.0, 7.0])

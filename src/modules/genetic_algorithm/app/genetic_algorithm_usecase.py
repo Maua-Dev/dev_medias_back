@@ -1,6 +1,27 @@
 from src.shared.domain.entities.boletim_ga import Boletim_GA
 from src.shared.helpers.errors.usecase_errors import CombinationNotFound
 from src.shared.genetic_algorithm_solver import GradeGeneticAlgorithm
+from decimal import Decimal, ROUND_HALF_DOWN
+
+
+def _round_grade_for_front(value: float) -> float:
+    """
+    Applies Maua display rule for grades:
+    - output only in 0.5 steps (e.g. 5.5, 6.0)
+    - midpoint ties do not round up
+    """
+    doubled = Decimal(str(value)) * Decimal("2")
+    rounded_doubled = doubled.quantize(Decimal("1"), rounding=ROUND_HALF_DOWN)
+    return float(rounded_doubled / Decimal("2"))
+
+
+def _round_weight_for_front(value: float) -> float:
+    """
+    Applies Maua rounding rule for frontend output:
+    - one decimal place
+    - ties (x.x5) do not round up
+    """
+    return float(Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_DOWN))
 
 
 class GeneticAlgorithmUsecase:
@@ -54,11 +75,17 @@ class GeneticAlgorithmUsecase:
         boletim.target_avg = target_average
         boletim.final_avg = final_avg
         boletim.provas = [
-            {"valor": round(nota, 2), "peso": round(boletim.spec_test_weight[i], 2)}
+            {
+                "valor": _round_grade_for_front(nota),
+                "peso": _round_weight_for_front(boletim.spec_test_weight[i]),
+            }
             for i, nota in enumerate(all_tests)
         ]
         boletim.trabalhos = [
-            {"valor": round(nota, 2), "peso": round(boletim.spec_assignment_weight[i], 2)}
+            {
+                "valor": _round_grade_for_front(nota),
+                "peso": _round_weight_for_front(boletim.spec_assignment_weight[i]),
+            }
             for i, nota in enumerate(all_assignments)
         ]
 
