@@ -19,7 +19,8 @@ class LambdaConstruct(Construct):
         self, 
         module_name: str,
         method: str, 
-        api_resource: Resource, 
+        api_resource: Resource,
+        api_key_required: bool = False,
         environment_variables: dict = {"STAGE": "TEST"},
         public: bool = False,
         subfolder: str = "",
@@ -43,12 +44,14 @@ class LambdaConstruct(Construct):
         if public:
             api_resource.add_resource("public").add_resource(module_name.replace("_", "-")).add_method(
                 method,
-                integration=LambdaIntegration(function)
+                integration=LambdaIntegration(function),
+                api_key_required=api_key_required
             )
         else:
             api_resource.add_resource(module_name.replace("_", "-")).add_method(
                 method,
-                integration=LambdaIntegration(function)
+                integration=LambdaIntegration(function),
+                api_key_required=api_key_required
             )
 
         return function
@@ -187,7 +190,8 @@ class LambdaConstruct(Construct):
             method="POST",
             api_resource=api_gateway_resource,
             environment_variables=environment_variables,
-            subfolder="curso"
+            subfolder="curso",
+            api_key_required=True
         )
         
         bedrock_policy = iam.PolicyStatement(

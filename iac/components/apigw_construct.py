@@ -30,6 +30,21 @@ class ApigwConstruct(Construct):
             default_cors_preflight_options=cors_options,
         )
         
+        # implementação de uma key para mínima proteção de rotas abertas como create_curso
+        
+        api_key = self.rest_api.add_api_key(
+            id="AdminApiKey",
+            api_key_name="admin-key"
+        )
+        
+        plan = self.rest_api.add_usage_plan("UsagePlan",
+            name="AdminPlan",
+            api_stages=[apigateway.UsagePlanPerApiStage(
+                api=self.rest_api,
+                stage=self.rest_api.deployment_stage,
+            )]
+        )
+        plan.add_api_key(api_key)
 
         self.api_gateway_resource = self.rest_api.root.add_resource(
             path_part="mss-medias",
