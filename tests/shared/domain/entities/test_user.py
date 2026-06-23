@@ -12,11 +12,13 @@ class Test_User:
         user = User(
         id = id_user,
         name = "João",
+        email = "joao@example.com",
         role = ROLE.STUDENT    
         )
         
         assert user.id == id_user
         assert user.name == "João"
+        assert user.email == "joao@example.com"
         assert user.role == ROLE.STUDENT
     
     def test_id_not_uuid(self):
@@ -24,6 +26,7 @@ class Test_User:
             user = User(
             id = 1,
             name = "João",
+            email = "joao@example.com",
             role = ROLE.STUDENT    
             )
         
@@ -36,6 +39,7 @@ class Test_User:
     def test_id_missing(self):
         user = User(
             name = "João",
+            email = "joao@example.com",
             role = ROLE.STUDENT    
             )
         
@@ -47,6 +51,7 @@ class Test_User:
             user = User(
             id = str(uuid.uuid4()),
             name = 2,
+            email = "joao@example.com",
             role = ROLE.STUDENT    
             )
         
@@ -59,6 +64,7 @@ class Test_User:
         with pytest.raises(ValidationError) as err:
             user = User(
             id = str(uuid.uuid4()),
+            email = "joao@example.com",
             role = ROLE.STUDENT    
             )
         
@@ -67,11 +73,25 @@ class Test_User:
         assert error[0]["loc"] == ("name",)
         assert error[0]["type"] == "missing"
                 
+    def test_email_missing(self):
+        with pytest.raises(ValidationError) as err:
+            user = User(
+            id = str(uuid.uuid4()),
+            name = "João",
+            role = ROLE.STUDENT    
+            )
+        
+        error = err.value.errors()
+        
+        assert error[0]["loc"] == ("email",)
+        assert error[0]["type"] == "missing"
+
     def test_role_not_ROLE(self):
         with pytest.raises(ValidationError) as err:
             user = User(
             id = str(uuid.uuid4()),
             name = "João",
+            email = "joao@example.com",
             role = "A"    
             )
         
@@ -83,7 +103,8 @@ class Test_User:
     def test_role_missing(self):
         user = User(
             id = str(uuid.uuid4()),
-            name = "João"
+            name = "João",
+            email = "joao@example.com"
             )
         
         assert user.role != None

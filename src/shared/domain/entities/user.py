@@ -12,6 +12,11 @@ class User(BaseModel):
         ...,
         description="Nome do usuario"
     )
+
+    email:str = Field(
+        ...,
+        description="Email do usuário"
+    )
     
     role:ROLE = Field(
         default=ROLE.STUDENT,

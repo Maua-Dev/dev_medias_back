@@ -9,7 +9,7 @@ from src.shared.infra.repositories.user_repository_mock import UserRepositoryMoc
 class Test_UserRepositoryMock:
     def test_create_user(self):
         repo = UserRepositoryMock()
-        user = User(id=str(uuid.uuid4()), name="Guilherme", role=ROLE.STUDENT)
+        user = User(id=str(uuid.uuid4()), name="Guilherme", email="guilherme@example.com", role=ROLE.STUDENT)
 
         created = repo.create_user(user)
 
@@ -18,7 +18,7 @@ class Test_UserRepositoryMock:
 
     def test_get_user_returns_stored_user(self):
         repo = UserRepositoryMock()
-        user = User(id=str(uuid.uuid4()), name="Guilherme", role=ROLE.STUDENT)
+        user = User(id=str(uuid.uuid4()), name="Guilherme", email="guilherme@example.com", role=ROLE.STUDENT)
         repo.create_user(user)
 
         fetched = repo.get_user(user.id)
@@ -33,10 +33,10 @@ class Test_UserRepositoryMock:
 
     def test_update_user_replaces_user_in_store(self):
         repo = UserRepositoryMock()
-        user = User(id=str(uuid.uuid4()), name="Guilherme", role=ROLE.STUDENT)
+        user = User(id=str(uuid.uuid4()), name="Guilherme", email="guilherme@example.com", role=ROLE.STUDENT)
         repo.create_user(user)
 
-        updated = User(id=user.id, name="Guilherme 43", role=ROLE.ADMIN)
+        updated = User(id=user.id, name="Guilherme 43", email="guilherme43@example.com", role=ROLE.ADMIN)
         result = repo.update_user(updated)
 
         assert result == updated
@@ -45,14 +45,14 @@ class Test_UserRepositoryMock:
 
     def test_update_user_not_found_raises(self):
         repo = UserRepositoryMock()
-        new_user = User(id=str(uuid.uuid4()), name="Guilherme", role=ROLE.STUDENT)
+        new_user = User(id=str(uuid.uuid4()), name="Guilherme", email="guilherme@example.com", role=ROLE.STUDENT)
 
         with pytest.raises(ValueError, match="not found"):
             repo.update_user(new_user)
 
     def test_delete_user_returns_deleted_user(self):
         repo = UserRepositoryMock()
-        user = User(id=str(uuid.uuid4()), name="Guilherme", role=ROLE.STUDENT)
+        user = User(id=str(uuid.uuid4()), name="Guilherme", email="guilherme@example.com", role=ROLE.STUDENT)
         repo.create_user(user)
 
         deleted = repo.delete_user(user.id)
