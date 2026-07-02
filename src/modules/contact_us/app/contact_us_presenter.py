@@ -20,6 +20,7 @@ def send_email(event, context):
         return LambdaHttpResponse(status_code=400, body="Mensagem não informada").toDict()
 
     email = Email(subject=subject, message=message, user_email=user_email)
+    
     try:
         client.send_email(
             Destination={
