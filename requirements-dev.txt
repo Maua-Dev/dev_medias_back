@@ -1,5 +1,3 @@
-pytest==6.2.5
-pytest-cov==4.0.0
-boto3==1.24.88
-python-dotenv==0.21.0
-PyMuPDF==1.26.4
+# CI / local tests only — not bundled into the Lambda layer (see requirements-app.txt).
+pytest==8.4.1
+pytest-cov==6.2.1

@@ -11,7 +11,6 @@ class LambdaHttpResponse(HttpResponse):
     status_code: int = 200
     body: any = {"message": "No response"}
     headers: dict = {"Content-Type": "application/json"}
-
     def __init__(self, body: any = None, status_code: int = None, headers: dict = None, **kwargs) -> None:
         """
         Constructor for HttpResponse.
@@ -45,7 +44,7 @@ class LambdaHttpResponse(HttpResponse):
         """
         return {
             "statusCode": self.status_code,
-            "body": json.dumps(self.body),
+            "body": json.dumps(self.body, ensure_ascii=False),
             "headers": self.headers,
             "isBase64Encoded": False
         }

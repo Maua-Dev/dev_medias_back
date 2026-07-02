@@ -22,10 +22,10 @@ jobs:
         - name: Checkout repository
           uses: actions/checkout@v4 
 
-        - name: Setup Python 3.9
+        - name: Setup Python 3.13
           uses: actions/setup-python@v5
           with:
-            python-version: '3.9'
+            python-version: '3.13'
 
         - name: Set AWS Account ID and other variables
           run: |
@@ -41,7 +41,7 @@ jobs:
             echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
 
         - name: Setup AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v4 # --> ATUALIZADO
+          uses: aws-actions/configure-aws-credentials@v4
           with:
             aws-region: ${{ vars.AWS_REGION }}
             role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
@@ -51,7 +51,7 @@ jobs:
           run: |
             npm install -g aws-cdk
             cd iac
-            pip install -r requirements.txt
+            pip install -r requirements-infra.txt
 
         - name: DeployWithCDK
           run: |
