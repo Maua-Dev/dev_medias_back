@@ -1,8 +1,16 @@
+import base64
 import os
+from pathlib import Path
 from typing import Tuple, Any, Dict
 from datetime import datetime
 
 import boto3
+
+_LOGO_PATH = Path(__file__).resolve().parent.parent / "assets" / "dev_medias_logo.png"
+
+
+def _logo_data_uri() -> str:
+    return f"data:image/png;base64,{base64.b64encode(_LOGO_PATH.read_bytes()).decode('ascii')}"
 
 
 class Email:
@@ -18,6 +26,7 @@ class Email:
         self.subject = subject
         self.message = message
         self.date_time = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        logo_src = _logo_data_uri()
         self.body = f"""
        <!DOCTYPE html>
         <html lang="pt-br" charset="UTF-8">
@@ -30,7 +39,7 @@ class Email:
                 <table class="TittleBox" style="width: 100%; background-color: black; border-radius: 10px 10px 0 0;">
                 <tr>
                     <td style="text-align: center; padding: 20px;">
-                        <img alt="DevMedias Logo" src="https://d22wxe17x1tv7t.cloudfront.net/devmedias.png" 
+                        <img alt="DevMedias Logo" src="{logo_src}"
                              style="max-width: 100%; height: auto; width: 200px;" />
                         <h1 style="color:white; margin-top: 10px;"><strong>Feedback Enviado!</strong></h1>
                     </td>

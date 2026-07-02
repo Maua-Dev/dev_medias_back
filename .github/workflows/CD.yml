@@ -41,7 +41,7 @@ jobs:
             echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
 
         - name: Setup AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v4 # --> ATUALIZADO
+          uses: aws-actions/configure-aws-credentials@v4
           with:
             aws-region: ${{ vars.AWS_REGION }}
             role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
