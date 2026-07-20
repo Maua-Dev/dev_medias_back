@@ -2,7 +2,7 @@
 
 ## Resumo
 
-O algoritmo funciona por meio de um **Algoritmo Genético (AG)**. O AG busca uma combinação de notas futuras (provas e trabalhos) que minimize uma função de fitness, de forma iterativa e estocástica. Ele opera sobre uma população de soluções candidatas, evoluindo-as ao longo de gerações por meio de seleção, crossover e mutação, até convergir para a melhor solução encontrada.
+O algoritmo funciona por meio de um **Algoritmo Genético (AG)**. Diferentemente da abordagem anterior por força bruta, o AG busca uma combinação de notas futuras (provas e trabalhos) que minimize uma função de fitness, de forma iterativa e estocástica. Ele opera sobre uma população de soluções candidatas, evoluindo-as ao longo de gerações por meio de seleção, crossover e mutação, até convergir para a melhor solução encontrada.
 
 ## Definição das Entidades
 
@@ -51,7 +51,9 @@ A média final é calculada em três etapas:
 
 3. **Média final**: combina as duas médias pelos pesos globais `test_weight` e `assignment_weight`:
 
-$$\text{média\_final} = \text{média\_provas} \times w_{\text{prova}} + \text{média\_trabalhos} \times w_{\text{trabalho}}$$
+```math
+\text{media\_final} = \text{media\_provas} \times w_{\text{prova}} + \text{media\_trabalhos} \times w_{\text{trabalho}}
+```
 
 Casos especiais são tratados: se não houver provas, retorna-se apenas a média dos trabalhos, e vice-versa.
 
@@ -59,13 +61,15 @@ Casos especiais são tratados: se não houver provas, retorna-se apenas a média
 
 A função de fitness avalia a qualidade de um indivíduo. Ela é **minimizada** e composta por três penalidades:
 
-$$\text{fitness} = 10 \cdot |\text{média\_final} - \text{média\_alvo}| + 2 \cdot \sigma_{\text{notas\_futuras}} + 20 \cdot P_{\text{impossível}}$$
+```math
+\text{fitness} = 10 \cdot |\text{media\_final} - \text{media\_alvo}| + 2 \cdot \sigma_{\text{notas\_futuras}} + 20 \cdot P_{\text{impossivel}}
+```
 
 onde:
 
-- $|\text{média\_final} - \text{média\_alvo}|$ penaliza o desvio em relação à média desejada (peso 10);
-- $\sigma_{\text{notas\_futuras}}$ é o desvio padrão entre as notas futuras, penalizando soluções com notas muito dispersas (peso 2);
-- $P_{\text{impossível}} = \sum \max(0,\, g - \text{max\_grade})$ penaliza notas que excedam o valor máximo permitido (peso 20).
+- `|media_final - media_alvo|` penaliza o desvio em relação à média desejada (peso 10);
+- `σ(notas_futuras)` é o desvio padrão entre as notas futuras, penalizando soluções com notas muito dispersas (peso 2);
+- `P_impossivel = Σ max(0, g - max_grade)` penaliza notas que excedam o valor máximo permitido (peso 20).
 
 ### Inicialização da População (`create_individual`)
 
@@ -121,7 +125,6 @@ Se o AG retornar `None` como solução, o usecase lança o erro `CombinationNotF
 ### Algoritmo ➕➖
 - João Branco - [JoaoVitorBranco](https://github.com/JoaoVitorBranco) 😎
 - Pedro Mesquita - [pedrogjmesquita](https://github.com/pedrogjmesquita) 💫
-- Thomas Boehm - [ThomassBoehm](https://github.com/ThomassBoehm)
 
 
 ## Agradecimentos especiais 🙏
