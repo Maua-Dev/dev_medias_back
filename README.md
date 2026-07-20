@@ -25,6 +25,8 @@ A entidade `Boletim_GA` encapsula todas as informações necessárias para a exe
 - `trabalhos`: lista de dicionários com `valor` e `peso` de cada trabalho (todos, incluindo os já existentes), formatada para exibição no frontend;
 - `message`: mensagem descritiva sobre a qualidade da solução encontrada.
 
+  
+
 ### 2. GradeGeneticAlgorithm
 
 Esta é a classe principal que implementa o algoritmo genético. É instanciada com um `Boletim_GA`, a média desejada e parâmetros de controle do AG (`population_size` e `generations`). Seus métodos são descritos a seguir.
@@ -45,11 +47,15 @@ Cada valor é um número real no intervalo `[0, max_grade]`.
 
 A média final é calculada em três etapas:
 
+
 1. **Média das provas**: se `spec_test_weight` for fornecido, calcula-se a média ponderada das provas pelos seus pesos individuais; caso contrário, calcula-se a média aritmética simples.
+   
 
 2. **Média dos trabalhos**: análogo ao passo anterior, usando `spec_assignment_weight`.
+   
 
 3. **Média final**: combina as duas médias pelos pesos globais `test_weight` e `assignment_weight`:
+   
 
 ```math
 \text{media\_final} = \text{media\_provas} \times w_{\text{prova}} + \text{media\_trabalhos} \times w_{\text{trabalho}}
@@ -57,9 +63,11 @@ A média final é calculada em três etapas:
 
 Casos especiais são tratados: se não houver provas, retorna-se apenas a média dos trabalhos, e vice-versa.
 
+
 ### Função de Fitness (`fitness`)
 
 A função de fitness avalia a qualidade de um indivíduo. Ela é **minimizada** e composta por três penalidades:
+
 
 ```math
 \text{fitness} = 10 \cdot |\text{media\_final} - \text{media\_alvo}| + 2 \cdot \sigma_{\text{notas\_futuras}} + 20 \cdot P_{\text{impossivel}}
@@ -70,22 +78,27 @@ onde:
 - `|media_final - media_alvo|` penaliza o desvio em relação à média desejada (peso 10);
 - `σ(notas_futuras)` é o desvio padrão entre as notas futuras, penalizando soluções com notas muito dispersas (peso 2);
 - `P_impossivel = Σ max(0, g - max_grade)` penaliza notas que excedam o valor máximo permitido (peso 20).
+- 
 
 ### Inicialização da População (`create_individual`)
 
 A população inicial é composta por `population_size` indivíduos gerados aleatoriamente. Cada nota futura é amostrada de uma distribuição uniforme no intervalo `[0, max_grade]`.
 
+
 ### Seleção (`selection`)
 
 Utiliza-se **seleção por torneio** com tamanho de torneio igual a 3. Três indivíduos são amostrados aleatoriamente da população, e os dois de menor fitness são selecionados como pais.
+
 
 ### Crossover (`crossover`)
 
 O crossover ocorre com probabilidade 0.8. É realizado separadamente para provas e trabalhos: escolhe-se um ponto de corte aleatório em cada lista e intercambiam-se os genes entre os dois pais, gerando dois filhos. Caso o crossover não ocorra, os filhos são cópias diretas dos pais.
 
+
 ### Mutação (`mutate`)
 
 Cada nota futura de um indivíduo é mutada com probabilidade 0.2 por uma perturbação gaussiana de média 0 e desvio padrão 0.5. O valor resultante é clampado ao intervalo `[0, max_grade]`.
+
 
 ### Execução Principal (`run`)
 
@@ -97,6 +110,7 @@ O algoritmo executa o seguinte ciclo por `generations` gerações:
    - Os 2 melhores indivíduos da geração atual são copiados diretamente (**elitismo local**);
    - Os demais são gerados por seleção, crossover e mutação até completar `population_size` indivíduos;
 4. Ao final das gerações, calcula a média final do melhor indivíduo encontrado e o retorna junto com seu fitness.
+   
 
 ### Pós-processamento no Usecase
 
@@ -110,6 +124,7 @@ Após o retorno do AG, o `GeneticAlgorithmUsecase` aplica as seguintes transform
   - diferença > 0.20: solução não satisfatória.
 
 Se o AG retornar `None` como solução, o usecase lança o erro `CombinationNotFound`.
+
 
 # Contribuidores 💰🤝💰
 
@@ -125,6 +140,7 @@ Se o AG retornar `None` como solução, o usecase lança o erro `CombinationNotF
 ### Algoritmo ➕➖
 - João Branco - [JoaoVitorBranco](https://github.com/JoaoVitorBranco) 😎
 - Pedro Mesquita - [pedrogjmesquita](https://github.com/pedrogjmesquita) 💫
+- Thomas Boehm - [ThomassBoehm](https://github.com/ThomassBoehm) 🚀
 
 
 ## Agradecimentos especiais 🙏
