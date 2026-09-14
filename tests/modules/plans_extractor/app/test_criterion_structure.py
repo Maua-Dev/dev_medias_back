@@ -1,6 +1,6 @@
 import pytest
 
-from src.modules.plans_extractor.app.course_extractor import (
+from src.modules.plans_extractor.app.helper.criterion_structure import (
     apply_criterion_structure,
     determinar_estrutura_provas_trabalhos,
     extract_criterion_code,
