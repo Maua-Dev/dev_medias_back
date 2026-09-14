@@ -119,3 +119,41 @@ def test_apply_criterion_ignores_conflicting_free_text_counts():
 
     assert len(result["exams"]) == 1
     assert result["exams"][0]["name"] == "P1"
+
+
+def test_apply_criterion_skips_substitutive_and_uses_canonical_names():
+    payload = {
+        "period": "A",
+        "examWeight": 0.5,
+        "assignmentWeight": 0.5,
+        "exams": [
+            {"name": "Prova substitutiva", "weight": 1.0},
+            {"name": "Avaliação PS", "weight": 1.0},
+        ],
+        "assignments": [{"name": "K1", "weight": 1.0}],
+    }
+    result = apply_criterion_structure(payload, "Critério de aprovação: C3/2015")
+
+    assert result["exams"] == [{"name": "P1", "weight": 0}]
+    assert result["assignments"] == [{"name": "K1", "weight": 1.0}]
+
+
+def test_apply_criterion_c_star_defaults_weights_when_bedrock_returns_zero():
+    payload = {
+        "period": "A",
+        "examWeight": 0.0,
+        "assignmentWeight": 0.0,
+        "exams": [
+            {"name": "Prova P1", "weight": 0.25},
+            {"name": "Prova P2", "weight": 0.25},
+            {"name": "Prova P3", "weight": 0.25},
+            {"name": "Prova P4", "weight": 0.25},
+        ],
+        "assignments": [{"name": "T1", "weight": 1.0}],
+    }
+    result = apply_criterion_structure(payload, "Critério de aprovação: C4/2015")
+
+    assert [exam["name"] for exam in result["exams"]] == ["P1", "P2"]
+    assert result["assignments"] == [{"name": "T1", "weight": 1.0}]
+    assert result["examWeight"] == 0.7
+    assert result["assignmentWeight"] == 0.3

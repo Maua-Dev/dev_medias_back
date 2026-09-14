@@ -305,8 +305,9 @@ def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None =
 
     ## Regras de extração
     - "course" deve ser o nome da disciplina presente no PDF; o backend sobrescreve esse campo com o nome do curso vindo da pasta do S3 antes de persistir.
-    - "examWeight" vem do campo "Peso de MP(kp)" dividido pela soma de kp+kt (ex: kp=5, kt=5 → examWeight=0.5)
+    - "examWeight" vem do campo "Peso de MP(kp)" dividido pela soma de kp+kt (ex: kp=7, kt=3 → examWeight=0.7)
     - "assignmentWeight" vem do campo "Peso de MT(kt)" dividido pela soma de kp+kt
+    - Se o critério inclui provas e trabalhos mas kp e kt estiverem ausentes ou zerados, use o padrão 0.7 provas / 0.3 trabalhos.
     - A QUANTIDADE de provas/trabalhos é definida pelo código do critério de aprovação (ex: "C4/2015" → família C4). Ignore qualquer texto conflitante sobre número de provas:
       - A*: 0 provas + trabalhos
       - B1: 2 provas; B2: 4 provas; B3: 1 prova; demais B*: 2 provas

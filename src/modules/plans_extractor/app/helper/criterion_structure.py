@@ -15,6 +15,48 @@ CRITERION_CODE_REGEX = re.compile(
     r"Crit[eé]rio\s+de\s+aprova[cç][aã]o\s*:\s*([A-E]\d)(?:\s*/\s*\d{4})?",
     re.IGNORECASE,
 )
+SUBSTITUTIVE_HINTS = (
+    "substitutiva",
+    "substitutivo",
+    "substituta",
+    "substituto",
+    "psub",
+    "p sub",
+    "prova sub",
+)
+# Fallback when criterion includes provas+trabalhos but kp/kt are missing or zero.
+DEFAULT_EXAM_WEIGHT = 0.7
+DEFAULT_ASSIGNMENT_WEIGHT = 0.3
+
+
+
+def _normalize_text(value: Any) -> str:
+    if value is None:
+        return ""
+    return " ".join(str(value).casefold().split())
+
+
+def _is_substitutive_name(name: Any) -> bool:
+    normalized = _normalize_text(name)
+    if not normalized:
+        return False
+    if normalized in {"ps", "p.s.", "p.s"}:
+        return True
+    if re.search(r"\bps\b", normalized):
+        return True
+    return any(hint in normalized for hint in SUBSTITUTIVE_HINTS)
+
+
+def _numeric_weight(payload: dict[str, Any], *keys: str) -> float:
+    for key in keys:
+        value = payload.get(key)
+        if value is None:
+            continue
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            continue
+    return 0.0
 
 
 def extract_criterion_code(criteria_text: str) -> str | None:
@@ -94,31 +136,57 @@ def apply_criterion_structure(
     existing_exams = payload.get("exams") or []
     if not isinstance(existing_exams, list):
         existing_exams = []
+    # Never keep substitutive exams — criterion count is for regular provas only.
+    regular_exams = [
+        item
+        for item in existing_exams
+        if isinstance(item, dict) and not _is_substitutive_name(item.get("name"))
+    ]
 
     if num_provas == 0:
         payload["exams"] = []
         payload["examWeight"] = 0
         payload["exam_weight"] = 0
-        if not (payload.get("assignmentWeight") or payload.get("assignment_weight")):
+        if _numeric_weight(payload, "assignmentWeight", "assignment_weight") == 0:
             payload["assignmentWeight"] = 1
             payload["assignment_weight"] = 1
     else:
         resized: list[dict[str, Any]] = []
         for index in range(num_provas):
-            if index < len(existing_exams) and isinstance(existing_exams[index], dict):
-                item = dict(existing_exams[index])
-                item["name"] = item.get("name") or f"P{index + 1}"
-                resized.append(item)
-            else:
-                resized.append({"name": f"P{index + 1}", "weight": 0})
+            weight = 0
+            if index < len(regular_exams):
+                try:
+                    weight = float(regular_exams[index].get("weight") or 0)
+                except (TypeError, ValueError):
+                    weight = 0
+            # Canonical names avoid Bedrock "Prova substitutiva"/"PS" surviving into Dynamo.
+            resized.append({"name": f"P{index + 1}", "weight": weight})
         payload["exams"] = resized
 
     if not tem_trabalhos:
         payload["assignments"] = []
         payload["assignmentWeight"] = 0
         payload["assignment_weight"] = 0
-        if num_provas > 0 and not (payload.get("examWeight") or payload.get("exam_weight")):
+        if num_provas > 0 and _numeric_weight(payload, "examWeight", "exam_weight") == 0:
             payload["examWeight"] = 1
             payload["exam_weight"] = 1
+    else:
+        existing_assignments = payload.get("assignments") or []
+        if not isinstance(existing_assignments, list):
+            existing_assignments = []
+        payload["assignments"] = [
+            item
+            for item in existing_assignments
+            if isinstance(item, dict) and not _is_substitutive_name(item.get("name"))
+        ]
+
+    exam_weight = _numeric_weight(payload, "examWeight", "exam_weight")
+    assignment_weight = _numeric_weight(payload, "assignmentWeight", "assignment_weight")
+    # Bedrock/PDF sometimes return 0/0 (blank kp/kt). Default policy: 70% provas / 30% trabalhos.
+    if num_provas > 0 and tem_trabalhos and exam_weight == 0 and assignment_weight == 0:
+        payload["examWeight"] = DEFAULT_EXAM_WEIGHT
+        payload["exam_weight"] = DEFAULT_EXAM_WEIGHT
+        payload["assignmentWeight"] = DEFAULT_ASSIGNMENT_WEIGHT
+        payload["assignment_weight"] = DEFAULT_ASSIGNMENT_WEIGHT
 
     return payload
