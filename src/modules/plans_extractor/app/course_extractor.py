@@ -10,6 +10,7 @@ import pymupdf
 from botocore.exceptions import ClientError
 
 from .helper.course.course import Course
+from .helper.criterion_structure import apply_criterion_structure
 from .parser import build_disciplina
 from src.shared.environments import Environments
 from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
@@ -23,7 +24,7 @@ COURSE_CODE_BY_FOLDER = {
     "arquitetura e urbanismo": "ARQ",
     "ciencia da computacao": "CIC",
     "design": "DSG",
-    "economia": "UNK",
+    "economia": "ECO",
     "engenharia civil": "ECV",
     "engenharia de alimentos": "EAL",
     "engenharia de computacao": "ECM",
@@ -152,6 +153,7 @@ def _parse_s3_key(key: str) -> tuple[str, str | None, int | None, str | None]:
         key,
     )
     return stem, None, None, None
+
 
 def extract_course_info_from_header(page: pymupdf.Page) -> dict[str, str]:
     ptm = page.transformation_matrix
@@ -303,16 +305,22 @@ def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None =
 
     ## Regras de extração
     - "course" deve ser o nome da disciplina presente no PDF; o backend sobrescreve esse campo com o nome do curso vindo da pasta do S3 antes de persistir.
-    - "examWeight" vem do campo "Peso de MP(kp)" dividido pela soma de kp+kt (ex: kp=5, kt=5 → examWeight=0.5)
+    - "examWeight" vem do campo "Peso de MP(kp)" dividido pela soma de kp+kt (ex: kp=7, kt=3 → examWeight=0.7)
     - "assignmentWeight" vem do campo "Peso de MT(kt)" dividido pela soma de kp+kt
-    - Ao extrair "exams" e "assignments", use prioritariamente o trecho "INFORMAÇÕES SOBRE PROVAS E TRABALHOS" quando ele existir.
+    - Se o critério inclui provas e trabalhos mas kp e kt estiverem ausentes ou zerados, use o padrão 0.7 provas / 0.3 trabalhos.
+    - A QUANTIDADE de provas/trabalhos é definida pelo código do critério de aprovação (ex: "C4/2015" → família C4). Ignore qualquer texto conflitante sobre número de provas:
+      - A*: 0 provas + trabalhos
+      - B1: 2 provas; B2: 4 provas; B3: 1 prova; demais B*: 2 provas
+      - C1: trabalhos + 2 provas; C2: trabalhos + 4 provas; C3: trabalhos + 1 prova; demais C* (inclui C4): trabalhos + 2 provas
+      - E*: tratamento específico (não force a estrutura acima)
+    - Ao extrair "exams" e "assignments", use prioritariamente o trecho "INFORMAÇÕES SOBRE PROVAS E TRABALHOS" quando ele existir, mas respeitando a quantidade imposta pelo critério.
     - Se houver pontuação explícita para componentes avaliativos (ex.: "X vale 2", "Y vale 6"), calcule os pesos relativos dividindo cada valor pela soma total dos valores do grupo.
     - Só use distribuição de pesos iguais quando não houver qualquer informação explícita de pontuação ou peso no texto.
     - Para disciplina anual com duas provas semestrais, aplicar pesos 2/5 e 3/5 (RN CEPE 16/2014), preferindo primeiro semestre=0.4 e segundo semestre=0.6 quando identificados
     - Para disciplina semestral, distribuir pesos das provas por média simples quando não houver pesos explícitos
-    - "exams" deve listar todas as provas mencionadas (P1, P2, PS1, etc.), inclusive quando elas aparecem no programa da disciplina.
+    - "exams" deve listar exatamente a quantidade de provas definida pelo critério (P1..Pn), sem prova substitutiva.
     - Para provas bimestrais com pesos iguais, cada uma recebe weight = 1 / (número de provas regulares)
-    - "assignments" deve listar todos os trabalhos mencionados (T1, T2, T3, projeto, relatório, etc.) com pesos coerentes com os valores explícitos; na ausência deles, usar pesos iguais.
+    - "assignments" deve listar trabalhos quando o critério inclui trabalhos (T1/K1, etc.) com pesos coerentes com os valores explícitos; na ausência deles, usar pesos iguais. Se o critério não inclui trabalhos, retorne lista vazia.
     - "period" deve ser extraído se mencionado (ex: "1º semestre de 2024"), senão null
     - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
@@ -423,6 +431,7 @@ def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryD
         )
 
         extracted_data = generate_json_with_bedrock(course)
+        extracted_data = apply_criterion_structure(extracted_data, course_criteria)
         # Source of truth for disciplina code is the S3 object key.
         # This avoids model hallucinations/variations (e.g., EEN281 -> EEE281)
         # that would persist under the wrong primary key in Dynamo.
