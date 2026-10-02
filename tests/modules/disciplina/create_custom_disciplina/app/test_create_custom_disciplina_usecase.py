@@ -1,10 +1,11 @@
 import pytest
 
 from src.modules.disciplina.create_custom_disciplina.app.create_custom_disciplina_usecase import (
+    MAX_CUSTOM_DISCIPLINAS_PER_DEVICE,
     CreateCustomDisciplinaUsecase,
 )
 from src.shared.domain.entities.disciplina import Disciplina, ItemAvaliacao
-from src.shared.helpers.errors.usecase_errors import DuplicatedItem
+from src.shared.helpers.errors.usecase_errors import DuplicatedItem, ForbiddenAction
 from src.shared.infra.repositories.disciplina_repository_mock import DisciplinaRepositoryMock
 
 DEVICE = "550e8400-e29b-41d4-a716-446655440000"
@@ -47,3 +48,12 @@ class TestCreateCustomDisciplinaUsecase:
         usecase(_custom())
         with pytest.raises(DuplicatedItem):
             usecase(_custom())
+
+    def test_max_per_device_limit(self):
+        repo = DisciplinaRepositoryMock(user_id=DEVICE)
+        usecase = CreateCustomDisciplinaUsecase(repo)
+        for i in range(MAX_CUSTOM_DISCIPLINAS_PER_DEVICE):
+            usecase(_custom(code=f"C{i:03d}"))
+
+        with pytest.raises(ForbiddenAction):
+            usecase(_custom(code="C020"))

@@ -1,11 +1,12 @@
 from src.shared.helpers.disciplina.custom_disciplina_payload import parse_create_disciplina_body
 from src.shared.helpers.errors.controller_errors import MissingParameters, WrongTypeParameter
-from src.shared.helpers.errors.usecase_errors import DuplicatedItem, InvalidInput
+from src.shared.helpers.errors.usecase_errors import DuplicatedItem, ForbiddenAction, InvalidInput
 from src.shared.helpers.external_interfaces.external_interface import IRequest, IResponse
 from src.shared.helpers.external_interfaces.http_codes import (
     BadRequest,
     Conflict,
     Created,
+    Forbidden,
     InternalServerError,
 )
 from src.shared.helpers.http.device_id import require_device_id
@@ -38,6 +39,9 @@ class CreateCustomDisciplinaController:
 
         except DuplicatedItem as error:
             return Conflict(error.message)
+
+        except ForbiddenAction as error:
+            return Forbidden(error.message)
 
         except Exception as error:
             return InternalServerError(error)

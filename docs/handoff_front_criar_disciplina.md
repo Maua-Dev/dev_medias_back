@@ -140,9 +140,9 @@ Resposta do back hoje vem em **snake_case** (`exam_weight`, `is_custom`, …). O
 |--------|--------|-------------|
 | **201** | ok | Fechar form / toast sucesso / refetch lista |
 | **400** | sem header, UUID inválido, `name`/`code` vazio, tipos errados, `deviceId` no body | Mensagem genérica ou do body (string) |
+| **403** | device já tem **20** matérias custom | “Limite de 20 matérias personalizadas atingido” (pode desabilitar botão criar se `customs.length >= 20`) |
 | **409** | `code` já existe **neste** device | “Já existe uma matéria com esse código” + focar campo code |
 | **5xx** | falha servidor | retry / erro genérico |
-
 Body de erro costuma ser **string** (não objeto), ex.: `"The item alredy exists for this code"`.
 
 ---

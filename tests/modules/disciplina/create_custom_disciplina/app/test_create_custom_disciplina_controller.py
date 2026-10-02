@@ -70,3 +70,22 @@ class TestCreateCustomDisciplinaController:
         )
         response = self._controller()(request)
         assert response.status_code == 400
+
+    def test_max_per_device_returns_403(self):
+        from src.modules.disciplina.create_custom_disciplina.app.create_custom_disciplina_usecase import (
+            MAX_CUSTOM_DISCIPLINAS_PER_DEVICE,
+        )
+
+        controller = self._controller()
+        headers = {"X-Device-Id": DEVICE}
+        for i in range(MAX_CUSTOM_DISCIPLINAS_PER_DEVICE):
+            response = controller(
+                HttpRequest(body={"code": f"C{i:03d}", "name": f"M{i}"}, headers=headers)
+            )
+            assert response.status_code == 201
+
+        limited = controller(
+            HttpRequest(body={"code": "C020", "name": "Overflow"}, headers=headers)
+        )
+        assert limited.status_code == 403
+        assert "max 20" in str(limited.body)

@@ -114,6 +114,7 @@ Content-Type: application/json
 - `device_id` / `deviceId` no body → **400** (só header)
 - **201** matéria criada (`is_custom: true`, `device_id` do header)
 - **409** se `code` já existe para aquele device
+- **403** se o device já tem **20** matérias custom (limite por `device_id`)
 - **400** header/campos inválidos
 
 ---
