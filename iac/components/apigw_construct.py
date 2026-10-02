@@ -13,7 +13,8 @@ class ApigwConstruct(Construct):
         cors_options = CorsOptions(
             allow_origins=Cors.ALL_ORIGINS,
             allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            allow_headers=Cors.DEFAULT_HEADERS
+            # X-Device-Id: identity for custom disciplinas (no login)
+            allow_headers=list(dict.fromkeys([*Cors.DEFAULT_HEADERS, "X-Device-Id"])),
         )
         
         self.rest_api = RestApi(

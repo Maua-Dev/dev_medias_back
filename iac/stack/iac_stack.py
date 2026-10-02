@@ -8,6 +8,7 @@ from components.apigw_construct import ApigwConstruct
 from components.dynamo_construct import DynamoConstruct
 from components.lambda_construct import LambdaConstruct
 from components.s3_construct import S3Construct
+from components.sqs_construct import SqsConstruct
 from components.ssm_construct import SsmConstruct
 
 class IacStack(Stack):
@@ -46,10 +47,17 @@ class IacStack(Stack):
             stage=stage,
         )
 
+        self.sqs_construct = SqsConstruct(
+            self,
+            construct_id=f"{stack_name}Sqs",
+            stage=stage,
+        )
+
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage.upper(),
             "PLANS_BUCKET_NAME": self.s3_construct.plans_bucket.bucket_name,
             "SUBJECT_BUCKET_NAME": self.s3_construct.subject_bucket.bucket_name,
+            "PLANS_CDN_DOMAIN": self.s3_construct.cloudfront_distribution_plans.distribution_domain_name,
             "ACADEMIC_CATALOG_TABLE_NAME": self.dynamo_construct.academic_catalog_table.table_name,
             "FROM_EMAIL": os.environ.get("FROM_EMAIL"),
             "REPLY_TO_EMAIL": os.environ.get("REPLY_TO_EMAIL"),
@@ -64,6 +72,7 @@ class IacStack(Stack):
             stack_name=stack_name,
             plans_bucket=self.s3_construct.plans_bucket,
             subject_bucket=self.s3_construct.subject_bucket,
+            plans_extractor_queue=self.sqs_construct.plans_extractor_queue,
             environment_variables=ENVIRONMENT_VARIABLES
         )
         
@@ -86,7 +95,8 @@ class IacStack(Stack):
             api_gateway_resource=self.apigw_construct.api_gateway_resource,
             buckets=None, # o que deve ser salvo são os CDNs, visto que os buckets bloqueiam acesso pela URL publica
             extra_params={
-                "cdn/subjects": self.s3_construct.cloudfront_distribution_subjects.distribution_domain_name
+                "cdn/subjects": self.s3_construct.cloudfront_distribution_subjects.distribution_domain_name,
+                "cdn/plans": self.s3_construct.cloudfront_distribution_plans.distribution_domain_name,
             },
             stage=stage
         )
