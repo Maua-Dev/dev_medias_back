@@ -34,6 +34,25 @@ class TestDisciplina:
         assert disciplina.exams == [ItemAvaliacao(name="P1", weight=0.6)]
         assert disciplina.assignments == [ItemAvaliacao(name="T1", weight=0.4)]
         assert disciplina.courses == {"ECM": 2024}
+        assert disciplina.study_plan_download_pdf_url is None
+        assert disciplina.exams_code is None
+
+    def test_disciplina_with_study_plan_and_exams_code(self):
+        disciplina = Disciplina(
+            course="ECM",
+            name="Engenharia de Computação",
+            code="ECM101",
+            period="A",
+            exam_weight=0.7,
+            assignment_weight=0.3,
+            exams=[ItemAvaliacao(name="P1", weight=0.4), ItemAvaliacao(name="P2", weight=0.6)],
+            assignments=[ItemAvaliacao(name="T1", weight=1.0)],
+            courses={"ECM": 1},
+            study_plan_download_pdf_url="https://cdn.example/Engenharia/1/ECM101.pdf",
+            exams_code="C4/2015",
+        )
+        assert disciplina.study_plan_download_pdf_url.endswith("ECM101.pdf")
+        assert disciplina.exams_code == "C4/2015"
 
     def test_disciplina_course_invalido(self):
         with pytest.raises(ValidationError) as exc_info:

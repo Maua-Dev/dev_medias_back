@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ItemAvaliacao(BaseModel):
-    """Componente ponderado de prova ou trabalho (ex.: P1, K1)."""
+    """Componente ponderado de prova ou trabalho (ex.: P1, T1)."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -26,3 +26,13 @@ class Disciplina(BaseModel):
     exams: list[ItemAvaliacao] = Field(..., description="Provas")
     assignments: list[ItemAvaliacao] = Field(..., description="Trabalhos")
     courses: dict[str, int] = Field(..., description="Cursos e anos")
+    study_plan_download_pdf_url: str | None = Field(
+        default=None,
+        alias="studyPlanDownloadPdfUrl",
+        description="URL HTTP do plano de ensino (CloudFront/S3)",
+    )
+    exams_code: str | None = Field(
+        default=None,
+        alias="examsCode",
+        description="Código do critério de aprovação (ex.: C4/2015)",
+    )

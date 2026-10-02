@@ -1,8 +1,10 @@
 from aws_cdk import (
     aws_lambda as lambda_,
+    aws_lambda_event_sources as lambda_event_sources,
     aws_s3 as s3,
     aws_s3_notifications as s3n,
-    Duration
+    aws_sqs as sqs,
+    Duration,
 )
 from aws_cdk import aws_iam as iam
 from constructs import Construct
@@ -56,14 +58,16 @@ class LambdaConstruct(Construct):
 
         return function
     
-    def create_lambda_s3_object_creation_deletion_trigger_integration(
+    def create_lambda_plans_extractor_sqs_integration(
         self,
         module_name: str,
         bucket_plans: s3.Bucket,
         bucket_subjects: s3.Bucket,
-        environment_variables: dict
+        plans_extractor_queue: sqs.Queue,
+        environment_variables: dict,
     ) -> lambda_.Function:
-        
+        """Create plans_extractor Lambda triggered by S3 -> SQS -> Lambda."""
+
         function = lambda_.Function(
             self,
             module_name.title(),
@@ -73,24 +77,26 @@ class LambdaConstruct(Construct):
             runtime=lambda_.Runtime.PYTHON_3_13,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(300), # increased time for excel and bedrock
-            memory_size=1024
+            timeout=Duration.seconds(300),  # increased time for excel and bedrock
+            memory_size=1024,
         )
-        
+
         bucket_plans.add_event_notification(
             s3.EventType.OBJECT_CREATED,
-            s3n.LambdaDestination(function)
+            s3n.SqsDestination(plans_extractor_queue),
         )
-                
-        # bucket.add_event_notification(
-        #     s3.EventType.OBJECT_REMOVED_DELETE,
-        #     s3n.LambdaDestination(function)
-        # )
-        
-        bucket_plans.grant_read(function) # read the plans
-        bucket_subjects.grant_read(function) # read all subjects
-        bucket_subjects.grant_write(function) # write all subjects
-        
+
+        function.add_event_source(
+            lambda_event_sources.SqsEventSource(
+                plans_extractor_queue,
+                batch_size=1,
+            )
+        )
+
+        bucket_plans.grant_read(function)
+        bucket_subjects.grant_read(function)
+        bucket_subjects.grant_write(function)
+
         return function
         
 
@@ -103,6 +109,7 @@ class LambdaConstruct(Construct):
         api_gateway_resource: Resource,
         plans_bucket: s3.Bucket,
         subject_bucket: s3.Bucket,
+        plans_extractor_queue: sqs.Queue,
         environment_variables: dict,
         **kargs
     ) -> None:
@@ -162,11 +169,12 @@ class LambdaConstruct(Construct):
             environment_variables=environment_variables
         )
 
-        self.plans_extractor_function = self.create_lambda_s3_object_creation_deletion_trigger_integration(
+        self.plans_extractor_function = self.create_lambda_plans_extractor_sqs_integration(
             module_name="plans_extractor",
             bucket_plans=plans_bucket,
             bucket_subjects=subject_bucket,
-            environment_variables=environment_variables
+            plans_extractor_queue=plans_extractor_queue,
+            environment_variables=environment_variables,
         )
         
         self.get_all_disciplinas_function = self.create_lambda_api_gateway_integration(

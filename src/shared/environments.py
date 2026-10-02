@@ -24,6 +24,7 @@ class Environments:
     region: str
     endpoint_url: str = None
     cloud_front_distribution_domain: str
+    plans_cdn_domain: str | None = None
 
     def _configure_local(self):
         from dotenv import load_dotenv
@@ -40,11 +41,13 @@ class Environments:
             self.region = "sa-east-1"
             self.endpoint_url = os.environ.get("ENDPOINT_URL") or "http://localhost:8000"
             self.cloud_front_distribution_domain = "https://d3q9q9q9q9q9q9.cloudfront.net"
+            self.plans_cdn_domain = "https://dplans-test.cloudfront.net"
 
         else:
             self.region = os.environ.get("AWS_REGION")
             self.endpoint_url = os.environ.get("ENDPOINT_URL")
             self.cloud_front_distribution_domain = os.environ.get("CLOUD_FRONT_DISTRIBUTION_DOMAIN")
+            self.plans_cdn_domain = os.environ.get("PLANS_CDN_DOMAIN")
 
         self.academic_catalog_table_name = (
             os.environ.get("ACADEMIC_CATALOG_TABLE_NAME")

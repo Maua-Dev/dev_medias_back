@@ -20,3 +20,5 @@ class TestGetAllDisciplinasViewmodel:
         assert response[0]["name"] == "Engenharia de Computação"
         assert "exam_weight" in response[0]
         assert "assignment_weight" in response[0]
+        assert "study_plan_download_pdf_url" in response[0]
+        assert "exams_code" in response[0]

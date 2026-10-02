@@ -12,7 +12,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 CRITERION_CODE_REGEX = re.compile(
-    r"Crit[eé]rio\s+de\s+aprova[cç][aã]o\s*:\s*([A-E]\d)(?:\s*/\s*\d{4})?",
+    r"Crit[eé]rio\s+de\s+aprova[cç][aã]o\s*:\s*([A-E]\d)(?:\s*/\s*(\d{4}))?",
     re.IGNORECASE,
 )
 SUBSTITUTIVE_HINTS = (
@@ -27,7 +27,6 @@ SUBSTITUTIVE_HINTS = (
 # Fallback when criterion includes provas+trabalhos but kp/kt are missing or zero.
 DEFAULT_EXAM_WEIGHT = 0.7
 DEFAULT_ASSIGNMENT_WEIGHT = 0.3
-
 
 
 def _normalize_text(value: Any) -> str:
@@ -59,14 +58,26 @@ def _numeric_weight(payload: dict[str, Any], *keys: str) -> float:
     return 0.0
 
 
-def extract_criterion_code(criteria_text: str) -> str | None:
-    """Extract approval criterion family code (e.g. C4 from 'C4/2015')."""
+def extract_exams_code(criteria_text: str) -> str | None:
+    """Extract full approval criterion code (e.g. C4/2015)."""
     if not criteria_text:
         return None
     match = CRITERION_CODE_REGEX.search(criteria_text)
     if not match:
         return None
-    return match.group(1).upper()
+    family = match.group(1).upper()
+    year = match.group(2)
+    if year:
+        return f"{family}/{year}"
+    return family
+
+
+def extract_criterion_code(criteria_text: str) -> str | None:
+    """Extract approval criterion family code (e.g. C4 from 'C4/2015')."""
+    exams_code = extract_exams_code(criteria_text)
+    if exams_code is None:
+        return None
+    return exams_code.split("/", 1)[0]
 
 
 def determinar_estrutura_provas_trabalhos(
@@ -81,8 +92,9 @@ def determinar_estrutura_provas_trabalhos(
     if not criterio:
         raise ValueError("Criterion code is required")
 
-    family = criterio[0].upper()
-    digit = criterio[1] if len(criterio) > 1 else ""
+    family_code = criterio.split("/", 1)[0]
+    family = family_code[0].upper()
+    digit = family_code[1] if len(family_code) > 1 else ""
 
     if family == "A":
         return 0, True
@@ -110,25 +122,57 @@ def determinar_estrutura_provas_trabalhos(
     raise ValueError(f"Unknown criterion family: {criterio}")
 
 
+def _canonical_items(
+    items: list[dict[str, Any]],
+    *,
+    prefix: str,
+) -> list[dict[str, Any]]:
+    """Keep weights, force names to P1/T1..., drop substitutives."""
+    regular = [
+        item
+        for item in items
+        if isinstance(item, dict) and not _is_substitutive_name(item.get("name"))
+    ]
+    canonical: list[dict[str, Any]] = []
+    for index, item in enumerate(regular, start=1):
+        try:
+            weight = float(item.get("weight") or 0)
+        except (TypeError, ValueError):
+            weight = 0
+        canonical.append({"name": f"{prefix}{index}", "weight": weight})
+    return canonical
+
+
 def apply_criterion_structure(
     extracted_data: dict[str, Any], criteria_text: str
 ) -> dict[str, Any]:
     """Force exams/assignments counts from the approval criterion code."""
     payload = dict(extracted_data)
-    code = extract_criterion_code(criteria_text)
-    if code is None:
+    exams_code = extract_exams_code(criteria_text)
+    if exams_code is None:
         logger.warning("No criterion code found in criteria text; skipping structure override")
+        # Still canonicalize names when present, and drop substitutives.
+        existing_exams = payload.get("exams") or []
+        existing_assignments = payload.get("assignments") or []
+        if isinstance(existing_exams, list):
+            payload["exams"] = _canonical_items(existing_exams, prefix="P")
+        if isinstance(existing_assignments, list):
+            payload["assignments"] = _canonical_items(existing_assignments, prefix="T")
         return payload
 
+    payload["exams_code"] = exams_code
+    payload["examsCode"] = exams_code
+
+    code = exams_code.split("/", 1)[0]
     if code.startswith("E"):
-        logger.info("Criterion %s uses specific handling; skipping structure override", code)
+        logger.info("Criterion %s uses specific handling; skipping structure override", exams_code)
         return payload
 
     period = payload.get("period")
     num_provas, tem_trabalhos = determinar_estrutura_provas_trabalhos(code, period)
     logger.info(
         "Applying criterion %s structure: num_provas=%s tem_trabalhos=%s",
-        code,
+        exams_code,
         num_provas,
         tem_trabalhos,
     )
@@ -136,12 +180,7 @@ def apply_criterion_structure(
     existing_exams = payload.get("exams") or []
     if not isinstance(existing_exams, list):
         existing_exams = []
-    # Never keep substitutive exams — criterion count is for regular provas only.
-    regular_exams = [
-        item
-        for item in existing_exams
-        if isinstance(item, dict) and not _is_substitutive_name(item.get("name"))
-    ]
+    regular_exams = _canonical_items(existing_exams, prefix="P")
 
     if num_provas == 0:
         payload["exams"] = []
@@ -153,13 +192,7 @@ def apply_criterion_structure(
     else:
         resized: list[dict[str, Any]] = []
         for index in range(num_provas):
-            weight = 0
-            if index < len(regular_exams):
-                try:
-                    weight = float(regular_exams[index].get("weight") or 0)
-                except (TypeError, ValueError):
-                    weight = 0
-            # Canonical names avoid Bedrock "Prova substitutiva"/"PS" surviving into Dynamo.
+            weight = regular_exams[index]["weight"] if index < len(regular_exams) else 0
             resized.append({"name": f"P{index + 1}", "weight": weight})
         payload["exams"] = resized
 
@@ -174,11 +207,7 @@ def apply_criterion_structure(
         existing_assignments = payload.get("assignments") or []
         if not isinstance(existing_assignments, list):
             existing_assignments = []
-        payload["assignments"] = [
-            item
-            for item in existing_assignments
-            if isinstance(item, dict) and not _is_substitutive_name(item.get("name"))
-        ]
+        payload["assignments"] = _canonical_items(existing_assignments, prefix="T")
 
     exam_weight = _numeric_weight(payload, "examWeight", "exam_weight")
     assignment_weight = _numeric_weight(payload, "assignmentWeight", "assignment_weight")

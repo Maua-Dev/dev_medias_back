@@ -4,13 +4,14 @@ import re
 import unicodedata
 from pathlib import PurePosixPath
 from typing import Any
-from urllib.parse import unquote_plus
+from urllib.parse import quote, unquote_plus
+import os
 
 import pymupdf
 from botocore.exceptions import ClientError
 
 from .helper.course.course import Course
-from .helper.criterion_structure import apply_criterion_structure
+from .helper.criterion_structure import apply_criterion_structure, extract_exams_code
 from .parser import build_disciplina
 from src.shared.environments import Environments
 from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
@@ -318,9 +319,9 @@ def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None =
     - Só use distribuição de pesos iguais quando não houver qualquer informação explícita de pontuação ou peso no texto.
     - Para disciplina anual com duas provas semestrais, aplicar pesos 2/5 e 3/5 (RN CEPE 16/2014), preferindo primeiro semestre=0.4 e segundo semestre=0.6 quando identificados
     - Para disciplina semestral, distribuir pesos das provas por média simples quando não houver pesos explícitos
-    - "exams" deve listar exatamente a quantidade de provas definida pelo critério (P1..Pn), sem prova substitutiva.
+    - "exams" deve listar exatamente a quantidade de provas definida pelo critério com nomes canônicos P1, P2, P3... Nunca incluir prova substitutiva/PSUB/PS.
     - Para provas bimestrais com pesos iguais, cada uma recebe weight = 1 / (número de provas regulares)
-    - "assignments" deve listar trabalhos quando o critério inclui trabalhos (T1/K1, etc.) com pesos coerentes com os valores explícitos; na ausência deles, usar pesos iguais. Se o critério não inclui trabalhos, retorne lista vazia.
+    - "assignments" deve listar trabalhos quando o critério inclui trabalhos com nomes canônicos T1, T2, T3... (nunca nomes descritivos do professor) e pesos coerentes com os valores explícitos; na ausência deles, usar pesos iguais. Se o critério não inclui trabalhos, retorne lista vazia.
     - "period" deve ser extraído se mencionado (ex: "1º semestre de 2024"), senão null
     - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
@@ -400,20 +401,44 @@ def load_pdf_from_s3(bucket: str, key: str) -> pymupdf.Document:
     raise FileNotFoundError(f"S3 object not found in bucket {bucket} (tried keys: {_key_candidates(key)})") from last_error
 
 
+def _plans_cdn_domain() -> str | None:
+    raw = (
+        os.environ.get("PLANS_CDN_DOMAIN")
+        or os.environ.get("CLOUD_FRONT_DISTRIBUTION_DOMAIN")
+        or ""
+    ).strip()
+    if not raw:
+        return None
+    return raw.removeprefix("https://").removeprefix("http://").rstrip("/")
+
+
+def build_study_plan_download_pdf_url(s3_key: str) -> str | None:
+    """Build HTTPS CloudFront URL for a plans-bucket object key."""
+    domain = _plans_cdn_domain()
+    if not domain:
+        logger.warning("PLANS_CDN_DOMAIN not set; study_plan_download_pdf_url will be null")
+        return None
+    decoded_key = unquote_plus(s3_key).lstrip("/")
+    return f"https://{domain}/{quote(decoded_key, safe='/')}"
+
+
 def _repository() -> DisciplinaRepositoryDynamo:
     """Get DynamoDB repository instance."""
     return Environments.get_disciplina_repo()
 
 
-def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryDynamo) -> bool:
-    """Process a single S3 event record and persist extracted disciplina to DynamoDB."""
+def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryDynamo) -> None:
+    """Process a single S3 event record and persist extracted disciplina to DynamoDB.
+
+    Raises on failure so SQS can retry and eventually send the message to the DLQ.
+    """
+    bucket = record["s3"]["bucket"]["name"]
+    raw_key = record["s3"]["object"]["key"]
+
     try:
-        bucket = record["s3"]["bucket"]["name"]
-        raw_key = record["s3"]["object"]["key"]
-        
         code, curso, ano, course_name = _parse_s3_key(raw_key)
         logger.info("Parsed S3 key: code=%s, curso=%s, ano=%s, course_name=%s", code, curso, ano, course_name)
-        
+
         doc = load_pdf_from_s3(bucket, raw_key)
 
         header_info = extract_course_info_from_header(doc[0])
@@ -436,10 +461,14 @@ def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryD
         # This avoids model hallucinations/variations (e.g., EEN281 -> EEE281)
         # that would persist under the wrong primary key in Dynamo.
         extracted_data["code"] = code
-        
+        extracted_data["study_plan_download_pdf_url"] = build_study_plan_download_pdf_url(raw_key)
+        exams_code = extract_exams_code(course_criteria)
+        if exams_code:
+            extracted_data["exams_code"] = exams_code
+
         if course_name:
             extracted_data["course"] = course_name
-        
+
         existing = repository.get_disciplina(code)
         course_occurrence: dict[str, int] = {curso: ano} if curso and ano is not None else {}
         if existing is None:
@@ -456,25 +485,53 @@ def _process_s3_record(record: dict[str, Any], repository: DisciplinaRepositoryD
         else:
             logger.info("Updating existing disciplina %s", code)
             repository.update_disciplina(disciplina)
+    except Exception:
+        logger.exception("Error processing S3 record s3://%s/%s", bucket, raw_key)
+        raise
 
-        return True
-    except Exception as e:
-        logger.error("Error processing S3 record: %s", e)
-        return False
+
+def _s3_records_from_event(event: dict[str, Any]) -> list[dict[str, Any]]:
+    """Extract S3 records from a direct S3 event or an SQS-wrapped S3 notification."""
+    s3_records: list[dict[str, Any]] = []
+
+    for record in event.get("Records", []):
+        if "s3" in record:
+            s3_records.append(record)
+            continue
+
+        body = record.get("body")
+        if not body:
+            logger.warning("Skipping record without s3 payload or SQS body: %s", record.get("eventSource"))
+            continue
+
+        try:
+            payload = json.loads(body) if isinstance(body, str) else body
+        except json.JSONDecodeError:
+            logger.exception("Invalid SQS message body (not JSON)")
+            raise
+
+        nested_records = payload.get("Records", [])
+        if not nested_records:
+            raise ValueError("SQS message body has no S3 Records")
+
+        for nested in nested_records:
+            if "s3" not in nested:
+                raise ValueError("SQS nested record is not an S3 event")
+            s3_records.append(nested)
+
+    return s3_records
 
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
-    """AWS Lambda handler for processing syllabus PDFs from S3."""
-    records = event.get("Records", [])
+    """AWS Lambda handler for processing syllabus PDFs from S3 (via SQS)."""
+    s3_records = _s3_records_from_event(event)
     repository = _repository()
 
     processed = 0
-    skipped = 0
-    for record in records:
-        if _process_s3_record(record, repository):
-            processed += 1
-        else:
-            skipped += 1
+    for record in s3_records:
+        _process_s3_record(record, repository)
+        processed += 1
 
-    logger.info("Lambda execution complete: processed=%d, skipped=%d", processed, skipped)
-    return {"processed": processed, "skipped": skipped}
+    logger.info("Lambda execution complete: processed=%d", processed)
+    return {"processed": processed}
+
