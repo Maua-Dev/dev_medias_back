@@ -13,6 +13,9 @@ class ItemAvaliacao(BaseModel):
 class Disciplina(BaseModel):
     """
     Disciplina com pesos de avaliação e vínculos a cursos (códigos de grade → período).
+
+    Catálogo oficial: device_id=None, is_custom=False (owner Dynamo GLOBAL).
+    Custom do app: device_id=<uuid>, is_custom=True (owner Dynamo = device_id).
     """
 
     model_config = ConfigDict(str_strip_whitespace=True, populate_by_name=True)
@@ -25,7 +28,7 @@ class Disciplina(BaseModel):
     assignment_weight: float = Field(..., alias="assignmentWeight", description="Peso dos trabalhos")
     exams: list[ItemAvaliacao] = Field(..., description="Provas")
     assignments: list[ItemAvaliacao] = Field(..., description="Trabalhos")
-    courses: dict[str, int] = Field(..., description="Cursos e anos")
+    courses: dict[str, int] = Field(default_factory=dict, description="Cursos e anos")
     study_plan_download_pdf_url: str | None = Field(
         default=None,
         alias="studyPlanDownloadPdfUrl",
@@ -35,4 +38,24 @@ class Disciplina(BaseModel):
         default=None,
         alias="examsCode",
         description="Código do critério de aprovação (ex.: C4/2015)",
+    )
+    device_id: str | None = Field(
+        default=None,
+        alias="deviceId",
+        description="UUID do dispositivo dono (somente matérias custom)",
+    )
+    is_custom: bool = Field(
+        default=False,
+        alias="isCustom",
+        description="True se criada pelo app (não faz parte do catálogo oficial)",
+    )
+    created_at: str | None = Field(
+        default=None,
+        alias="createdAt",
+        description="ISO-8601 UTC de criação",
+    )
+    updated_at: str | None = Field(
+        default=None,
+        alias="updatedAt",
+        description="ISO-8601 UTC da última atualização",
     )

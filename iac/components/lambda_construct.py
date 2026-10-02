@@ -185,6 +185,30 @@ class LambdaConstruct(Construct):
             subfolder="disciplina"
         )
 
+        self.create_custom_disciplina_function = self.create_lambda_api_gateway_integration(
+            module_name="create_custom_disciplina",
+            method="POST",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables,
+            subfolder="disciplina",
+        )
+
+        self.update_custom_disciplina_function = self.create_lambda_api_gateway_integration(
+            module_name="update_custom_disciplina",
+            method="PUT",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables,
+            subfolder="disciplina",
+        )
+
+        self.delete_custom_disciplina_function = self.create_lambda_api_gateway_integration(
+            module_name="delete_custom_disciplina",
+            method="DELETE",
+            api_resource=api_gateway_resource,
+            environment_variables=environment_variables,
+            subfolder="disciplina",
+        )
+
         self.get_all_cursos_function = self.create_lambda_api_gateway_integration(
             module_name="get_all_cursos",
             method="GET",
@@ -218,6 +242,9 @@ class LambdaConstruct(Construct):
         
         self.funtions_that_need_dynamo_db_access.append(self.plans_extractor_function)
         self.funtions_that_need_dynamo_db_access.append(self.get_all_disciplinas_function)
+        self.funtions_that_need_dynamo_db_access.append(self.create_custom_disciplina_function)
+        self.funtions_that_need_dynamo_db_access.append(self.update_custom_disciplina_function)
+        self.funtions_that_need_dynamo_db_access.append(self.delete_custom_disciplina_function)
         self.funtions_that_need_dynamo_db_access.append(self.get_all_cursos_function)
         self.funtions_that_need_dynamo_db_access.append(self.create_curso_function)
         

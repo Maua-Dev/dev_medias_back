@@ -71,17 +71,17 @@ class Environments:
     #         raise Exception("No repository found for this stage")
 
     @staticmethod
-    def get_disciplina_repo():
+    def get_disciplina_repo(user_id: str | None = None):
         stage = os.environ.get("STAGE")
         running_in_ci = os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true"
         if stage == STAGE.TEST.value or running_in_ci:
             from src.shared.infra.repositories.disciplina_repository_mock import DisciplinaRepositoryMock
 
-            return DisciplinaRepositoryMock()
+            return DisciplinaRepositoryMock(user_id=user_id)
 
         from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
 
-        return DisciplinaRepositoryDynamo()
+        return DisciplinaRepositoryDynamo(user_id=user_id)
 
     @staticmethod
     def get_curso_repo():
