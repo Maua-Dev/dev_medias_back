@@ -27,7 +27,9 @@ class SqsConstruct(Construct):
             self,
             "PlansExtractorQueue",
             queue_name=f"devmedias-plans-extractor-{stage_lower}",
-            visibility_timeout=Duration.seconds(1800),
+            # Keep close to plans_extractor Lambda timeout so failed messages retry quickly
+            # instead of staying invisible for the old 30-minute window.
+            visibility_timeout=Duration.seconds(30),
             retention_period=Duration.days(14),
             dead_letter_queue=sqs.DeadLetterQueue(
                 max_receive_count=3,

@@ -77,7 +77,7 @@ class LambdaConstruct(Construct):
             runtime=lambda_.Runtime.PYTHON_3_13,
             layers=[self.lambda_layer],
             environment=environment_variables,
-            timeout=Duration.seconds(300),  # increased time for excel and bedrock
+            timeout=Duration.seconds(30),  # must stay <= SQS visibility timeout (30s)
             memory_size=1024,
         )
 
