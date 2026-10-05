@@ -4,6 +4,10 @@ from src.shared.genetic_algorithm_solver import GradeGeneticAlgorithm
 from decimal import Decimal, ROUND_HALF_DOWN
 
 
+EXACT_DIFF_THRESHOLD = 0.05
+CLOSE_DIFF_THRESHOLD = 0.2
+
+
 def _round_grade_for_front(value: float) -> float:
     """
     Applies Maua display rule for grades:
@@ -15,13 +19,12 @@ def _round_grade_for_front(value: float) -> float:
     return float(rounded_doubled / Decimal("2"))
 
 
-def _round_weight_for_front(value: float) -> float:
+def _weight_for_front(value: float) -> float:
     """
-    Applies Maua rounding rule for frontend output:
-    - one decimal place
-    - ties (x.x5) do not round up
+    Preserva o peso enviado (até 4 casas) para não quebrar a soma (=1.0).
+    Ex.: 0.25 permanece 0.25 (não vira 0.2).
     """
-    return float(Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_HALF_DOWN))
+    return float(Decimal(str(value)).quantize(Decimal("0.0001")))
 
 
 class GeneticAlgorithmUsecase:
@@ -64,38 +67,70 @@ class GeneticAlgorithmUsecase:
             generations=generations,
         )
 
-        solution, fitness, final_avg = ga.run()
+        max_possible = ga.max_possible_average()
+        min_possible = ga.min_possible_average()
 
-        if solution is None:
+        # Mesmo com todas as lacunas em 10, a meta não é atingível.
+        if max_possible < target_average:
             raise CombinationNotFound()
 
-        all_tests = current_tests + solution["tests"]
-        all_assignments = current_assignments + solution["assignments"]
+        # Mesmo zerando as lacunas, a média já fica >= meta.
+        already_achieved = min_possible >= target_average
+        if already_achieved:
+            solution = ga.zero_remaining_solution()
+        else:
+            solution, _, _ = ga.run()
 
-        boletim.target_avg = target_average
-        boletim.final_avg = final_avg
+            if solution is None:
+                raise CombinationNotFound()
+
+        n_current_tests = len(current_tests)
+        n_current_assignments = len(current_assignments)
+        test_weights = boletim.spec_test_weight or []
+        assignment_weights = boletim.spec_assignment_weight or []
+
+        # Resposta alinhada ao grade_optimizer: apenas lacunas (quero).
         boletim.provas = [
             {
                 "valor": _round_grade_for_front(nota),
-                "peso": _round_weight_for_front(boletim.spec_test_weight[i]),
+                "peso": _weight_for_front(test_weights[n_current_tests + i]),
             }
-            for i, nota in enumerate(all_tests)
+            for i, nota in enumerate(solution["tests"])
         ]
         boletim.trabalhos = [
             {
                 "valor": _round_grade_for_front(nota),
-                "peso": _round_weight_for_front(boletim.spec_assignment_weight[i]),
+                "peso": _weight_for_front(assignment_weights[n_current_assignments + i]),
             }
-            for i, nota in enumerate(all_assignments)
+            for i, nota in enumerate(solution["assignments"])
         ]
 
+        displayed_tests = current_tests + [item["valor"] for item in boletim.provas]
+        displayed_assignments = current_assignments + [item["valor"] for item in boletim.trabalhos]
+        final_avg = ga.calculate_weighted_average(
+            displayed_tests,
+            displayed_assignments,
+            boletim.spec_test_weight,
+            boletim.spec_assignment_weight,
+        )
+
+        boletim.target_avg = target_average
+        boletim.final_avg = round(final_avg, 2)
+
+        if already_achieved:
+            boletim.status = "already_achieved"
+            boletim.message = "Média desejada já atingida; lacunas preenchidas com 0"
+            return boletim
+
         diff = abs(final_avg - target_average)
-        if diff <= 0.05:
+        if diff > CLOSE_DIFF_THRESHOLD:
+            raise CombinationNotFound()
+
+        if diff <= EXACT_DIFF_THRESHOLD:
+            boletim.status = "exact"
             boletim.message = "O algoritmo retornou uma combinação válida de notas"
-        elif diff <= 0.2:
-            boletim.message = f"O algoritmo retornou uma solução próxima (diferença: {diff:.2f})"
         else:
-            boletim.message = f"O algoritmo não conseguiu encontrar uma solução próxima (diferença: {diff:.2f})"
+            boletim.status = "close"
+            boletim.message = f"O algoritmo retornou uma solução próxima (diferença: {diff:.2f})"
 
         return boletim
-        

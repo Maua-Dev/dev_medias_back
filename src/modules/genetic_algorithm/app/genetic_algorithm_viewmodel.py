@@ -11,8 +11,8 @@ class GeneticAlgorithmViewmodel:
                 "provas": self.boletim.provas,
                 "trabalhos": self.boletim.trabalhos,
             },
+            "final_average": self.boletim.final_avg,
+            "target_average": self.boletim.target_avg,
+            "status": self.boletim.status,
             "message": self.boletim.message,
         }
-    
-        
-    
