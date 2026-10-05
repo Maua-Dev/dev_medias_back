@@ -68,6 +68,25 @@ class TestGeneticAlgorithmController:
         assert response.status_code == 400
         assert response.body == 'Parâmetro provas_que_tenho não existe'
 
+    def test_genetic_algorithm_controller_provas_que_tenho_item_not_dict(self):
+        request = HttpRequest(body={
+            'provas_que_tenho': [6.0],
+            'trabalhos_que_tenho': [],
+            'provas_que_quero': [],
+            'trabalhos_que_quero': [],
+            'peso_prova': 0.6,
+            'peso_trabalho': 0.4,
+            'media_desejada': 7.0
+        })
+
+        usecase = GeneticAlgorithmUsecase()
+        controller = GeneticAlgorithmController(usecase=usecase)
+
+        response = controller(request=request)
+
+        assert response.status_code == 400
+        assert 'dict' in response.body
+
     def test_genetic_algorithm_controller_provas_que_tenho_wrong_type(self):
         request = HttpRequest(body={
             'provas_que_tenho': 5.0,

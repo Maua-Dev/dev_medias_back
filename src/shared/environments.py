@@ -24,6 +24,7 @@ class Environments:
     region: str
     endpoint_url: str = None
     cloud_front_distribution_domain: str
+    plans_cdn_domain: str | None = None
 
     def _configure_local(self):
         from dotenv import load_dotenv
@@ -40,11 +41,13 @@ class Environments:
             self.region = "sa-east-1"
             self.endpoint_url = os.environ.get("ENDPOINT_URL") or "http://localhost:8000"
             self.cloud_front_distribution_domain = "https://d3q9q9q9q9q9q9.cloudfront.net"
+            self.plans_cdn_domain = "https://dplans-test.cloudfront.net"
 
         else:
             self.region = os.environ.get("AWS_REGION")
             self.endpoint_url = os.environ.get("ENDPOINT_URL")
             self.cloud_front_distribution_domain = os.environ.get("CLOUD_FRONT_DISTRIBUTION_DOMAIN")
+            self.plans_cdn_domain = os.environ.get("PLANS_CDN_DOMAIN")
 
         self.academic_catalog_table_name = (
             os.environ.get("ACADEMIC_CATALOG_TABLE_NAME")
@@ -68,17 +71,17 @@ class Environments:
     #         raise Exception("No repository found for this stage")
 
     @staticmethod
-    def get_disciplina_repo():
+    def get_disciplina_repo(user_id: str | None = None):
         stage = os.environ.get("STAGE")
         running_in_ci = os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true"
         if stage == STAGE.TEST.value or running_in_ci:
             from src.shared.infra.repositories.disciplina_repository_mock import DisciplinaRepositoryMock
 
-            return DisciplinaRepositoryMock()
+            return DisciplinaRepositoryMock(user_id=user_id)
 
         from src.shared.infra.repositories.disciplina_repository_dynamo import DisciplinaRepositoryDynamo
 
-        return DisciplinaRepositoryDynamo()
+        return DisciplinaRepositoryDynamo(user_id=user_id)
 
     @staticmethod
     def get_curso_repo():

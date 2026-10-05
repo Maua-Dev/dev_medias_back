@@ -1,7 +1,6 @@
 import traceback
 from .genetic_algorithm_usecase import GeneticAlgorithmUsecase
 from .genetic_algorithm_viewmodel import GeneticAlgorithmViewmodel
-from src.shared.domain.entities.nota import Nota
 from src.shared.helpers.errors.controller_errors import MissingParameters, WrongTypeParameter
 from src.shared.helpers.errors.domain_errors import EntityError, EntityParameterError
 from src.shared.helpers.errors.function_errors import FunctionInputError
@@ -14,6 +13,15 @@ class GeneticAlgorithmController:
 
     def __init__(self, usecase: GeneticAlgorithmUsecase):
         self.usecase = usecase
+
+    @staticmethod
+    def _ensure_dict_item(nota, field_name: str) -> None:
+        if not isinstance(nota, dict):
+            raise WrongTypeParameter(
+                fieldName=field_name,
+                fieldTypeExpected="dict",
+                fieldTypeReceived=type(nota).__name__
+            )
 
     def __call__(self, request: IRequest) -> IResponse:
         try:
@@ -29,16 +37,16 @@ class GeneticAlgorithmController:
                     fieldTypeExpected="list",
                     fieldTypeReceived=type(provas_que_tenho).__name__
                 )
-            
-            # Validação de cada nota e peso da lista provas_que_tenho
+
             for nota in provas_que_tenho:
-                if not isinstance(nota.get('valor'), (int, float)):
+                self._ensure_dict_item(nota, "provas_que_tenho item")
+                if not isinstance(nota.get('valor'), (int, float)) or isinstance(nota.get('valor'), bool):
                     raise WrongTypeParameter(
                         fieldName="provas_que_tenho item",
                         fieldTypeExpected="float",
                         fieldTypeReceived=type(nota.get('valor')).__name__
                     )
-                if not isinstance(nota.get('peso'), (int, float)):
+                if not isinstance(nota.get('peso'), (int, float)) or isinstance(nota.get('peso'), bool):
                     raise WrongTypeParameter(
                         fieldName="provas_que_tenho peso item",
                         fieldTypeExpected="float",
@@ -46,7 +54,7 @@ class GeneticAlgorithmController:
                     )
                 if nota['peso'] < 0 or nota['peso'] > 1:
                     raise InvalidInput("provas_que_tenho peso item", "Must be between 0 and 1")
-            
+
             current_tests = [nota['valor'] for nota in provas_que_tenho]
             spec_current_test_weight = [nota['peso'] for nota in provas_que_tenho]
 
@@ -62,16 +70,16 @@ class GeneticAlgorithmController:
                     fieldTypeExpected="list",
                     fieldTypeReceived=type(trabalhos_que_tenho).__name__
                 )
-            
-            # Validação de cada nota e peso da lista trabalhos_que_tenho
+
             for nota in trabalhos_que_tenho:
-                if not isinstance(nota.get('valor'), (int, float)):
+                self._ensure_dict_item(nota, "trabalhos_que_tenho item")
+                if not isinstance(nota.get('valor'), (int, float)) or isinstance(nota.get('valor'), bool):
                     raise WrongTypeParameter(
                         fieldName="trabalhos_que_tenho item",
                         fieldTypeExpected="float",
                         fieldTypeReceived=type(nota.get('valor')).__name__
                     )
-                if not isinstance(nota.get('peso'), (int, float)):
+                if not isinstance(nota.get('peso'), (int, float)) or isinstance(nota.get('peso'), bool):
                     raise WrongTypeParameter(
                         fieldName="trabalhos_que_tenho peso item",
                         fieldTypeExpected="float",
@@ -79,7 +87,7 @@ class GeneticAlgorithmController:
                     )
                 if nota['peso'] < 0 or nota['peso'] > 1:
                     raise InvalidInput("trabalhos_que_tenho peso item", "Must be between 0 and 1")
-                
+
             current_assignments = [nota['valor'] for nota in trabalhos_que_tenho]
             spec_current_assignment_weight = [nota['peso'] for nota in trabalhos_que_tenho]
 
@@ -95,10 +103,10 @@ class GeneticAlgorithmController:
                     fieldTypeExpected="list",
                     fieldTypeReceived=type(provas_que_quero).__name__
                 )
-            
-            # Validação de cada peso da lista provas_que_quero
+
             for nota in provas_que_quero:
-                if not isinstance(nota.get('peso'), (int, float)):
+                self._ensure_dict_item(nota, "provas_que_quero item")
+                if not isinstance(nota.get('peso'), (int, float)) or isinstance(nota.get('peso'), bool):
                     raise WrongTypeParameter(
                         fieldName="provas_que_quero peso item",
                         fieldTypeExpected="float",
@@ -122,10 +130,10 @@ class GeneticAlgorithmController:
                     fieldTypeExpected="list",
                     fieldTypeReceived=type(trabalhos_que_quero).__name__
                 )
-            
-            # Validação de cada peso da lista trabalhos_que_quero
+
             for nota in trabalhos_que_quero:
-                if not isinstance(nota.get('peso'), (int, float)):
+                self._ensure_dict_item(nota, "trabalhos_que_quero item")
+                if not isinstance(nota.get('peso'), (int, float)) or isinstance(nota.get('peso'), bool):
                     raise WrongTypeParameter(
                         fieldName="trabalhos_que_quero peso item",
                         fieldTypeExpected="float",
@@ -143,7 +151,7 @@ class GeneticAlgorithmController:
             peso_prova = request.data.get('peso_prova')
             if peso_prova is None:
                 raise MissingParameters('peso_prova')
-            if not isinstance(peso_prova, (int, float)):
+            if not isinstance(peso_prova, (int, float)) or isinstance(peso_prova, bool):
                 raise WrongTypeParameter(
                     fieldName="peso_prova",
                     fieldTypeExpected="float",
@@ -151,11 +159,11 @@ class GeneticAlgorithmController:
                 )
             if peso_prova < 0 or peso_prova > 1:
                 raise InvalidInput("peso_prova", "Must be between 0 and 1")
-            
+
             peso_trabalho = request.data.get('peso_trabalho')
             if peso_trabalho is None:
                 raise MissingParameters('peso_trabalho')
-            if not isinstance(peso_trabalho, (int, float)):
+            if not isinstance(peso_trabalho, (int, float)) or isinstance(peso_trabalho, bool):
                 raise WrongTypeParameter(
                     fieldName="peso_trabalho",
                     fieldTypeExpected="float",
@@ -167,7 +175,7 @@ class GeneticAlgorithmController:
             media_desejada = request.data.get('media_desejada')
             if media_desejada is None:
                 raise MissingParameters('media_desejada')
-            if not isinstance(media_desejada, (int, float)):
+            if not isinstance(media_desejada, (int, float)) or isinstance(media_desejada, bool):
                 raise WrongTypeParameter(
                     fieldName="media_desejada",
                     fieldTypeExpected="float",
@@ -175,8 +183,9 @@ class GeneticAlgorithmController:
                 )
             if media_desejada < 0 or media_desejada > 10:
                 raise InvalidInput("media_desejada", "Must be between 0 and 10")
-            
-            if peso_prova + peso_trabalho != 1.0:
+
+            # Tolerância alinhada à entity (±0.01)
+            if abs((peso_prova + peso_trabalho) - 1.0) > 0.01:
                 raise InvalidInput("peso_prova and/or peso_trabalho", "Must sum 1.0")
 
             # ==========================================

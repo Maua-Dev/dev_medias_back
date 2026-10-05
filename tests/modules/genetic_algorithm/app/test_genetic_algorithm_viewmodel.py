@@ -1,14 +1,23 @@
-import pytest
 from unittest.mock import MagicMock
 from src.shared.domain.entities.boletim_ga import Boletim_GA
 from src.modules.genetic_algorithm.app.genetic_algorithm_viewmodel import GeneticAlgorithmViewmodel
 
 
-def make_boletim(provas=None, trabalhos=None, message="Combinação válida"):
+def make_boletim(
+    provas=None,
+    trabalhos=None,
+    message="Combinação válida",
+    final_avg=7.0,
+    target_avg=7.0,
+    status="exact",
+):
     boletim = MagicMock(spec=Boletim_GA)
     boletim.provas = provas if provas is not None else [{"valor": 8.0, "peso": 0.5}, {"valor": 7.0, "peso": 0.5}]
     boletim.trabalhos = trabalhos if trabalhos is not None else [{"valor": 9.0, "peso": 1.0}]
     boletim.message = message
+    boletim.final_avg = final_avg
+    boletim.target_avg = target_avg
+    boletim.status = status
     return boletim
 
 
@@ -22,6 +31,9 @@ class TestGeneticAlgorithmViewmodel:
         assert "provas" in result["notas"]
         assert "trabalhos" in result["notas"]
         assert "message" in result
+        assert "final_average" in result
+        assert "target_average" in result
+        assert "status" in result
 
     def test_provas_correct(self):
         provas = [{"valor": 8.0, "peso": 0.5}]
@@ -48,6 +60,14 @@ class TestGeneticAlgorithmViewmodel:
         result = GeneticAlgorithmViewmodel(boletim).to_dict()
 
         assert result["message"] == "O algoritmo retornou uma combinação válida de notas"
+
+    def test_status_and_averages(self):
+        boletim = make_boletim(final_avg=7.1, target_avg=7.0, status="close")
+        result = GeneticAlgorithmViewmodel(boletim).to_dict()
+
+        assert result["final_average"] == 7.1
+        assert result["target_average"] == 7.0
+        assert result["status"] == "close"
 
     def test_empty_provas(self):
         boletim = make_boletim(provas=[])

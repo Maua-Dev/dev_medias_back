@@ -200,6 +200,19 @@ def _reconcile_annual_semester_split(exams: list[dict[str, Any]], period: str) -
     exams[second_index]["weight"] = 0.6
 
 
+def _normalize_assignments(items: Any) -> list[dict[str, Any]]:
+    normalized_items = _normalize_items(items, "assignments")
+    normalized_items = _remove_substitutive_items(normalized_items)
+    if not normalized_items:
+        return []
+    normalized_items = _normalize_items_distribution(normalized_items)
+    normalized_items = _truncate_items_weights(normalized_items)
+    # Canonical names for Dynamo (ignore professor wording).
+    for index, item in enumerate(normalized_items, start=1):
+        item["name"] = f"T{index}"
+    return normalized_items
+
+
 def _normalize_exams(items: Any, period: str) -> list[dict[str, Any]]:
     normalized_items = _normalize_items(items, "exams")
     normalized_items = _remove_substitutive_items(normalized_items)
@@ -209,16 +222,10 @@ def _normalize_exams(items: Any, period: str) -> list[dict[str, Any]]:
     fallback = _fallback_exam_weights(len(normalized_items), period)
     normalized_items = _normalize_items_distribution(normalized_items, fallback_weights=fallback)
     _reconcile_annual_semester_split(normalized_items, period)
-    return _truncate_items_weights(normalized_items)
-
-
-def _normalize_assignments(items: Any) -> list[dict[str, Any]]:
-    normalized_items = _normalize_items(items, "assignments")
-    normalized_items = _remove_substitutive_items(normalized_items)
-    if not normalized_items:
-        return []
-    normalized_items = _normalize_items_distribution(normalized_items)
-    return _truncate_items_weights(normalized_items)
+    normalized_items = _truncate_items_weights(normalized_items)
+    for index, item in enumerate(normalized_items, start=1):
+        item["name"] = f"P{index}"
+    return normalized_items
 
 
 def _normalize_assessment_weights(exam_weight: Any, assignment_weight: Any) -> tuple[float, float]:
@@ -259,6 +266,19 @@ def build_disciplina(extracted_data: dict[str, Any], courses: dict[str, int]) ->
 
     # courses is derived from the S3 object name, not from the model output.
     payload["courses"] = courses
+
+    exams_code = payload.get("exams_code", payload.get("examsCode"))
+    payload.pop("examsCode", None)
+    payload["exams_code"] = str(exams_code).strip() if exams_code else None
+
+    study_plan_url = payload.get(
+        "study_plan_download_pdf_url",
+        payload.get("studyPlanDownloadPdfUrl"),
+    )
+    payload.pop("studyPlanDownloadPdfUrl", None)
+    payload["study_plan_download_pdf_url"] = (
+        str(study_plan_url).strip() if study_plan_url else None
+    )
 
     try:
         return Disciplina.model_validate(payload)
