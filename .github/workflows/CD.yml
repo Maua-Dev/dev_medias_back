@@ -29,16 +29,14 @@ jobs:
 
         - name: Set AWS Account ID and other variables
           run: |
-            # Prefer environment-scoped AWS_ACCOUNT_ID (historical prod CD target).
-            # Fall back to stage-specific repo secrets for environments that only have those.
-            if [[ -n "${{ secrets.AWS_ACCOUNT_ID }}" ]]; then
-              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
-            elif [[ "${{ github.ref_name }}" == "dev" ]]; then
+            if [[ "${{ github.ref_name }}" == "dev" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "prod" ]]; then
-              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
+              # Same account as legacy DevMediasStackprod / iOS CDN (SSO AWSPowerUserAccessProd).
+              # Do not use a mismatched AWS_ACCOUNT_ID_PROD secret if it points elsewhere.
+              echo "AWS_ACCOUNT_ID=891377229275" >> $GITHUB_ENV
             else
               echo "Invalid branch name!" && exit 1
             fi
