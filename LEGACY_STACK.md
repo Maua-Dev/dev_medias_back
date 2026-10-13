@@ -24,3 +24,11 @@ Use workflow `CD-legacy` (`workflow_dispatch` only). It hardcodes:
 - Subjects CloudFront: `E1XC2LFUOQ5S4N` → `d3c1aqxshha6rg.cloudfront.net`
 - Plans bucket: `devmediasstackprod-plansstackplansbucket699f4d02-m8ewfz392smg`
 - Subjects bucket: `devmediasstackprod-subjectstacksubjectbucket927c88-tglqq1xpktvo`
+
+## cdk diff smoke (2026-10-13)
+
+With `STACK_NAME=DevMediasStackprod` and `GITHUB_REF_NAME=prod` against live prod:
+
+- Targets stack `DevMediasStackprod` correctly
+- No CloudFront / S3 bucket changes
+- Only Lambda layer content + placeholder email env diffs (expected when local env emails differ)
