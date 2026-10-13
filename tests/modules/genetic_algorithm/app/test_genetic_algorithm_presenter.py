@@ -68,21 +68,59 @@ class TestGeneticAlgorithmPresenter:
         response = lambda_handler(event=self._make_event(self._default_body(media_desejada=1.0)), context=None)
         assert response["statusCode"] == 200
 
+    def test_impossible_target_returns_not_found(self):
+        body = {
+            'provas_que_tenho': [{'valor': 2.0, 'peso': 0.3}, {'valor': 3.0, 'peso': 0.3}],
+            'trabalhos_que_tenho': [{'valor': 2.0, 'peso': 0.5}],
+            'provas_que_quero': [{'peso': 0.4}],
+            'trabalhos_que_quero': [{'peso': 0.5}],
+            'peso_prova': 0.6,
+            'peso_trabalho': 0.4,
+            'media_desejada': 10.0,
+        }
+        response = lambda_handler(event=self._make_event(body), context=None)
+        assert response["statusCode"] == 404
+        assert "combinação possível" in json.loads(response["body"])
+
+    def test_already_achieved_returns_zero_gaps(self):
+        body = {
+            'provas_que_tenho': [{'valor': 10.0, 'peso': 0.4}, {'valor': 10.0, 'peso': 0.4}],
+            'trabalhos_que_tenho': [],
+            'provas_que_quero': [{'peso': 0.2}],
+            'trabalhos_que_quero': [],
+            'peso_prova': 1.0,
+            'peso_trabalho': 0.0,
+            'media_desejada': 8.0,
+        }
+        response = lambda_handler(event=self._make_event(body), context=None)
+        assert response["statusCode"] == 200
+        payload = json.loads(response["body"])
+        assert len(payload["notas"]["provas"]) == 1
+        assert payload["notas"]["provas"][0]["valor"] == 0.0
+        assert payload["status"] == "already_achieved"
+        assert "já atingida" in payload["message"]
+
     def test_success_response_has_expected_keys(self):
         response = lambda_handler(event=self._make_event(self._default_body()), context=None)
         body = json.loads(response["body"])
         assert "notas" in body
         assert "message" in body
+        assert "final_average" in body
+        assert "target_average" in body
+        assert "status" in body
         assert "provas" in body["notas"]
         assert "trabalhos" in body["notas"]
         assert isinstance(body["notas"]["provas"], list)
         assert isinstance(body["notas"]["trabalhos"], list)
+        # só lacunas: 2 provas_que_quero + 1 trabalho_que_quero
+        assert len(body["notas"]["provas"]) == 2
+        assert len(body["notas"]["trabalhos"]) == 1
 
     def test_success_response_does_not_expose_legacy_keys(self):
         response = lambda_handler(event=self._make_event(self._default_body()), context=None)
         body = json.loads(response["body"])
 
-        for key in ["tests", "assignments", "final_average", "target_average"]:
+        for key in ["tests", "assignments"]:
             assert key not in body
 
     def test_success_multiple_calls(self):

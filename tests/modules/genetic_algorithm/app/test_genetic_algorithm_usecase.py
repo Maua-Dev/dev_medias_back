@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from src.modules.genetic_algorithm.app.genetic_algorithm_usecase import (
     GeneticAlgorithmUsecase,
     _round_grade_for_front,
-    _round_weight_for_front,
+    _weight_for_front,
 )
 from src.shared.helpers.errors.usecase_errors import CombinationNotFound
 
@@ -54,15 +54,17 @@ class TestGeneticAlgorithmUsecase:
         assert hasattr(boletim, 'message')
         assert isinstance(boletim.message, str)
 
-    def test_provas_total_length(self):
-        boletim = self._run(num_remaining_tests=2)
-        # current(2) + remaining(2)
-        assert len(boletim.provas) == 4
+    def test_boletim_has_status(self):
+        boletim = self._run()
+        assert boletim.status in {"exact", "close", "already_achieved"}
 
-    def test_trabalhos_total_length(self):
+    def test_provas_are_only_lacunas(self):
+        boletim = self._run(num_remaining_tests=2)
+        assert len(boletim.provas) == 2
+
+    def test_trabalhos_are_only_lacunas(self):
         boletim = self._run(num_remaining_assignments=2)
-        # current(2) + remaining(2)
-        assert len(boletim.trabalhos) == 4
+        assert len(boletim.trabalhos) == 2
 
     def test_provas_have_valor_and_peso(self):
         boletim = self._run()
@@ -88,45 +90,94 @@ class TestGeneticAlgorithmUsecase:
         boletim = self._run()
         for prova in boletim.provas:
             assert (prova['valor'] * 2).is_integer()
-            assert prova['peso'] == round(prova['peso'], 1)
+
+    def test_weights_preserve_quarter_values(self):
+        boletim = self._run()
+        for prova in boletim.provas:
+            assert prova['peso'] == 0.25
 
     def test_maua_grade_step_rounding_rule(self):
         assert _round_grade_for_front(5.6) == 5.5
         assert _round_grade_for_front(5.7) == 5.5
         assert _round_grade_for_front(5.8) == 6.0
 
-    def test_maua_weight_rounding_rule(self):
-        assert _round_weight_for_front(0.25) == 0.2
-        assert _round_weight_for_front(0.26) == 0.3
+    def test_weight_for_front_preserves_025(self):
+        assert _weight_for_front(0.25) == 0.25
+        assert _weight_for_front(0.3333) == 0.3333
 
     def test_message_exact_when_diff_lte_005(self):
         boletim = self._run(target_average=7.0, current_tests=[7.0, 7.0], current_assignments=[7.0, 7.0])
         if abs(boletim.final_avg - boletim.target_avg) <= 0.05:
             assert boletim.message == "O algoritmo retornou uma combinação válida de notas"
+            assert boletim.status == "exact"
 
     def test_message_contains_diff_when_close(self):
         boletim = self._run()
         diff = abs(boletim.final_avg - boletim.target_avg)
         if 0.05 < diff <= 0.2:
             assert "próxima" in boletim.message
-
-    def test_message_contains_diff_when_far(self):
-        boletim = self._run()
-        diff = abs(boletim.final_avg - boletim.target_avg)
-        if diff > 0.2:
-            assert "não conseguiu" in boletim.message
+            assert boletim.status == "close"
 
     # ==========================================
-    # Casos de erro
+    # Casos de erro / edge
     # ==========================================
 
     def test_raises_combination_not_found_when_impossible(self):
+        with pytest.raises(CombinationNotFound):
+            self._run(
+                current_tests=[2.0, 3.0],
+                current_assignments=[2.0],
+                num_remaining_tests=1,
+                num_remaining_assignments=1,
+                target_average=10.0,
+                spec_test_weight=[0.3, 0.3, 0.4],
+                spec_assignment_weight=[0.5, 0.5],
+            )
+
+    def test_raises_combination_not_found_when_solver_returns_none(self):
         with patch('src.modules.genetic_algorithm.app.genetic_algorithm_usecase.GradeGeneticAlgorithm') as mock_ga:
             mock_instance = MagicMock()
+            mock_instance.max_possible_average.return_value = 10.0
+            mock_instance.min_possible_average.return_value = 0.0
             mock_instance.run.return_value = (None, None, None)
             mock_ga.return_value = mock_instance
             with pytest.raises(CombinationNotFound):
                 self._run()
+
+    def test_raises_combination_not_found_when_solution_far_from_target(self):
+        with patch('src.modules.genetic_algorithm.app.genetic_algorithm_usecase.GradeGeneticAlgorithm') as mock_ga:
+            mock_instance = MagicMock()
+            mock_instance.max_possible_average.return_value = 10.0
+            mock_instance.min_possible_average.return_value = 0.0
+            mock_instance.run.return_value = (
+                {"tests": [1.0, 1.0], "assignments": [1.0, 1.0]},
+                99.0,
+                1.0,
+            )
+            mock_instance.calculate_weighted_average.return_value = 1.0
+            mock_ga.return_value = mock_instance
+            with pytest.raises(CombinationNotFound):
+                self._run()
+
+    def test_already_achieved_returns_zero_gaps(self):
+        boletim = self._run(
+            current_tests=[10.0, 10.0],
+            current_assignments=[],
+            num_remaining_tests=1,
+            num_remaining_assignments=0,
+            test_weight=1.0,
+            assignment_weight=0.0,
+            target_average=8.0,
+            spec_test_weight=[0.4, 0.4, 0.2],
+            spec_assignment_weight=[],
+        )
+
+        assert len(boletim.provas) == 1
+        assert boletim.provas[0]["valor"] == 0.0
+        assert boletim.provas[0]["peso"] == 0.2
+        assert boletim.status == "already_achieved"
+        assert boletim.message == "Média desejada já atingida; lacunas preenchidas com 0"
+        assert boletim.final_avg >= 8.0
 
     def test_raises_entity_error_invalid_weight_sum(self):
         from src.shared.helpers.errors.domain_errors import EntityError

@@ -35,7 +35,7 @@ Itens de curso e disciplina compartilham a tabela:
 - `sk` = `METADATA` (registro canônico; reserva outras SKs no futuro)
 - `entity_type` = `CURSO` | `DISCIPLINA` (filtro no scan)
 
-`GLOBAL` = catálogo padrão (usuário não logado). Com usuário logado, instancie o repositório com `user_id` para ler/gravar só o escopo daquele dono.
+`GLOBAL` = catálogo oficial (leitura pública). Matérias custom do app usam `user_id` = `X-Device-Id` (UUID do device, sem login): `pk` = `{deviceId}#DISCIPLINA#{code}`, com `is_custom=true` e `device_id` no item. Ver `docs/custom_disciplinas_api.md`.
 
 Variável principal: **`ACADEMIC_CATALOG_TABLE_NAME`**. Ainda são aceitos, por compatibilidade: `ENTITY_TABLE_NAME`, `DISCIPLINA_TABLE_NAME`, `CURSO_TABLE_NAME`.
 

@@ -1,5 +1,14 @@
+import pytest
+
 from src.modules.disciplina.get_all_disciplinas.app.get_all_disciplinas_viewmodel import GetAllDisciplinasViewmodel
 from src.shared.infra.repositories.disciplina_repository_mock import DisciplinaRepositoryMock
+
+
+@pytest.fixture(autouse=True)
+def _reset_mock():
+    DisciplinaRepositoryMock.reset_store()
+    yield
+    DisciplinaRepositoryMock.reset_store()
 
 
 class TestGetAllDisciplinasViewmodel:
@@ -20,3 +29,7 @@ class TestGetAllDisciplinasViewmodel:
         assert response[0]["name"] == "Engenharia de Computação"
         assert "exam_weight" in response[0]
         assert "assignment_weight" in response[0]
+        assert "study_plan_download_pdf_url" in response[0]
+        assert "exams_code" in response[0]
+        assert response[0]["is_custom"] is False
+        assert response[0]["device_id"] is None

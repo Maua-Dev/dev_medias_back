@@ -38,7 +38,9 @@ jobs:
             else
               echo "Invalid branch name!" && exit 1
             fi
-            echo "STACK_NAME=DevMediasStack${{github.ref_name}}" >> $GITHUB_ENV
+            # V2 parallel stack — never target DevMediasStackprod (iOS CDN legacy)
+            echo "STACK_NAME=DevMediasStackV2${{github.ref_name}}" >> $GITHUB_ENV
+            echo "STACK_GENERATION=v2" >> $GITHUB_ENV
 
         - name: Setup AWS Credentials
           uses: aws-actions/configure-aws-credentials@v4
@@ -62,6 +64,7 @@ jobs:
             AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
             AWS_REGION: ${{ vars.AWS_REGION }}
             STACK_NAME: ${{ env.STACK_NAME }}
+            STACK_GENERATION: ${{ env.STACK_GENERATION }}
             GITHUB_REF_NAME: ${{ github.ref_name }}
             FROM_EMAIL: ${{ vars.FROM_EMAIL }}  
             HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}

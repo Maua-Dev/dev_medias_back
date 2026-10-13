@@ -117,6 +117,29 @@ def test_remove_provas_e_trabalhos_substitutivos():
     assert [assignment.weight for assignment in disciplina.assignments] == pytest.approx([1.0])
 
 
+def test_canonicaliza_nomes_descritivos_para_p_e_t():
+    disciplina = build_disciplina(
+        _payload(
+            exams=[
+                {"name": "Primeira Prova Bimestral", "weight": 0.4},
+                {"name": "Segunda Avaliação", "weight": 0.6},
+            ],
+            assignments=[
+                {"name": "Projeto do professor", "weight": 0.5},
+                {"name": "Relatório final", "weight": 0.5},
+            ],
+            exams_code="C1/2007",
+            study_plan_download_pdf_url="https://cdn.example/ADS/1/ADS1003.pdf",
+        ),
+        courses={"ADS": 1},
+    )
+
+    assert [exam.name for exam in disciplina.exams] == ["P1", "P2"]
+    assert [assignment.name for assignment in disciplina.assignments] == ["T1", "T2"]
+    assert disciplina.exams_code == "C1/2007"
+    assert disciplina.study_plan_download_pdf_url == "https://cdn.example/ADS/1/ADS1003.pdf"
+
+
 def test_trunca_pesos_para_tres_casas_sem_arredondar_para_cima():
     disciplina = build_disciplina(
         _payload(

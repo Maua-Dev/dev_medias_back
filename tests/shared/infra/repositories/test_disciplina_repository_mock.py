@@ -3,7 +3,7 @@ import pytest
 from src.shared.domain.entities.disciplina import Disciplina, ItemAvaliacao
 from src.shared.infra.repositories.disciplina_repository_mock import DisciplinaRepositoryMock
 
-# Função auxiliar para criar uma disciplina com valores padrão.
+
 def _disciplina(code: str, *, name: str = "Nome") -> Disciplina:
     return Disciplina(
         course="ECM",
@@ -18,9 +18,13 @@ def _disciplina(code: str, *, name: str = "Nome") -> Disciplina:
     )
 
 
-# Cada teste começa do zero: repositório novo, 
-# com as mesmas disciplinas de exemplo, 
-# para não misturar um teste com outro.
+@pytest.fixture(autouse=True)
+def _reset_store():
+    DisciplinaRepositoryMock.reset_store()
+    yield
+    DisciplinaRepositoryMock.reset_store()
+
+
 @pytest.fixture
 def repo() -> DisciplinaRepositoryMock:
     return DisciplinaRepositoryMock()
@@ -57,8 +61,9 @@ class TestDisciplinaRepositoryMockCreate:
     def test_create_disciplina_insere_e_retorna(self, repo: DisciplinaRepositoryMock):
         nova = _disciplina("ECM999", name="Nova")
         out = repo.create_disciplina(nova)
-        assert out is nova
-        assert repo.get_disciplina("ECM999") is nova
+        assert out is not None
+        assert out.code == nova.code
+        assert repo.get_disciplina("ECM999") is not None
         assert len(repo.get_all_disciplinas()) == 5
 
 
@@ -66,7 +71,7 @@ class TestDisciplinaRepositoryMockUpdate:
     def test_update_disciplina_put_substitui(self, repo: DisciplinaRepositoryMock):
         atualizada = _disciplina("ECM101", name="Nome atualizado")
         out = repo.update_disciplina(atualizada)
-        assert out is atualizada
+        assert out is not None
         loaded = repo.get_disciplina("ECM101")
         assert loaded is not None
         assert loaded.name == "Nome atualizado"
@@ -85,3 +90,15 @@ class TestDisciplinaRepositoryMockDelete:
 
     def test_delete_disciplina_inexistente(self, repo: DisciplinaRepositoryMock):
         assert repo.delete_disciplina("NAO_EXISTE") is None
+
+
+class TestDisciplinaRepositoryMockOwnerScope:
+    def test_device_partition_isolated(self):
+        device = "550e8400-e29b-41d4-a716-446655440000"
+        device_repo = DisciplinaRepositoryMock(user_id=device)
+        device_repo.create_disciplina(
+            _disciplina("MIN001").model_copy(update={"device_id": device, "is_custom": True})
+        )
+        assert device_repo.get_disciplina("MIN001") is not None
+        assert DisciplinaRepositoryMock().get_disciplina("MIN001") is None
+        assert DisciplinaRepositoryMock(user_id=device).get_disciplina("ECM101") is None

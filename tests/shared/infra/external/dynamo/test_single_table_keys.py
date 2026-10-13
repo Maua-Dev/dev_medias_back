@@ -43,3 +43,4 @@ def test_strip_dynamo_metadata():
 def test_physical_table_name_alinha_cdk():
     assert physical_table_name("TEST") == "DevMediasAcademicCatalogTable-test"
     assert physical_table_name("Dev") == "DevMediasAcademicCatalogTable-dev"
+    assert physical_table_name("prod", "v2") == "DevMediasAcademicCatalogTable-v2-prod"
