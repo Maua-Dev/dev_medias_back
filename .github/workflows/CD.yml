@@ -29,14 +29,14 @@ jobs:
 
         - name: Set AWS Account ID and other variables
           run: |
+            # Secret por stage → GITHUB_ENV → env.AWS_ACCOUNT_ID (role + CDK).
+            # Nunca usar secrets.AWS_ACCOUNT_ID (org / conta legada).
             if [[ "${{ github.ref_name }}" == "dev" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "prod" ]]; then
-              # Same account as legacy DevMediasStackprod / iOS CDN (SSO AWSPowerUserAccessProd).
-              # Do not use a mismatched AWS_ACCOUNT_ID_PROD secret if it points elsewhere.
-              echo "AWS_ACCOUNT_ID=891377229275" >> $GITHUB_ENV
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
             else
               echo "Invalid branch name!" && exit 1
             fi
@@ -48,7 +48,7 @@ jobs:
           uses: aws-actions/configure-aws-credentials@v4
           with:
             aws-region: ${{ vars.AWS_REGION }}
-            role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActionsRole
+            role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
 
         - name: Installing Dependencies
@@ -60,11 +60,10 @@ jobs:
         - name: DeployWithCDK
           run: |
             cd iac
-            cdk bootstrap aws://${{ secrets.AWS_ACCOUNT_ID }}/${{ vars.AWS_REGION }}
             cdk synth
             cdk deploy --require-approval never
           env:
-            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+            AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
             AWS_REGION: ${{ vars.AWS_REGION }}
             STACK_NAME: ${{ env.STACK_NAME }}
             STACK_GENERATION: ${{ env.STACK_GENERATION }}
