@@ -37,6 +37,9 @@ jobs:
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "prod" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
+              # Destino iOS: subject bucket do DevMediasStackprod (não usar buckets *-v2-*)
+              echo "LEGACY_EXPORT_BUCKET_NAME=devmediasstackprod-subjectstacksubjectbucket927c88-tglqq1xpktvo" >> $GITHUB_ENV
+              echo "LEGACY_EXPORT_CLOUDFRONT_DISTRIBUTION_ID=E1XC2LFUOQ5S4N" >> $GITHUB_ENV
             else
               echo "Invalid branch name!" && exit 1
             fi
@@ -68,6 +71,8 @@ jobs:
             STACK_NAME: ${{ env.STACK_NAME }}
             STACK_GENERATION: ${{ env.STACK_GENERATION }}
             GITHUB_REF_NAME: ${{ github.ref_name }}
+            LEGACY_EXPORT_BUCKET_NAME: ${{ env.LEGACY_EXPORT_BUCKET_NAME }}
+            LEGACY_EXPORT_CLOUDFRONT_DISTRIBUTION_ID: ${{ env.LEGACY_EXPORT_CLOUDFRONT_DISTRIBUTION_ID }}
             FROM_EMAIL: ${{ vars.FROM_EMAIL }}  
             HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
             REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}

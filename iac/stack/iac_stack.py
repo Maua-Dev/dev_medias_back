@@ -60,6 +60,11 @@ class IacStack(Stack):
             stack_generation=self.stack_generation,
         )
 
+        legacy_export_bucket_name = (os.environ.get("LEGACY_EXPORT_BUCKET_NAME") or "").strip() or None
+        legacy_export_cf_distribution_id = (
+            os.environ.get("LEGACY_EXPORT_CLOUDFRONT_DISTRIBUTION_ID") or ""
+        ).strip()
+
         ENVIRONMENT_VARIABLES = {
             "STAGE": stage.upper(),
             "PLANS_BUCKET_NAME": self.s3_construct.plans_bucket.bucket_name,
@@ -69,6 +74,10 @@ class IacStack(Stack):
             "FROM_EMAIL": os.environ.get("FROM_EMAIL"),
             "REPLY_TO_EMAIL": os.environ.get("REPLY_TO_EMAIL"),
             "HIDDEN_COPY": os.environ.get("HIDDEN_COPY"),
+            "LEGACY_EXPORT_BUCKET_NAME": legacy_export_bucket_name or "",
+            "LEGACY_EXPORT_SUBJECTS_KEY": os.environ.get("LEGACY_EXPORT_SUBJECTS_KEY", "allSubjects.json"),
+            "LEGACY_EXPORT_COURSES_KEY": os.environ.get("LEGACY_EXPORT_COURSES_KEY", "courses.json"),
+            "LEGACY_EXPORT_CLOUDFRONT_DISTRIBUTION_ID": legacy_export_cf_distribution_id,
         }
 
         self.lambda_construct = LambdaConstruct(
@@ -80,11 +89,16 @@ class IacStack(Stack):
             plans_bucket=self.s3_construct.plans_bucket,
             subject_bucket=self.s3_construct.subject_bucket,
             plans_extractor_queue=self.sqs_construct.plans_extractor_queue,
-            environment_variables=ENVIRONMENT_VARIABLES
+            environment_variables=ENVIRONMENT_VARIABLES,
+            legacy_export_bucket_name=legacy_export_bucket_name,
         )
         
         for function in self.lambda_construct.funtions_that_need_dynamo_db_access:
             self.dynamo_construct.academic_catalog_table.grant_read_write_data(function)
+
+        self.dynamo_construct.academic_catalog_table.grant_read_data(
+            self.lambda_construct.export_legacy_catalog_function
+        )
         
         # nova instância SSM manager para passar automaticamente variáveis a um hub de segredos
         # da prórpia conta, evitando ter que manualmente passa-las para o github secrets

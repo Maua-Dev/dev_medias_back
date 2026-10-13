@@ -1,4 +1,8 @@
+from typing import Optional
+
 from aws_cdk import (
+    aws_events as events,
+    aws_events_targets as targets,
     aws_lambda as lambda_,
     aws_lambda_event_sources as lambda_event_sources,
     aws_s3 as s3,
@@ -98,7 +102,55 @@ class LambdaConstruct(Construct):
         bucket_subjects.grant_write(function)
 
         return function
-        
+
+    def create_lambda_export_legacy_catalog(
+        self,
+        module_name: str,
+        environment_variables: dict,
+        legacy_export_bucket_name: Optional[str],
+    ) -> lambda_.Function:
+        """Invokable + weekly job: Dynamo V2 catalog → legacy allSubjects/courses JSON on S3."""
+
+        function = lambda_.Function(
+            self,
+            module_name.title().replace("_", ""),
+            code=lambda_.Code.from_asset(f"../src/modules/{module_name}"),
+            handler=f"app.{module_name}_presenter.lambda_handler",
+            function_name=f"{module_name}-{self.stack_name}-{self.stage}"[:63],
+            runtime=lambda_.Runtime.PYTHON_3_13,
+            layers=[self.lambda_layer],
+            environment=environment_variables,
+            timeout=Duration.seconds(120),
+            memory_size=512,
+        )
+
+        if legacy_export_bucket_name:
+            legacy_bucket = s3.Bucket.from_bucket_name(
+                self,
+                "LegacyExportBucket",
+                legacy_export_bucket_name,
+            )
+            legacy_bucket.grant_put(function)
+
+            distribution_id = (environment_variables.get("LEGACY_EXPORT_CLOUDFRONT_DISTRIBUTION_ID") or "").strip()
+            if distribution_id:
+                function.add_to_role_policy(
+                    iam.PolicyStatement(
+                        effect=iam.Effect.ALLOW,
+                        actions=["cloudfront:CreateInvalidation"],
+                        resources=["*"],
+                    )
+                )
+
+            events.Rule(
+                self,
+                "ExportLegacyCatalogWeeklyRule",
+                rule_name=f"devmedias-export-legacy-{self.stage.lower()}"[:64],
+                description="Weekly Dynamo V2 → legacy iOS S3 JSON (allSubjects/courses)",
+                schedule=events.Schedule.cron(minute="0", hour="12", week_day="SUN"),
+            ).add_target(targets.LambdaFunction(function))
+
+        return function
 
     def __init__(
         self, 
@@ -111,6 +163,7 @@ class LambdaConstruct(Construct):
         subject_bucket: s3.Bucket,
         plans_extractor_queue: sqs.Queue,
         environment_variables: dict,
+        legacy_export_bucket_name: Optional[str] = None,
         **kargs
     ) -> None:
         
@@ -225,6 +278,12 @@ class LambdaConstruct(Construct):
             subfolder="curso",
             api_key_required=True
         )
+
+        self.export_legacy_catalog_function = self.create_lambda_export_legacy_catalog(
+            module_name="export_legacy_catalog",
+            environment_variables=environment_variables,
+            legacy_export_bucket_name=legacy_export_bucket_name,
+        )
         
         bedrock_policy = iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
@@ -247,4 +306,4 @@ class LambdaConstruct(Construct):
         self.funtions_that_need_dynamo_db_access.append(self.delete_custom_disciplina_function)
         self.funtions_that_need_dynamo_db_access.append(self.get_all_cursos_function)
         self.funtions_that_need_dynamo_db_access.append(self.create_curso_function)
-        
+        # export_legacy_catalog: Dynamo read-only (granted in IacStack)
