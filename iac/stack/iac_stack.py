@@ -34,7 +34,8 @@ class IacStack(Stack):
         self.apigw_construct = ApigwConstruct(
             self, 
             construct_id=f"{stack_name}Apigw", 
-            stage=stage
+            stage=stage,
+            stack_generation=self.stack_generation,
         )
         
         self.s3_construct = S3Construct(
