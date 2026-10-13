@@ -18,6 +18,7 @@ app = cdk.App()
 aws_region = os.environ.get("AWS_REGION")
 aws_account_id = os.environ.get("AWS_ACCOUNT_ID")
 stack_name = os.environ.get("STACK_NAME")
+stack_generation = (os.environ.get("STACK_GENERATION") or "").strip().lower()
 
 stage = os.environ.get("GITHUB_REF_NAME").capitalize()
 stack_name = os.environ.get("STACK_NAME")
@@ -27,6 +28,7 @@ tags = {
     'stage': stage,
     'stack': stack_name,
     'owner': 'DevCommunity',
+    'generation': stack_generation or 'legacy',
 }
 
 IacStack(
@@ -34,6 +36,7 @@ IacStack(
     stack_id=stack_name, 
     stack_name=stack_name,
     stage=stage,
+    stack_generation=stack_generation,
     env=cdk.Environment(
         account=aws_account_id,
         region=aws_region

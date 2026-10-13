@@ -7,9 +7,13 @@ Deve bater com `iac/components/dynamo_construct.py` (CDK). Se mudar o prefixo, a
 ACADEMIC_CATALOG_TABLE_PREFIX = "DevMediasAcademicCatalogTable"
 
 
-def physical_table_name(stage: str) -> str:
+def physical_table_name(stage: str, generation: str = "") -> str:
     """
-    Mesmo padrão do CDK: ``{PREFIX}-{stage.lower()}`` (ex.: DevMediasAcademicCatalogTable-dev).
+    Mesmo padrão do CDK: ``{PREFIX}-{generation-}{stage.lower()}``
+    (ex.: DevMediasAcademicCatalogTable-dev, DevMediasAcademicCatalogTable-v2-prod).
+    Prefer ACADEMIC_CATALOG_TABLE_NAME from Lambda env when set by CDK.
     """
     s = (stage or "test").strip().lower()
-    return f"{ACADEMIC_CATALOG_TABLE_PREFIX}-{s}"
+    g = (generation or "").strip().lower()
+    gen = f"{g}-" if g else ""
+    return f"{ACADEMIC_CATALOG_TABLE_PREFIX}-{gen}{s}"

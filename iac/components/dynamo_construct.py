@@ -4,7 +4,9 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-# Manter alinhado com src.shared.infra.external.dynamo.academic_catalog_naming.ACADEMIC_CATALOG_TABLE_PREFIX
+from components.stack_generation import name_segment
+
+# Manter alinhado com src.shared.infra.external.dynamo.academic_catalog.academic_catalog_naming
 _ACADEMIC_CATALOG_PREFIX = "DevMediasAcademicCatalogTable"
 
 RETAINED_STAGES = {"prod", "homolog"}
@@ -21,11 +23,13 @@ class DynamoConstruct(Construct):
         construct_id: str,
         stack_name: str,
         stage: str,
+        stack_generation: str = "",
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         stage_lower = stage.lower()
+        gen = name_segment(stack_generation)
 
         removal_policy = (
             RemovalPolicy.RETAIN if stage_lower in RETAINED_STAGES else RemovalPolicy.DESTROY
@@ -44,7 +48,7 @@ class DynamoConstruct(Construct):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=removal_policy,
-            table_name=f"{_ACADEMIC_CATALOG_PREFIX}-{stage_lower}",
+            table_name=f"{_ACADEMIC_CATALOG_PREFIX}-{gen}{stage_lower}",
             point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
                 point_in_time_recovery_enabled=(stage_lower == "prod")
             ),

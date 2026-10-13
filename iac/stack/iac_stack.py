@@ -10,6 +10,7 @@ from components.lambda_construct import LambdaConstruct
 from components.s3_construct import S3Construct
 from components.sqs_construct import SqsConstruct
 from components.ssm_construct import SsmConstruct
+from components.stack_generation import ssm_mss_path
 
 class IacStack(Stack):
     lambda_construct: LambdaConstruct
@@ -20,6 +21,7 @@ class IacStack(Stack):
         stack_id: str,
         stack_name: str,
         stage: str,
+        stack_generation: str = "",
         **kwargs
     ) -> None:
         super().__init__(scope, stack_id, **kwargs)
@@ -27,6 +29,7 @@ class IacStack(Stack):
         self.github_ref_name = os.environ.get("GITHUB_REF_NAME", "")
         self.aws_region = os.environ.get("AWS_REGION")
         self.s3_assets_cdn = os.environ.get("S3_ASSETS_CDN")
+        self.stack_generation = (stack_generation or "").strip().lower()
 
         self.apigw_construct = ApigwConstruct(
             self, 
@@ -37,7 +40,8 @@ class IacStack(Stack):
         self.s3_construct = S3Construct(
             self, 
             construct_id=f"{stack_name}S3", 
-            stage=stage
+            stage=stage,
+            stack_generation=self.stack_generation,
         )
 
         self.dynamo_construct = DynamoConstruct(
@@ -45,12 +49,14 @@ class IacStack(Stack):
             construct_id=f"{stack_name}Dynamo",
             stack_name=stack_name,
             stage=stage,
+            stack_generation=self.stack_generation,
         )
 
         self.sqs_construct = SqsConstruct(
             self,
             construct_id=f"{stack_name}Sqs",
             stage=stage,
+            stack_generation=self.stack_generation,
         )
 
         ENVIRONMENT_VARIABLES = {
@@ -90,7 +96,7 @@ class IacStack(Stack):
         self.ssm_construct = SsmConstruct(
             self, 
             construct_id=f"{stack_name}Ssm",
-            mss_name_identification_for_path="devmedias",
+            mss_name_identification_for_path=ssm_mss_path(self.stack_generation),
             api=self.apigw_construct.rest_api,
             api_gateway_resource=self.apigw_construct.api_gateway_resource,
             buckets=None, # o que deve ser salvo são os CDNs, visto que os buckets bloqueiam acesso pela URL publica
