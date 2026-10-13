@@ -28,36 +28,27 @@ jobs:
             python-version: '3.13'
 
         - name: Set AWS Account ID and other variables
-          id: cfg
           run: |
+            # Secret por stage → GITHUB_ENV → env.AWS_ACCOUNT_ID (role + CDK).
+            # Nunca usar secrets.AWS_ACCOUNT_ID (org / conta legada).
             if [[ "${{ github.ref_name }}" == "dev" ]]; then
-              ACCOUNT="${{ secrets.AWS_ACCOUNT_ID_DEV }}"
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
-              ACCOUNT="${{ secrets.AWS_ACCOUNT_ID_HOML }}"
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "prod" ]]; then
-              # Same account as legacy DevMediasStackprod / iOS CDN
-              ACCOUNT="891377229275"
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
             else
               echo "Invalid branch name!" && exit 1
             fi
-            STACK_NAME="DevMediasStackV2${{ github.ref_name }}"
-            {
-              echo "AWS_ACCOUNT_ID=$ACCOUNT"
-              echo "STACK_NAME=$STACK_NAME"
-              echo "STACK_GENERATION=v2"
-            } >> "$GITHUB_ENV"
-            {
-              echo "aws_account_id=$ACCOUNT"
-              echo "stack_name=$STACK_NAME"
-              echo "stack_generation=v2"
-            } >> "$GITHUB_OUTPUT"
+            # V2 parallel stack — never target DevMediasStackprod (iOS CDN legacy)
+            echo "STACK_NAME=DevMediasStackV2${{github.ref_name}}" >> $GITHUB_ENV
+            echo "STACK_GENERATION=v2" >> $GITHUB_ENV
 
         - name: Setup AWS Credentials
           uses: aws-actions/configure-aws-credentials@v4
           with:
             aws-region: ${{ vars.AWS_REGION }}
-            # Step output (not env context) — env context can lag GITHUB_ENV
-            role-to-assume: arn:aws:iam::${{ steps.cfg.outputs.aws_account_id }}:role/GithubActionsRole
+            role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
             role-session-name: github-action
 
         - name: Installing Dependencies
@@ -68,22 +59,14 @@ jobs:
 
         - name: DeployWithCDK
           run: |
-            set -euo pipefail
             cd iac
-            CALLER=$(aws sts get-caller-identity --query Account --output text)
-            echo "Deploying STACK_NAME=$STACK_NAME generation=$STACK_GENERATION"
-            echo "Configured account=$AWS_ACCOUNT_ID caller_identity=$CALLER"
-            if [[ "$CALLER" != "$AWS_ACCOUNT_ID" ]]; then
-              echo "::error::STS caller $CALLER != configured AWS_ACCOUNT_ID $AWS_ACCOUNT_ID"
-              exit 1
-            fi
             cdk synth
             cdk deploy --require-approval never
           env:
-            AWS_ACCOUNT_ID: ${{ steps.cfg.outputs.aws_account_id }}
+            AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
             AWS_REGION: ${{ vars.AWS_REGION }}
-            STACK_NAME: ${{ steps.cfg.outputs.stack_name }}
-            STACK_GENERATION: ${{ steps.cfg.outputs.stack_generation }}
+            STACK_NAME: ${{ env.STACK_NAME }}
+            STACK_GENERATION: ${{ env.STACK_GENERATION }}
             GITHUB_REF_NAME: ${{ github.ref_name }}
             FROM_EMAIL: ${{ vars.FROM_EMAIL }}  
             HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
