@@ -1,0 +1,48 @@
+from aws_cdk import (
+    Duration,
+    aws_sqs as sqs,
+)
+from constructs import Construct
+
+from components.stack_generation import name_segment
+
+
+class SqsConstruct(Construct):
+    """SQS Standard queues for plans_extractor (main + DLQ)."""
+
+    plans_extractor_queue: sqs.Queue
+    plans_extractor_dlq: sqs.Queue
+
+    def __init__(
+        self,
+        scope: Construct,
+        construct_id: str,
+        stage: str,
+        stack_generation: str = "",
+        **kwargs,
+    ) -> None:
+        super().__init__(scope, construct_id, **kwargs)
+
+        stage_lower = stage.lower()
+        gen = name_segment(stack_generation)
+
+        self.plans_extractor_dlq = sqs.Queue(
+            self,
+            "PlansExtractorDlq",
+            queue_name=f"devmedias-plans-extractor-{gen}{stage_lower}-dlq",
+            retention_period=Duration.days(14),
+        )
+
+        self.plans_extractor_queue = sqs.Queue(
+            self,
+            "PlansExtractorQueue",
+            queue_name=f"devmedias-plans-extractor-{gen}{stage_lower}",
+            # Keep close to plans_extractor Lambda timeout so failed messages retry quickly
+            # instead of staying invisible for the old 30-minute window.
+            visibility_timeout=Duration.seconds(30),
+            retention_period=Duration.days(14),
+            dead_letter_queue=sqs.DeadLetterQueue(
+                max_receive_count=3,
+                queue=self.plans_extractor_dlq,
+            ),
+        )

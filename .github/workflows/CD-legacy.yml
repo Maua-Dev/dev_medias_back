@@ -1,0 +1,80 @@
+# Deploy ONLY the frozen iOS CloudFormation stack.
+# Branch name is "legacy" but CDK envs MUST stay prod — never interpolate github.ref_name
+# into STACK_NAME or GITHUB_REF_NAME (that would replace CloudFront / API logical IDs).
+name: CD-legacy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  DiffAndDeployLegacyProd:
+    environment:
+      name: legacy-prod
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout legacy branch
+        uses: actions/checkout@v4
+        with:
+          ref: legacy
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Set hardcoded prod stack envs
+        run: |
+          echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
+          # HARDCODED — do not use github.ref_name here
+          echo "STACK_NAME=DevMediasStackprod" >> $GITHUB_ENV
+          echo "GITHUB_REF_NAME=prod" >> $GITHUB_ENV
+
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/GithubActionsRole
+          role-session-name: github-action-legacy
+
+      - name: Installing Dependencies
+        run: |
+          npm install -g aws-cdk
+          cd iac
+          pip install -r requirements.txt
+
+      - name: CDK synth and diff gate
+        working-directory: iac
+        env:
+          AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          STACK_NAME: DevMediasStackprod
+          GITHUB_REF_NAME: prod
+          FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+          HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
+          REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}
+        run: |
+          set -euo pipefail
+          cdk synth
+          cdk diff DevMediasStackprod 2>&1 | tee /tmp/cdk-diff.txt || true
+          if grep -Eiq 'AWS::CloudFront::Distribution|AWS::S3::Bucket' /tmp/cdk-diff.txt \
+            && grep -Eiq 'replace|destroy|\[-\]|\[~\]' /tmp/cdk-diff.txt; then
+            echo "::error::cdk diff indicates CloudFront/S3 change on legacy stack — aborting"
+            exit 1
+          fi
+
+      - name: DeployWithCDK
+        working-directory: iac
+        env:
+          AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          STACK_NAME: DevMediasStackprod
+          GITHUB_REF_NAME: prod
+          FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+          HIDDEN_COPY: ${{ vars.HIDDEN_COPY }}
+          REPLY_TO_EMAIL: ${{ vars.REPLY_TO_EMAIL }}
+        run: |
+          cdk deploy DevMediasStackprod --require-approval never
