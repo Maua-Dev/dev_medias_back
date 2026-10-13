@@ -29,7 +29,11 @@ jobs:
 
         - name: Set AWS Account ID and other variables
           run: |
-            if [[ "${{ github.ref_name }}" == "dev" ]]; then
+            # Prefer environment-scoped AWS_ACCOUNT_ID (historical prod CD target).
+            # Fall back to stage-specific repo secrets for environments that only have those.
+            if [[ -n "${{ secrets.AWS_ACCOUNT_ID }}" ]]; then
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
+            elif [[ "${{ github.ref_name }}" == "dev" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
