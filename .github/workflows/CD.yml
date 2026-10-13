@@ -29,14 +29,14 @@ jobs:
 
         - name: Set AWS Account ID and other variables
           run: |
+            # Secret por stage → GITHUB_ENV → env.AWS_ACCOUNT_ID (role + CDK).
+            # Nunca usar secrets.AWS_ACCOUNT_ID (org / conta legada).
             if [[ "${{ github.ref_name }}" == "dev" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_DEV }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
               echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_HOML }}" >> $GITHUB_ENV
             elif [[ "${{ github.ref_name }}" == "prod" ]]; then
-              # Same account as legacy DevMediasStackprod / iOS CDN (SSO AWSPowerUserAccessProd).
-              # Do not use a mismatched AWS_ACCOUNT_ID_PROD secret if it points elsewhere.
-              echo "AWS_ACCOUNT_ID=891377229275" >> $GITHUB_ENV
+              echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
             else
               echo "Invalid branch name!" && exit 1
             fi

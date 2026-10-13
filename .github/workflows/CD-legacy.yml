@@ -28,8 +28,9 @@ jobs:
 
       - name: Set hardcoded prod stack envs
         run: |
+          # AWS_ACCOUNT_ID_PROD → env (nunca secrets.AWS_ACCOUNT_ID da org)
           echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID_PROD }}" >> $GITHUB_ENV
-          # HARDCODED — do not use github.ref_name here
+          # Stack/stage hardcoded — do not use github.ref_name (branch is "legacy")
           echo "STACK_NAME=DevMediasStackprod" >> $GITHUB_ENV
           echo "GITHUB_REF_NAME=prod" >> $GITHUB_ENV
 
@@ -37,7 +38,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_PROD }}:role/GithubActionsRole
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GithubActionsRole
           role-session-name: github-action-legacy
 
       - name: Installing Dependencies
