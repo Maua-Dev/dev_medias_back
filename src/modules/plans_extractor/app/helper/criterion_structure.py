@@ -15,6 +15,12 @@ CRITERION_CODE_REGEX = re.compile(
     r"Crit[eé]rio\s+de\s+aprova[cç][aã]o\s*:\s*([A-E]\d)(?:\s*/\s*(\d{4}))?",
     re.IGNORECASE,
 )
+QTD_TRABALHOS_REGEX = re.compile(
+    r"Quantidade\s+de\s+Trabalhos?\s*:?\s*(\d+)",
+    re.IGNORECASE,
+)
+# Structured K-table rows in the criteria block (e.g. "K1:5", "K2:5").
+K_WEIGHT_REGEX = re.compile(r"\bK(\d+)\s*:\s*(\d+(?:[.,]\d+)?)", re.IGNORECASE)
 SUBSTITUTIVE_HINTS = (
     "substitutiva",
     "substitutivo",
@@ -27,6 +33,92 @@ SUBSTITUTIVE_HINTS = (
 # Fallback when criterion includes provas+trabalhos but kp/kt are missing or zero.
 DEFAULT_EXAM_WEIGHT = 0.7
 DEFAULT_ASSIGNMENT_WEIGHT = 0.3
+
+
+def extract_quantidade_trabalhos(criteria_text: str) -> int | None:
+    """Parse ``Quantidade de Trabalhos: N`` from the criteria block."""
+    if not criteria_text:
+        return None
+    match = QTD_TRABALHOS_REGEX.search(criteria_text)
+    if not match:
+        return None
+    count = int(match.group(1))
+    return count if count > 0 else None
+
+
+def extract_k_assignment_raw_weights(criteria_text: str) -> list[float]:
+    """Parse first contiguous K#:value table from criteria (ignore later narrative K mentions)."""
+    if not criteria_text:
+        return []
+    matches = list(K_WEIGHT_REGEX.finditer(criteria_text))
+    if not matches:
+        return []
+
+    items: list[tuple[int, float]] = []
+    seen: set[int] = set()
+    for match in matches:
+        idx = int(match.group(1))
+        if idx in seen:
+            # Later narrative repeats (e.g. "nota K1") — stop after first table.
+            break
+        if items and idx > max(seen) + 3:
+            break
+        seen.add(idx)
+        raw = match.group(2).replace(",", ".")
+        try:
+            value = float(raw)
+        except ValueError:
+            continue
+        items.append((idx, value))
+
+    items.sort(key=lambda pair: pair[0])
+    return [value for _, value in items]
+
+
+def _equal_assignment_items(count: int) -> list[dict[str, Any]]:
+    if count <= 0:
+        return []
+    weight = 1.0 / count
+    return [{"name": f"T{index}", "weight": weight} for index in range(1, count + 1)]
+
+
+def _assignments_from_criteria(
+    criteria_text: str,
+    existing_assignments: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Prefer Quantidade de Trabalhos + K# weights over Bedrock's assignment list."""
+    qtd = extract_quantidade_trabalhos(criteria_text)
+    k_raw = extract_k_assignment_raw_weights(criteria_text)
+
+    if k_raw:
+        if qtd is not None:
+            k_raw = k_raw[:qtd]
+        total = sum(k_raw)
+        if total <= 0:
+            return _equal_assignment_items(len(k_raw))
+        return [
+            {"name": f"T{index}", "weight": value / total}
+            for index, value in enumerate(k_raw, start=1)
+        ]
+
+    if qtd is not None:
+        canonical = _canonical_items(existing_assignments, prefix="T")
+        if len(canonical) == qtd and any(
+            float(item.get("weight") or 0) > 0 for item in canonical
+        ):
+            # Keep model-relative weights only when count already matches PDF.
+            weights_sum = sum(float(item.get("weight") or 0) for item in canonical)
+            if weights_sum > 0:
+                return [
+                    {
+                        "name": f"T{index}",
+                        "weight": float(item.get("weight") or 0) / weights_sum,
+                    }
+                    for index, item in enumerate(canonical, start=1)
+                ]
+        return _equal_assignment_items(qtd)
+
+    return _canonical_items(existing_assignments, prefix="T")
 
 
 def _normalize_text(value: Any) -> str:
@@ -207,7 +299,11 @@ def apply_criterion_structure(
         existing_assignments = payload.get("assignments") or []
         if not isinstance(existing_assignments, list):
             existing_assignments = []
-        payload["assignments"] = _canonical_items(existing_assignments, prefix="T")
+        # C* only says "has trabalhos"; count/weights come from the PDF criteria
+        # block (Quantidade de Trabalhos / K1:K2). Never trust Bedrock's invented list.
+        payload["assignments"] = _assignments_from_criteria(
+            criteria_text, existing_assignments
+        )
 
     exam_weight = _numeric_weight(payload, "examWeight", "exam_weight")
     assignment_weight = _numeric_weight(payload, "assignmentWeight", "assignment_weight")
