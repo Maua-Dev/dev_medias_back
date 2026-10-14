@@ -321,7 +321,7 @@ def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None =
     - Para disciplina semestral, distribuir pesos das provas por média simples quando não houver pesos explícitos
     - "exams" deve listar exatamente a quantidade de provas definida pelo critério com nomes canônicos P1, P2, P3... Nunca incluir prova substitutiva/PSUB/PS.
     - Para provas bimestrais com pesos iguais, cada uma recebe weight = 1 / (número de provas regulares)
-    - "assignments" deve listar trabalhos quando o critério inclui trabalhos com nomes canônicos T1, T2, T3... (nunca nomes descritivos do professor) e pesos coerentes com os valores explícitos; na ausência deles, usar pesos iguais. Se o critério não inclui trabalhos, retorne lista vazia.
+    - "assignments" deve listar trabalhos quando o critério inclui trabalhos com nomes canônicos T1, T2, T3... (nunca nomes descritivos do professor). A QUANTIDADE de trabalhos vem do campo "Quantidade de Trabalhos" e/ou da tabela K1:K2:... no bloco de critérios — nunca invente trabalhos extras a partir do programa ou da narrativa. Pesos relativos devem seguir os valores K# (ex: K1:5 K2:5 → 0.5/0.5); na ausência deles, usar pesos iguais. Se o critério não inclui trabalhos, retorne lista vazia.
     - "period" deve ser extraído se mencionado (ex: "1º semestre de 2024"), senão null
     - "courses" deve ser sempre um objeto vazio {{}}
     - Todos os campos numéricos de peso devem ser números (não strings)"""
