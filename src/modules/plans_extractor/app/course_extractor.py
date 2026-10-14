@@ -317,10 +317,10 @@ def generate_json_with_bedrock(course_info: Course, bedrock_client: Any | None =
     - Ao extrair "exams" e "assignments", use prioritariamente o trecho "INFORMAÇÕES SOBRE PROVAS E TRABALHOS" quando ele existir, mas respeitando a quantidade imposta pelo critério.
     - Se houver pontuação explícita para componentes avaliativos (ex.: "X vale 2", "Y vale 6"), calcule os pesos relativos dividindo cada valor pela soma total dos valores do grupo.
     - Só use distribuição de pesos iguais quando não houver qualquer informação explícita de pontuação ou peso no texto.
-    - Para disciplina anual com duas provas semestrais, aplicar pesos 2/5 e 3/5 (RN CEPE 16/2014), preferindo primeiro semestre=0.4 e segundo semestre=0.6 quando identificados
+    - Para disciplina anual sem pesos explícitos de prova, aplicar RN CEPE 16/2014: 40% no 1º semestre e 60% no 2º (2 provas → 0.4/0.6; 4 provas → 0.2/0.2/0.3/0.3). Nunca inventar distribuição uniforme (ex: 0.25×4) em disciplina anual.
     - Para disciplina semestral, distribuir pesos das provas por média simples quando não houver pesos explícitos
     - "exams" deve listar exatamente a quantidade de provas definida pelo critério com nomes canônicos P1, P2, P3... Nunca incluir prova substitutiva/PSUB/PS.
-    - Para provas bimestrais com pesos iguais, cada uma recebe weight = 1 / (número de provas regulares)
+    - Só use pesos iguais entre provas quando o período for semestral OU quando o plano declarar pontuação/peso explícito igual; em anual sem info, use a regra 40/60 acima
     - "assignments" deve listar trabalhos quando o critério inclui trabalhos com nomes canônicos T1, T2, T3... (nunca nomes descritivos do professor). A QUANTIDADE de trabalhos vem do campo "Quantidade de Trabalhos" e/ou da tabela K1:K2:... no bloco de critérios — nunca invente trabalhos extras a partir do programa ou da narrativa. Pesos relativos devem seguir os valores K# (ex: K1:5 K2:5 → 0.5/0.5); na ausência deles, usar pesos iguais. Se o critério não inclui trabalhos, retorne lista vazia.
     - "period" deve ser extraído se mencionado (ex: "1º semestre de 2024"), senão null
     - "courses" deve ser sempre um objeto vazio {{}}

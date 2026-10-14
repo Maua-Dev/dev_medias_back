@@ -163,6 +163,31 @@ def _semester_bucket(item_name: Any) -> int | None:
     return None
 
 
+def _weights_are_uniform(weights: list[float], *, tol: float = 0.01) -> bool:
+    if not weights:
+        return False
+    equal = 1.0 / len(weights)
+    return all(abs(weight - equal) <= tol for weight in weights)
+
+
+def _reconcile_annual_uniform_exam_weights(
+    exams: list[dict[str, Any]], period: str
+) -> None:
+    """RN CEPE 16/2014: annual + no explicit exam split → 40% sem1 / 60% sem2.
+
+    Bedrock often invents equal weights (e.g. 0.25×4). Treat uniform splits as
+    "no info" and apply the Mauá default (4 provas → 0.2/0.2/0.3/0.3).
+    Two-exam annual 50/50 is handled by ``_reconcile_annual_semester_split``.
+    """
+    if period != "A" or len(exams) < 3:
+        return
+    weights = [float(item["weight"]) for item in exams]
+    if not _weights_are_uniform(weights):
+        return
+    for index, weight in enumerate(_fallback_exam_weights(len(exams), period)):
+        exams[index]["weight"] = weight
+
+
 def _reconcile_annual_semester_split(exams: list[dict[str, Any]], period: str) -> None:
     if period != "A" or len(exams) != 2:
         return
@@ -222,6 +247,7 @@ def _normalize_exams(items: Any, period: str) -> list[dict[str, Any]]:
     fallback = _fallback_exam_weights(len(normalized_items), period)
     normalized_items = _normalize_items_distribution(normalized_items, fallback_weights=fallback)
     _reconcile_annual_semester_split(normalized_items, period)
+    _reconcile_annual_uniform_exam_weights(normalized_items, period)
     normalized_items = _truncate_items_weights(normalized_items)
     for index, item in enumerate(normalized_items, start=1):
         item["name"] = f"P{index}"
