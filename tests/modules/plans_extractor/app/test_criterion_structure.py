@@ -180,3 +180,68 @@ def test_apply_criterion_c_star_defaults_weights_when_bedrock_returns_zero():
     assert result["assignments"] == [{"name": "T1", "weight": 1.0}]
     assert result["examWeight"] == 0.7
     assert result["assignmentWeight"] == 0.3
+
+
+def test_apply_criterion_c2_uses_quantidade_and_k_weights_not_bedrock_list():
+    """EPM306-style: Bedrock invents 5 equal T's; PDF says 2 trabalhos K1:5 K2:5."""
+    criteria = (
+        "Critério de aprovação: C2/2007\n"
+        "Quantidade de Trabalhos: 2\n"
+        "K1:5\n"
+        "K2:5\n"
+        "Peso de MP(kp): 7\n"
+        "Peso de MT(kt): 3\n"
+        "INFORMAÇÕES SOBRE PROVAS E TRABALHOS\n"
+        "A nota K1 será a média dos cases. A nota K2 também."
+    )
+    payload = {
+        "period": "A",
+        "examWeight": 0.7,
+        "assignmentWeight": 0.3,
+        "exams": [
+            {"name": "P1", "weight": 0.25},
+            {"name": "P2", "weight": 0.25},
+            {"name": "P3", "weight": 0.25},
+            {"name": "P4", "weight": 0.25},
+        ],
+        "assignments": [
+            {"name": "T1", "weight": 0.2},
+            {"name": "T2", "weight": 0.2},
+            {"name": "T3", "weight": 0.2},
+            {"name": "T4", "weight": 0.2},
+            {"name": "T5", "weight": 0.2},
+        ],
+    }
+    result = apply_criterion_structure(payload, criteria)
+
+    assert [exam["name"] for exam in result["exams"]] == ["P1", "P2", "P3", "P4"]
+    assert result["assignments"] == [
+        {"name": "T1", "weight": 0.5},
+        {"name": "T2", "weight": 0.5},
+    ]
+    assert result["exams_code"] == "C2/2007"
+
+
+def test_apply_criterion_quantidade_without_k_forces_equal_count():
+    criteria = (
+        "Critério de aprovação: C4/2015\n"
+        "Quantidade de Trabalhos: 3\n"
+    )
+    payload = {
+        "period": "A",
+        "examWeight": 0.7,
+        "assignmentWeight": 0.3,
+        "exams": [{"name": "P1", "weight": 0.5}, {"name": "P2", "weight": 0.5}],
+        "assignments": [
+            {"name": "T1", "weight": 0.2},
+            {"name": "T2", "weight": 0.2},
+            {"name": "T3", "weight": 0.2},
+            {"name": "T4", "weight": 0.2},
+            {"name": "T5", "weight": 0.2},
+        ],
+    }
+    result = apply_criterion_structure(payload, criteria)
+
+    assert len(result["assignments"]) == 3
+    assert [a["name"] for a in result["assignments"]] == ["T1", "T2", "T3"]
+    assert all(abs(a["weight"] - (1 / 3)) < 1e-9 for a in result["assignments"])
