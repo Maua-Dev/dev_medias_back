@@ -1,3 +1,4 @@
+"""LEGACY: módulo grade_optmizer. O frontend usa genetic_algorithm."""
 from src.shared.domain.entities.boletim import Boletim
 from src.shared.domain.entities.nota import Nota
 

@@ -1,3 +1,4 @@
+"""LEGACY: módulo grade_optmizer. O frontend usa genetic_algorithm."""
 from typing import List
 from src.shared.domain.entities.boletim import Boletim
 

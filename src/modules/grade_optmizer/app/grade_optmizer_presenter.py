@@ -1,3 +1,4 @@
+"""LEGACY: módulo grade_optmizer. O frontend usa genetic_algorithm."""
 from .grade_optmizer_controller import GradeOptmizerController
 from .grade_optmizer_usecase import GradeOptimizerUsecase
 from src.shared.helpers.external_interfaces.http_lambda_requests import LambdaHttpRequest, LambdaHttpResponse

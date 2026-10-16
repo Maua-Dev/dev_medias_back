@@ -1,3 +1,4 @@
+"""LEGACY: módulo grade_optmizer. O frontend usa genetic_algorithm."""
 import traceback
 from .grade_optmizer_usecase import GradeOptimizerUsecase
 from .grade_optmizer_viewmodel import GradeOptmizerViewmodel
