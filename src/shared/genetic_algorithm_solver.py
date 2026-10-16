@@ -6,6 +6,10 @@ from typing import Optional
 
 class GradeGeneticAlgorithm:
 
+    # Desempate após bater a meta: equilíbrio forte, preferência leve a trabalhos.
+    BALANCE_WEIGHT = 3.0
+    ASSIGNMENT_PREFERENCE_WEIGHT = 0.75
+
     def __init__(
         self,
         boletim: Boletim_GA,
@@ -127,7 +131,7 @@ class GradeGeneticAlgorithm:
     def fitness(self, individual):
         """
         Minimiza primeiro a distância da meta (prioridade absoluta),
-        depois a variância das lacunas (apenas desempate).
+        depois equilíbrio entre notas futuras e leve preferência a trabalhos.
         Undershoot é penalizado mais que overshoot.
         """
         all_tests = self.current_tests + individual['tests']
@@ -143,15 +147,25 @@ class GradeGeneticAlgorithm:
         avg_diff = abs(avg - self.target_avg)
         undershoot = max(0.0, self.target_avg - avg)
 
-        future_grades = individual['tests'] + individual['assignments']
-        variance_penalty = np.std(future_grades) if len(future_grades) > 1 else 0.0
+        future_tests = individual['tests']
+        future_assignments = individual['assignments']
+        future_grades = future_tests + future_assignments
+
+        balance_penalty = float(np.std(future_grades)) if len(future_grades) > 1 else 0.0
         impossible_penalty = sum(max(0, g - self.max_grade) for g in future_grades)
 
-        # avg_diff domina; variância só desempatada soluções altamente próximas da meta
+        preference_penalty = 0.0
+        if future_tests and future_assignments:
+            test_mean = sum(future_tests) / len(future_tests)
+            assignment_mean = sum(future_assignments) / len(future_assignments)
+            preference_penalty = max(0.0, test_mean - assignment_mean)
+
+        # avg_diff domina; equilíbrio + preferência só desempatam perto da meta
         return (
             avg_diff * 1000.0
             + undershoot * 500.0
-            + variance_penalty * 0.1
+            + balance_penalty * self.BALANCE_WEIGHT
+            + preference_penalty * self.ASSIGNMENT_PREFERENCE_WEIGHT
             + impossible_penalty * 20.0
         )
 
